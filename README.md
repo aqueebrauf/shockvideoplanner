@@ -24,10 +24,12 @@ Resource data lives in JSON under `src/data/`. Edit these files (or use Cursor/s
 1. Push this project to GitHub.
 2. Open **Settings → Pages → Build and deployment**.
 3. Set **Source** to **Deploy from a branch**.
-4. Set **Branch** to **`main`** and folder to **`/docs`** (not root).
-5. Save. After 1–2 minutes the site is live at `https://<username>.github.io/<repo-name>/`.
+4. Set **Branch** to **`main`** and folder to **`/ (root)`**.
+5. Save. The site will be at `https://<username>.github.io/<repo-name>/`.
 
-Every push to `main` rebuilds the app and updates the `docs/` folder automatically.
+Every push to `main` rebuilds the app and updates the production files at the repo root (and in `docs/` as backup).
+
+Local development uses `index.dev.html`; run `npm run dev` as usual.
 
 ## Project structure
 

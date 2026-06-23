@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 const resourceTabs = [
   { to: '/resources/screens', label: 'Screens' },
   { to: '/resources/hashtags', label: 'Hashtags' },
+  { to: '/resources/goals', label: 'Goals' },
 ];
 
 export default function Resources() {

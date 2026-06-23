@@ -375,6 +375,33 @@ button {
   border-radius: 4px;
 }
 
+.data-table .col-link {
+  min-width: 14rem;
+}
+
+.link-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.link-cell .cell-input {
+  min-width: 0;
+  flex: 1;
+}
+
+.link-open {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.link-open:hover {
+  text-decoration: underline;
+}
+
 .cell-error {
   font-size: 0.7rem;
   color: #f87171;

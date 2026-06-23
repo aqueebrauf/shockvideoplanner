@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Resources from './pages/Resources';
 import Screens from './pages/resources/Screens';
 import Hashtags from './pages/resources/Hashtags';
+import Goals from './pages/resources/Goals';
 
 function NavIcon({ children }) {
   return <span aria-hidden="true">{children}</span>;
@@ -22,6 +23,7 @@ export default function App() {
             <Route index element={<Screens />} />
             <Route path="screens" element={<Screens />} />
             <Route path="hashtags" element={<Hashtags />} />
+            <Route path="goals" element={<Goals />} />
           </Route>
         </Routes>
       </main>

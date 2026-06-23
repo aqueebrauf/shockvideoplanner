@@ -22,8 +22,10 @@ Resource data lives in JSON under `src/data/`. Edit these files (or use Cursor/s
 ## GitHub Pages setup
 
 1. Create a repo on GitHub and push this project.
-2. In the repo: **Settings → Pages → Build and deployment → Source** → select **GitHub Actions**.
-3. Push to `main`. The workflow builds and deploys automatically.
+2. In the repo: **Settings → Pages → Build and deployment**
+   - **Source:** Deploy from a branch
+   - **Branch:** `gh-pages` / `/ (root)`
+3. Push to `main`. The workflow builds `dist` and publishes it to the `gh-pages` branch.
 
 The site will be at `https://<username>.github.io/<repo-name>/`.
 

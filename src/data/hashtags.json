@@ -1,0 +1,100 @@
+[
+  {
+    "id": 1,
+    "hashtag": "#goals",
+    "posts": 92306557,
+    "category": "broad",
+    "notes": "Most used goal-related tag"
+  },
+  {
+    "id": 2,
+    "hashtag": "#selfcare",
+    "posts": 49429548,
+    "category": "broad",
+    "notes": "Top related to #habittracking"
+  },
+  {
+    "id": 3,
+    "hashtag": "#mealprep",
+    "posts": 13389000,
+    "category": "broad",
+    "notes": "Popular for health habits"
+  },
+  {
+    "id": 4,
+    "hashtag": "#studygram",
+    "posts": 13012042,
+    "category": "broad",
+    "notes": "Academic habit tracking"
+  },
+  {
+    "id": 5,
+    "hashtag": "#planner",
+    "posts": 8720234,
+    "category": "broad",
+    "notes": "Core planner/organizing tag"
+  },
+  {
+    "id": 6,
+    "hashtag": "#bulletjournal",
+    "posts": 8133265,
+    "category": "broad",
+    "notes": "Used for analog habit tracking"
+  },
+  {
+    "id": 7,
+    "hashtag": "#stationery",
+    "posts": 7362729,
+    "category": "broad",
+    "notes": "Related to journal setups"
+  },
+  {
+    "id": 8,
+    "hashtag": "#journal",
+    "posts": 7347541,
+    "category": "broad",
+    "notes": "General journaling"
+  },
+  {
+    "id": 9,
+    "hashtag": "#bujo",
+    "posts": 6387027,
+    "category": "broad",
+    "notes": "Short for bullet journal"
+  },
+  {
+    "id": 10,
+    "hashtag": "#planneraddict",
+    "posts": 6340292,
+    "category": "broad",
+    "notes": "Planner community tag"
+  },
+  {
+    "id": 11,
+    "hashtag": "#notebook",
+    "posts": 5304822,
+    "category": "broad",
+    "notes": "Physical trackers"
+  },
+  {
+    "id": 12,
+    "hashtag": "#personalgrowth",
+    "posts": 5055663,
+    "category": "broad",
+    "notes": "Self-improvement focus"
+  },
+  {
+    "id": 13,
+    "hashtag": "#journaling",
+    "posts": 4980576,
+    "category": "broad",
+    "notes": "Daily writing habit"
+  },
+  {
+    "id": 14,
+    "hashtag": "#plannercommunity",
+    "posts": 4892098,
+    "category": "broad",
+    "notes": "Niche planner group"
+  }
+]

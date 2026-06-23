@@ -2,6 +2,7 @@ import { Routes, Route, NavLink } from 'react-router-dom';
 import Home from './pages/Home';
 import Resources from './pages/Resources';
 import Screens from './pages/resources/Screens';
+import Hashtags from './pages/resources/Hashtags';
 
 function NavIcon({ children }) {
   return <span aria-hidden="true">{children}</span>;
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/resources" element={<Resources />}>
             <Route index element={<Screens />} />
             <Route path="screens" element={<Screens />} />
+            <Route path="hashtags" element={<Hashtags />} />
           </Route>
         </Routes>
       </main>

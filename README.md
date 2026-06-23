@@ -16,6 +16,7 @@ Open [http://localhost:5173](http://localhost:5173).
 Resource data lives in JSON under `src/data/`. Edit these files (or use Cursor/scripts) and push to publish updates.
 
 - **Screens** — `src/data/screens.json`
+- **Hashtags** — `src/data/hashtags.json` (fields: `id`, `hashtag`, `posts`, `notes`, `category`)
 
 ## GitHub Pages setup
 

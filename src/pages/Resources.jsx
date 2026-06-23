@@ -1,8 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
 const resourceTabs = [
-  { to: '/resources/screens', label: 'Screens', active: true },
-  { to: '#', label: 'Hashtags', active: false },
+  { to: '/resources/screens', label: 'Screens' },
+  { to: '/resources/hashtags', label: 'Hashtags' },
 ];
 
 export default function Resources() {
@@ -12,17 +12,11 @@ export default function Resources() {
       <p className="page-subtitle">Reference data used when planning reels.</p>
 
       <nav className="sub-nav" aria-label="Resource sections">
-        {resourceTabs.map((tab) =>
-          tab.active ? (
-            <NavLink key={tab.label} to={tab.to} end>
-              {tab.label}
-            </NavLink>
-          ) : (
-            <span key={tab.label} className="disabled" aria-disabled="true">
-              {tab.label}
-            </span>
-          )
-        )}
+        {resourceTabs.map((tab) => (
+          <NavLink key={tab.label} to={tab.to}>
+            {tab.label}
+          </NavLink>
+        ))}
       </nav>
 
       <Outlet />

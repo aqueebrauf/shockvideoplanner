@@ -6,7 +6,11 @@ import { useGoals } from '../hooks/useGoals';
 import { usePlan } from '../hooks/usePlan';
 import { useScreens } from '../hooks/useScreens';
 import { DEFAULT_CTA_ID } from '../lib/ctasStorage';
-import { generatePlanScreenSequence } from '../lib/generatePlan';
+import {
+  buildPlanScreensFromSequence,
+  DEFAULT_SEQUENCE_ID,
+  SCREEN_SEQUENCES,
+} from '../lib/screenSequences';
 import { sortGoalsByRecent } from '../lib/goalDateLabel';
 
 function resolveCtaId(ctas, selectedId) {
@@ -28,15 +32,15 @@ export default function Generator() {
   const [hookText, setHookText] = useState('');
   const [referenceLink, setReferenceLink] = useState('');
   const [selectedGoalIds, setSelectedGoalIds] = useState([]);
+  const [selectedSequenceId, setSelectedSequenceId] = useState(DEFAULT_SEQUENCE_ID);
   const [selectedCtaId, setSelectedCtaId] = useState(DEFAULT_CTA_ID);
   const [customInstruction, setCustomInstruction] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
 
   const effectiveCtaId = resolveCtaId(ctas, selectedCtaId);
   const selectedCta = ctas.find((cta) => cta.id === effectiveCtaId);
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     const trimmedHook = hookText.trim();
     if (!trimmedHook) {
       setError('Hook text is required.');
@@ -44,6 +48,10 @@ export default function Generator() {
     }
     if (selectedGoalIds.length === 0) {
       setError('Select at least one goal.');
+      return;
+    }
+    if (!SCREEN_SEQUENCES.some((sequence) => sequence.id === selectedSequenceId)) {
+      setError('Select a screen sequence.');
       return;
     }
 
@@ -57,41 +65,29 @@ export default function Generator() {
     }
 
     setError('');
-    setIsGenerating(true);
 
     try {
-      const sharedInput = {
-        hookText: trimmedHook,
-        screens,
-        referenceLink,
-        ctaText: selectedCta?.text ?? '',
-        customInstruction,
-      };
+      const generatedRows = selectedGoals.map((goal) => {
+        const goalTitle = goal.title.trim();
+        const planScreens = buildPlanScreensFromSequence(
+          selectedSequenceId,
+          screens,
+          selectedCta?.text ?? ''
+        );
 
-      const generatedRows = await Promise.all(
-        selectedGoals.map(async (goal) => {
-          const goalTitle = goal.title.trim();
-          const planScreens = await generatePlanScreenSequence({
-            ...sharedInput,
-            goalTitles: [goalTitle],
-          });
-
-          return {
-            screens: planScreens,
-            hook: trimmedHook,
-            goalName: goalTitle,
-            referenceVideoLink: referenceLink.trim(),
-          };
-        })
-      );
+        return {
+          screens: planScreens,
+          hook: trimmedHook,
+          goalName: goalTitle,
+          referenceVideoLink: referenceLink.trim(),
+        };
+      });
 
       const newPlanIds = addGeneratedPlans(generatedRows);
 
       navigate('/plan', { state: { highlightId: newPlanIds[0] } });
     } catch (err) {
       setError(err.message || 'Could not generate plan.');
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -145,6 +141,25 @@ export default function Generator() {
         </div>
 
         <div className="form-field">
+          <label className="form-label" htmlFor="screen-sequence">
+            Screen Sequence <span className="form-required">*</span>
+          </label>
+          <select
+            id="screen-sequence"
+            className="cell-select generator-select"
+            value={selectedSequenceId}
+            onChange={(event) => setSelectedSequenceId(event.target.value)}
+            required
+          >
+            {SCREEN_SEQUENCES.map((sequence) => (
+              <option key={sequence.id} value={sequence.id}>
+                {sequence.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-field">
           <label className="form-label" htmlFor="cta-select">
             CTA
           </label>
@@ -183,13 +198,8 @@ export default function Generator() {
 
         {error ? <p className="generator-error">{error}</p> : null}
 
-        <button
-          type="button"
-          className="btn-generate"
-          onClick={handleGenerate}
-          disabled={isGenerating}
-        >
-          {isGenerating ? 'Generating…' : 'Generate'}
+        <button type="button" className="btn-generate" onClick={handleGenerate}>
+          Generate
         </button>
       </form>
     </>

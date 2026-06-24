@@ -23,12 +23,7 @@ Resource data lives in JSON under `src/data/`. Edit these files (or use Cursor/s
 ## Netlify deployment
 
 1. Connect this repo in [Netlify](https://app.netlify.com) (Build command: `npm run build`, Publish directory: `dist` — or use the included `netlify.toml`).
-2. Under **Site configuration → Environment variables**, add:
-   - `VITE_ANTHROPIC_API_KEY` — your Anthropic API key
-3. **Redeploy** after adding or changing env vars (build-time variables are baked into the bundle).
-4. Push to `main` — Netlify rebuilds automatically.
-
-Local dev: copy `.env.example` to `.env.local` and set `VITE_ANTHROPIC_API_KEY`.
+2. Push to `main` — Netlify rebuilds automatically.
 
 ## Project structure
 

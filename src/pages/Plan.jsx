@@ -1,86 +1,41 @@
+import { useEffect, useRef } from 'react';
 import { usePlan } from '../hooks/usePlan';
+import { screensToText, textToScreens } from '../lib/planScreensText';
 
-function ScreensWithCopyCell({ row, rowIndex, updatePlan }) {
-  const screens = row.screens;
+function SheetCell({
+  value,
+  onChange,
+  ariaLabel,
+  placeholder,
+  minRows = 1,
+  className = '',
+}) {
+  const ref = useRef(null);
 
-  const updateScreen = (screenIndex, patch) => {
-    updatePlan(row.id, {
-      screens: screens.map((screen, index) =>
-        index === screenIndex ? { ...screen, ...patch } : screen
-      ),
-    });
+  const resize = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
   };
 
-  const addScreen = () => {
-    updatePlan(row.id, {
-      screens: [...screens, { name: '', copy: '' }],
-    });
-  };
-
-  const removeScreen = (screenIndex) => {
-    updatePlan(row.id, {
-      screens: screens.filter((_, index) => index !== screenIndex),
-    });
-  };
-
-  if (screens.length === 0) {
-    return (
-      <div className="screens-copy-list screens-copy-list--empty">
-        <span className="screens-copy-empty">No screens yet</span>
-        <button
-          type="button"
-          className="btn-ghost btn-ghost--compact"
-          onClick={addScreen}
-        >
-          + Add screen
-        </button>
-      </div>
-    );
-  }
+  useEffect(() => {
+    resize();
+  }, [value]);
 
   return (
-    <div className="screens-copy-list">
-      {screens.map((screen, screenIndex) => (
-        <div key={screenIndex} className="screen-copy-item">
-          <div className="screen-copy-item__header">
-            <span className="screen-copy-label">
-              Screen {screenIndex + 1}
-            </span>
-            <button
-              type="button"
-              className="btn-ghost btn-ghost--compact btn-danger"
-              onClick={() => removeScreen(screenIndex)}
-              aria-label={`Remove screen ${screenIndex + 1} from plan ${rowIndex + 1}`}
-            >
-              Remove
-            </button>
-          </div>
-          <input
-            type="text"
-            className="cell-input cell-input--screen-name"
-            value={screen.name}
-            placeholder="Screen name"
-            onChange={(e) => updateScreen(screenIndex, { name: e.target.value })}
-            aria-label={`Screen name ${screenIndex + 1} for plan ${rowIndex + 1}`}
-          />
-          <textarea
-            className="cell-input cell-input--screen-copy"
-            value={screen.copy}
-            placeholder="Copy for this screen"
-            rows={2}
-            onChange={(e) => updateScreen(screenIndex, { copy: e.target.value })}
-            aria-label={`Copy for screen ${screenIndex + 1} in plan ${rowIndex + 1}`}
-          />
-        </div>
-      ))}
-      <button
-        type="button"
-        className="btn-ghost btn-ghost--compact"
-        onClick={addScreen}
-      >
-        + Add screen
-      </button>
-    </div>
+    <textarea
+      ref={ref}
+      className={`cell-input cell-input--sheet ${className}`.trim()}
+      value={value}
+      placeholder={placeholder}
+      rows={minRows}
+      onChange={(e) => {
+        onChange(e.target.value);
+        resize();
+      }}
+      aria-label={ariaLabel}
+    />
   );
 }
 
@@ -88,15 +43,15 @@ export default function Plan() {
   const { plan, updatePlan, addPlan, deletePlan } = usePlan();
 
   return (
-    <>
+    <div className="plan-page">
       <h2 className="page-title">Plan</h2>
       <p className="page-subtitle">
         Generated reel plans with hooks, screen copy, and captions.
       </p>
 
       <p className="table-hint">Edits save automatically in this browser.</p>
-      <div className="data-table-wrap">
-        <table className="data-table data-table--plan">
+      <div className="data-table-wrap data-table-wrap--sheet">
+        <table className="data-table data-table--sheet">
           <thead>
             <tr>
               <th className="col-id">#</th>
@@ -119,78 +74,76 @@ export default function Plan() {
             ) : (
               plan.map((row, index) => (
                 <tr key={row.id}>
-                  <td className="col-id">{index + 1}</td>
+                  <td className="col-id sheet-cell-static">{index + 1}</td>
                   <td className="col-date">
-                    <input
-                      type="text"
-                      className="cell-input cell-input--date"
+                    <SheetCell
                       value={row.generatedDate}
                       placeholder="Jun 24"
-                      onChange={(e) =>
-                        updatePlan(row.id, { generatedDate: e.target.value })
+                      onChange={(value) =>
+                        updatePlan(row.id, { generatedDate: value })
                       }
-                      aria-label={`Generated date for plan ${index + 1}`}
+                      ariaLabel={`Generated date for plan ${index + 1}`}
                     />
                   </td>
                   <td className="col-hook">
-                    <input
-                      type="text"
-                      className="cell-input"
+                    <SheetCell
                       value={row.hook}
                       placeholder="Hook"
-                      onChange={(e) =>
-                        updatePlan(row.id, { hook: e.target.value })
+                      onChange={(value) =>
+                        updatePlan(row.id, { hook: value })
                       }
-                      aria-label={`Hook for plan ${index + 1}`}
+                      ariaLabel={`Hook for plan ${index + 1}`}
                     />
                   </td>
                   <td className="col-goal-name">
-                    <input
-                      type="text"
-                      className="cell-input"
+                    <SheetCell
                       value={row.goalName}
                       placeholder="Goal name"
-                      onChange={(e) =>
-                        updatePlan(row.id, { goalName: e.target.value })
+                      onChange={(value) =>
+                        updatePlan(row.id, { goalName: value })
                       }
-                      aria-label={`Goal name for plan ${index + 1}`}
+                      ariaLabel={`Goal name for plan ${index + 1}`}
                     />
                   </td>
                   <td className="col-screens-copy">
-                    <ScreensWithCopyCell
-                      row={row}
-                      rowIndex={index}
-                      updatePlan={updatePlan}
+                    <SheetCell
+                      value={screensToText(row.screens)}
+                      placeholder={'Screen name\nCopy for this screen\n\nNext screen name\nCopy for next screen'}
+                      onChange={(value) =>
+                        updatePlan(row.id, { screens: textToScreens(value) })
+                      }
+                      ariaLabel={`Screens with copy for plan ${index + 1}`}
+                      minRows={4}
+                      className="cell-input--screens-copy"
                     />
                   </td>
-                  <td className="col-ref-video">
+                  <td className="col-ref-video sheet-cell-static">
                     {row.referenceVideoLink.trim() ? (
                       <a
                         href={row.referenceVideoLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="link-open link-open--button"
-                        aria-label={`Open reference video for plan ${index + 1}`}
+                        aria-label={`Reference video for plan ${index + 1}`}
                       >
-                        Open
+                        Reference
                       </a>
                     ) : (
                       <span className="cell-muted">—</span>
                     )}
                   </td>
                   <td className="col-caption">
-                    <textarea
-                      className="cell-input cell-input--caption"
+                    <SheetCell
                       value={row.caption}
                       placeholder="Caption"
-                      rows={3}
-                      onChange={(e) =>
-                        updatePlan(row.id, { caption: e.target.value })
+                      onChange={(value) =>
+                        updatePlan(row.id, { caption: value })
                       }
-                      aria-label={`Caption for plan ${index + 1}`}
+                      ariaLabel={`Caption for plan ${index + 1}`}
+                      minRows={3}
                     />
                   </td>
-                  <td className="col-actions">
+                  <td className="col-actions sheet-cell-static">
                     <button
                       type="button"
                       className="btn-ghost btn-danger"
@@ -209,6 +162,6 @@ export default function Plan() {
       <button type="button" className="btn-add-row" onClick={addPlan}>
         + Add row
       </button>
-    </>
+    </div>
   );
 }

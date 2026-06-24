@@ -49,13 +49,40 @@ function mergeLegacy(baseline, overrides) {
   });
 }
 
+function migrateMergedScreens3And4(screens) {
+  if (screens.length !== 14) return screens;
+
+  const byId = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
+  const old3 = byId[3];
+  const old4 = byId[4];
+  if (!old3 || !old4 || old4.name !== 'Set goals') return screens;
+
+  const merged3 = normalizeScreen({
+    id: 3,
+    name: 'Clicking on hamburger menu to open Set goals',
+    image: old4.image ?? old3.image ?? null,
+    suggestedCopy: 'Set your goal',
+  });
+
+  return screens
+    .filter((screen) => screen.id !== 3 && screen.id !== 4)
+    .map((screen) => (screen.id > 4 ? { ...screen, id: screen.id - 1 } : screen))
+    .concat(merged3)
+    .sort((a, b) => a.id - b.id)
+    .map(normalizeScreen);
+}
+
 export function loadScreens(baseline) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return mergeBaselineSuggestedCopy(parsed, baseline);
+        const migrated = migrateMergedScreens3And4(parsed);
+        if (migrated !== parsed) {
+          saveScreens(migrated);
+        }
+        return mergeBaselineSuggestedCopy(migrated, baseline);
       }
     }
   } catch {

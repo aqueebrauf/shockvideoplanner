@@ -47,7 +47,7 @@ TASK:
 Understand the energy of the hook copy and the goals. Decide which demo screens are required and the order they should appear. Keep the demo as short as possible while still making the point. The sequence should make narrative sense even if real users might tap through the app differently. Not every screen is needed.
 
 Return ONLY valid JSON with no markdown fences or extra text:
-{"screenIds":[2,4,5]}
+{"screenIds":[2,3,4]}
 
 Rules:
 - screenIds must contain only IDs from the available demo screens list

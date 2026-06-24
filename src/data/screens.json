@@ -1,16 +1,15 @@
 [
   { "id": 1, "name": "Website URL being typed in search bar", "image": null, "suggestedCopy": "Go here" },
   { "id": 2, "name": "Loading of homepage", "image": null, "suggestedCopy": "Go here" },
-  { "id": 3, "name": "Clicking on hamburger menu to open", "image": null, "suggestedCopy": "Go here" },
-  { "id": 4, "name": "Set goals", "image": null, "suggestedCopy": "Set your goal" },
-  { "id": 5, "name": "Typing goal name", "image": null, "suggestedCopy": "Set your goal" },
-  { "id": 6, "name": "Selecting goal icon", "image": null, "suggestedCopy": "Set your goal" },
-  { "id": 7, "name": "Selecting goal dates", "image": null, "suggestedCopy": "Set your goal" },
-  { "id": 8, "name": "Responding to weekly checkin - On track or behind", "image": null, "suggestedCopy": "Add weekly focus" },
-  { "id": 9, "name": "Typing weekly focus", "image": null, "suggestedCopy": "Add weekly focus" },
-  { "id": 10, "name": "Marking Showup", "image": null, "suggestedCopy": "Show up daily" },
-  { "id": 11, "name": "Setting up milestones", "image": null, "suggestedCopy": "Unlock milestones" },
-  { "id": 12, "name": "Marking milestone as completed", "image": null, "suggestedCopy": "Unlock milestones" },
-  { "id": 13, "name": "Marking main goal as completed", "image": null, "suggestedCopy": "Smash your goal" },
-  { "id": 14, "name": "Typing journal log.", "image": null, "suggestedCopy": "" }
+  { "id": 3, "name": "Clicking on hamburger menu to open Set goals", "image": null, "suggestedCopy": "Set your goal" },
+  { "id": 4, "name": "Typing goal name", "image": null, "suggestedCopy": "Set your goal" },
+  { "id": 5, "name": "Selecting goal icon", "image": null, "suggestedCopy": "Set your goal" },
+  { "id": 6, "name": "Selecting goal dates", "image": null, "suggestedCopy": "Set your goal" },
+  { "id": 7, "name": "Responding to weekly checkin - On track or behind", "image": null, "suggestedCopy": "Add weekly focus" },
+  { "id": 8, "name": "Typing weekly focus", "image": null, "suggestedCopy": "Add weekly focus" },
+  { "id": 9, "name": "Marking Showup", "image": null, "suggestedCopy": "Show up daily" },
+  { "id": 10, "name": "Setting up milestones", "image": null, "suggestedCopy": "Unlock milestones" },
+  { "id": 11, "name": "Marking milestone as completed", "image": null, "suggestedCopy": "Unlock milestones" },
+  { "id": 12, "name": "Marking main goal as completed", "image": null, "suggestedCopy": "Smash your goal" },
+  { "id": 13, "name": "Typing journal log.", "image": null, "suggestedCopy": "" }
 ]

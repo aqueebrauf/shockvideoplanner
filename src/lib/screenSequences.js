@@ -12,7 +12,11 @@ export function getScreenSequence(id) {
   return SCREEN_SEQUENCES.find((sequence) => sequence.id === id);
 }
 
-export function buildPlanScreensFromSequence(sequenceId, screens, ctaText = '') {
+export function buildPlanScreensFromSequence(
+  sequenceId,
+  screens,
+  { ctaText = '', hookText = '' } = {}
+) {
   const sequence = getScreenSequence(sequenceId);
   if (!sequence) {
     throw new Error('Select a screen sequence.');
@@ -21,10 +25,13 @@ export function buildPlanScreensFromSequence(sequenceId, screens, ctaText = '') 
   const screenById = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
 
   return [
-    { name: 'Hook screen', copy: '' },
+    { name: 'Hook screen', copy: hookText.trim() },
     ...sequence.screenIds
       .filter((id) => screenById[id])
-      .map((id) => ({ name: screenById[id].name, copy: '' })),
+      .map((id) => ({
+        name: screenById[id].name,
+        copy: screenById[id].suggestedCopy?.trim() ?? '',
+      })),
     { name: 'CTA', copy: ctaText.trim() },
   ];
 }

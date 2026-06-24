@@ -188,9 +188,9 @@ export default function Plan() {
                         type="button"
                         className="link-open link-open--button link-open--sheet"
                         onClick={() => setScreensModalRow(row)}
-                        aria-label={`Open ${row.screens.length} screens for plan ${serial}`}
+                        aria-label={`Screens for plan ${serial}`}
                       >
-                        Open {row.screens.length}
+                        Screens
                       </button>
                     </td>
                     <td className="col-ref-video sheet-cell-static">

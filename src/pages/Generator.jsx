@@ -69,11 +69,10 @@ export default function Generator() {
     try {
       const generatedRows = selectedGoals.map((goal) => {
         const goalTitle = goal.title.trim();
-        const planScreens = buildPlanScreensFromSequence(
-          selectedSequenceId,
-          screens,
-          selectedCta?.text ?? ''
-        );
+        const planScreens = buildPlanScreensFromSequence(selectedSequenceId, screens, {
+          ctaText: selectedCta?.text ?? '',
+          hookText: trimmedHook,
+        });
 
         return {
           screens: planScreens,

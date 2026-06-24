@@ -1,6 +1,8 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ScreensCopyModal from '../components/ScreensCopyModal';
 import { usePlan } from '../hooks/usePlan';
+import { formatPlanSerial, sortPlansByRecent } from '../lib/planSort';
+
 function SheetCell({
   value,
   onChange,
@@ -53,9 +55,58 @@ function SheetCell({
   );
 }
 
+function CaptionCell({ value, onChange, serial }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyCaption = async () => {
+    if (!value.trim()) return;
+
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
+  return (
+    <div className="caption-cell">
+      <SheetCell
+        value={value}
+        placeholder="Caption"
+        onChange={onChange}
+        ariaLabel={`Caption for plan ${serial}`}
+        minRows={3}
+        className="cell-input--caption"
+      />
+      <button
+        type="button"
+        className="caption-cell__copy"
+        onClick={copyCaption}
+        disabled={!value.trim()}
+        aria-label={`Copy caption for plan ${serial}`}
+        title={copied ? 'Copied' : 'Copy caption'}
+      >
+        {copied ? (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
+
 export default function Plan() {
   const { plan, updatePlan, addPlan, deletePlan } = usePlan();
   const [screensModalRow, setScreensModalRow] = useState(null);
+  const sortedPlan = useMemo(() => sortPlansByRecent(plan), [plan]);
 
   return (
     <div className="plan-page">
@@ -72,104 +123,106 @@ export default function Plan() {
           <thead>
             <tr>
               <th className="col-id">#</th>
-              <th className="col-date">Generated</th>
               <th className="col-hook">Hook</th>
               <th className="col-goal-name">Goal name</th>
               <th className="col-screens">Screens</th>
               <th className="col-ref-video">Reference</th>
               <th className="col-caption">Caption</th>
               <th className="col-actions" aria-label="Actions" />
+              <th className="col-date">Generated</th>
             </tr>
           </thead>
           <tbody>
-            {plan.length === 0 ? (
+            {sortedPlan.length === 0 ? (
               <tr>
                 <td colSpan={8} className="empty-state">
                   No plans yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
             ) : (
-              plan.map((row, index) => (
-                <tr key={row.id}>
-                  <td className="col-id sheet-cell-static">{index + 1}</td>
-                  <td className="col-date">
-                    <SheetCell
-                      value={row.generatedDate}
-                      placeholder="Jun 24"
-                      onChange={(value) =>
-                        updatePlan(row.id, { generatedDate: value })
-                      }
-                      ariaLabel={`Generated date for plan ${index + 1}`}
-                    />
-                  </td>
-                  <td className="col-hook">
-                    <SheetCell
-                      value={row.hook}
-                      placeholder="Hook"
-                      onChange={(value) =>
-                        updatePlan(row.id, { hook: value })
-                      }
-                      ariaLabel={`Hook for plan ${index + 1}`}
-                    />
-                  </td>
-                  <td className="col-goal-name">
-                    <SheetCell
-                      value={row.goalName}
-                      placeholder="Goal name"
-                      onChange={(value) =>
-                        updatePlan(row.id, { goalName: value })
-                      }
-                      ariaLabel={`Goal name for plan ${index + 1}`}
-                    />
-                  </td>
-                  <td className="col-screens sheet-cell-static">
-                    <button
-                      type="button"
-                      className="link-open link-open--button link-open--sheet"
-                      onClick={() => setScreensModalRow(row)}
-                      aria-label={`Open ${row.screens.length} screens for plan ${index + 1}`}
-                    >
-                      Open {row.screens.length}
-                    </button>
-                  </td>
-                  <td className="col-ref-video sheet-cell-static">
-                    {row.referenceVideoLink.trim() ? (
-                      <a
-                        href={row.referenceVideoLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
+              sortedPlan.map((row) => {
+                const serial = formatPlanSerial(row.id);
+
+                return (
+                  <tr key={row.id}>
+                    <td className="col-id sheet-cell-static">{serial}</td>
+                    <td className="col-hook">
+                      <SheetCell
+                        value={row.hook}
+                        placeholder="Hook"
+                        onChange={(value) =>
+                          updatePlan(row.id, { hook: value })
+                        }
+                        ariaLabel={`Hook for plan ${serial}`}
+                      />
+                    </td>
+                    <td className="col-goal-name">
+                      <SheetCell
+                        value={row.goalName}
+                        placeholder="Goal name"
+                        onChange={(value) =>
+                          updatePlan(row.id, { goalName: value })
+                        }
+                        ariaLabel={`Goal name for plan ${serial}`}
+                      />
+                    </td>
+                    <td className="col-screens sheet-cell-static">
+                      <button
+                        type="button"
                         className="link-open link-open--button link-open--sheet"
-                        aria-label={`Reference video for plan ${index + 1}`}
+                        onClick={() => setScreensModalRow(row)}
+                        aria-label={`Open ${row.screens.length} screens for plan ${serial}`}
                       >
-                        Reference
-                      </a>
-                    ) : (
-                      <span className="cell-muted">—</span>
-                    )}
-                  </td>
-                  <td className="col-caption">
-                    <SheetCell
-                      value={row.caption}
-                      placeholder="Caption"
-                      onChange={(value) =>
-                        updatePlan(row.id, { caption: value })
-                      }
-                      ariaLabel={`Caption for plan ${index + 1}`}
-                      minRows={3}
-                    />
-                  </td>
-                  <td className="col-actions sheet-cell-static">
-                    <button
-                      type="button"
-                      className="btn-ghost btn-danger btn-ghost--sheet"
-                      onClick={() => deletePlan(row.id)}
-                      aria-label={`Delete plan ${index + 1}`}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
+                        Open {row.screens.length}
+                      </button>
+                    </td>
+                    <td className="col-ref-video sheet-cell-static">
+                      {row.referenceVideoLink.trim() ? (
+                        <a
+                          href={row.referenceVideoLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="link-open link-open--button link-open--sheet"
+                          aria-label={`Reference video for plan ${serial}`}
+                        >
+                          Reference
+                        </a>
+                      ) : (
+                        <span className="cell-muted">—</span>
+                      )}
+                    </td>
+                    <td className="col-caption">
+                      <CaptionCell
+                        value={row.caption}
+                        serial={serial}
+                        onChange={(value) =>
+                          updatePlan(row.id, { caption: value })
+                        }
+                      />
+                    </td>
+                    <td className="col-actions sheet-cell-static">
+                      <button
+                        type="button"
+                        className="btn-ghost btn-danger btn-ghost--sheet"
+                        onClick={() => deletePlan(row.id)}
+                        aria-label={`Delete plan ${serial}`}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                    <td className="col-date">
+                      <SheetCell
+                        value={row.generatedDate}
+                        placeholder="Jun 24"
+                        onChange={(value) =>
+                          updatePlan(row.id, { generatedDate: value })
+                        }
+                        ariaLabel={`Generated date for plan ${serial}`}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

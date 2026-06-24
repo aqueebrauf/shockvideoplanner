@@ -6,7 +6,24 @@ export function normalizeScreen(row) {
     id: row.id,
     name: row.name ?? '',
     image: row.image ?? null,
+    suggestedCopy: row.suggestedCopy ?? '',
   };
+}
+
+function mergeBaselineSuggestedCopy(screens, baseline) {
+  const baselineById = Object.fromEntries(
+    baseline.map((screen) => [screen.id, normalizeScreen(screen)])
+  );
+
+  return screens.map((screen) => {
+    const normalized = normalizeScreen(screen);
+    if (normalized.suggestedCopy.trim()) return normalized;
+
+    const base = baselineById[screen.id];
+    if (!base?.suggestedCopy?.trim()) return normalized;
+
+    return { ...normalized, suggestedCopy: base.suggestedCopy };
+  });
 }
 
 function loadLegacyOverrides() {
@@ -37,7 +54,9 @@ export function loadScreens(baseline) {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed.map(normalizeScreen);
+      if (Array.isArray(parsed)) {
+        return mergeBaselineSuggestedCopy(parsed, baseline);
+      }
     }
   } catch {
     /* fall through */
@@ -48,7 +67,7 @@ export function loadScreens(baseline) {
     const migrated = mergeLegacy(baseline, legacy);
     saveScreens(migrated);
     localStorage.removeItem(LEGACY_KEY);
-    return migrated;
+    return mergeBaselineSuggestedCopy(migrated, baseline);
   }
 
   return baseline.map(normalizeScreen);

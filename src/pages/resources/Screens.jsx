@@ -13,6 +13,7 @@ export default function Screens() {
             <tr>
               <th className="col-id">#</th>
               <th>Screen</th>
+              <th className="col-suggested-copy">Suggested copy</th>
               <th className="col-image">Image example</th>
               <th className="col-actions" aria-label="Actions" />
             </tr>
@@ -20,7 +21,7 @@ export default function Screens() {
           <tbody>
             {screens.length === 0 ? (
               <tr>
-                <td colSpan={4} className="empty-state">
+                <td colSpan={5} className="empty-state">
                   No screens yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
@@ -39,6 +40,21 @@ export default function Screens() {
                         e.target.style.height = `${e.target.scrollHeight}px`;
                       }}
                       aria-label={`Screen ${index + 1} name`}
+                    />
+                  </td>
+                  <td className="col-suggested-copy">
+                    <textarea
+                      className="cell-input"
+                      value={screen.suggestedCopy}
+                      rows={1}
+                      onChange={(e) =>
+                        updateScreen(screen.id, { suggestedCopy: e.target.value })
+                      }
+                      onInput={(e) => {
+                        e.target.style.height = 'auto';
+                        e.target.style.height = `${e.target.scrollHeight}px`;
+                      }}
+                      aria-label={`Suggested copy for screen ${index + 1}`}
                     />
                   </td>
                   <td className="col-image">

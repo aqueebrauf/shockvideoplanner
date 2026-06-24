@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import GoalMultiSelect from '../components/GoalMultiSelect';
 import { useCtas } from '../hooks/useCtas';
 import { useGoals } from '../hooks/useGoals';
+import { usePlan } from '../hooks/usePlan';
+import { useScreens } from '../hooks/useScreens';
 import { DEFAULT_CTA_ID } from '../lib/ctasStorage';
+import { generatePlanScreenSequence } from '../lib/generatePlan';
 import { sortGoalsByRecent } from '../lib/goalDateLabel';
 
 function resolveCtaId(ctas, selectedId) {
@@ -14,8 +18,11 @@ function resolveCtaId(ctas, selectedId) {
 }
 
 export default function Generator() {
+  const navigate = useNavigate();
   const { goals } = useGoals();
   const { ctas } = useCtas();
+  const { screens } = useScreens();
+  const { addGeneratedPlan } = usePlan();
   const sortedGoals = useMemo(() => sortGoalsByRecent(goals), [goals]);
 
   const [hookText, setHookText] = useState('');
@@ -23,8 +30,53 @@ export default function Generator() {
   const [selectedGoalIds, setSelectedGoalIds] = useState([]);
   const [selectedCtaId, setSelectedCtaId] = useState(DEFAULT_CTA_ID);
   const [customInstruction, setCustomInstruction] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState('');
 
   const effectiveCtaId = resolveCtaId(ctas, selectedCtaId);
+  const selectedCta = ctas.find((cta) => cta.id === effectiveCtaId);
+
+  const handleGenerate = async () => {
+    const trimmedHook = hookText.trim();
+    if (!trimmedHook) {
+      setError('Hook text is required.');
+      return;
+    }
+    if (selectedGoalIds.length === 0) {
+      setError('Select at least one goal.');
+      return;
+    }
+
+    const goalTitles = selectedGoalIds
+      .map((id) => goals.find((goal) => goal.id === id)?.title.trim())
+      .filter(Boolean);
+
+    if (goalTitles.length === 0) {
+      setError('Selected goals need titles.');
+      return;
+    }
+
+    setError('');
+    setIsGenerating(true);
+
+    try {
+      const planScreens = await generatePlanScreenSequence({
+        hookText: trimmedHook,
+        goalTitles,
+        screens,
+        referenceLink,
+        ctaText: selectedCta?.text ?? '',
+        customInstruction,
+      });
+
+      addGeneratedPlan(planScreens);
+      navigate('/plan');
+    } catch (err) {
+      setError(err.message || 'Could not generate plan.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <>
@@ -36,7 +88,7 @@ export default function Generator() {
       <form className="generator-form" onSubmit={(event) => event.preventDefault()}>
         <div className="form-field">
           <label className="form-label" htmlFor="hook-text">
-            Hook text
+            Hook text <span className="form-required">*</span>
           </label>
           <textarea
             id="hook-text"
@@ -45,6 +97,7 @@ export default function Generator() {
             placeholder="Opening line or hook for the reel…"
             value={hookText}
             onChange={(event) => setHookText(event.target.value)}
+            required
           />
         </div>
 
@@ -64,7 +117,7 @@ export default function Generator() {
 
         <div className="form-field">
           <span className="form-label" id="goals-label">
-            Goals
+            Goals <span className="form-required">*</span>
           </span>
           <GoalMultiSelect
             goals={sortedGoals}
@@ -110,8 +163,15 @@ export default function Generator() {
           />
         </div>
 
-        <button type="button" className="btn-generate">
-          Generate
+        {error ? <p className="generator-error">{error}</p> : null}
+
+        <button
+          type="button"
+          className="btn-generate"
+          onClick={handleGenerate}
+          disabled={isGenerating}
+        >
+          {isGenerating ? 'Generating…' : 'Generate'}
         </button>
       </form>
     </>

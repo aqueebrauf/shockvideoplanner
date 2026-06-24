@@ -43,5 +43,20 @@ export function usePlan() {
     commit(setPlan, (prev) => prev.filter((row) => row.id !== id));
   }, []);
 
-  return { plan, updatePlan, addPlan, deletePlan };
+  const addGeneratedPlan = useCallback((screens) => {
+    commit(setPlan, (prev) => [
+      ...prev,
+      {
+        id: nextPlanId(prev),
+        generatedDate: '',
+        hook: '',
+        goalName: '',
+        screens: screens.map(normalizeScreen),
+        referenceVideoLink: '',
+        caption: '',
+      },
+    ]);
+  }, []);
+
+  return { plan, updatePlan, addPlan, deletePlan, addGeneratedPlan };
 }

@@ -239,6 +239,11 @@ button {
   min-width: 9rem;
 }
 
+.data-table .col-suggested-copy {
+  width: 10rem;
+  min-width: 8rem;
+}
+
 .table-hint {
   margin: 0 0 0.75rem;
   font-size: 0.8125rem;
@@ -850,6 +855,21 @@ button {
 
 .btn-generate:active {
   transform: scale(0.98);
+}
+
+.btn-generate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-required {
+  color: var(--accent);
+}
+
+.generator-error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #c0392b;
 }
 
 .goal-multiselect {

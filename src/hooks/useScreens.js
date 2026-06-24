@@ -27,7 +27,7 @@ export function useScreens() {
   const addScreen = useCallback(() => {
     commit(setScreens, (prev) => [
       ...prev,
-      { id: nextScreenId(prev), name: '', image: null },
+      { id: nextScreenId(prev), name: '', image: null, suggestedCopy: '' },
     ]);
   }, []);
 

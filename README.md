@@ -20,15 +20,15 @@ Resource data lives in JSON under `src/data/`. Edit these files (or use Cursor/s
 - **Goals** — `src/data/goals.json` (fields: `id`, `title`, `date`, `link`)
 - **CTAs** — `src/data/ctas.json` (fields: `id`, `text`)
 
-## GitHub Pages setup
+## Netlify deployment
 
-1. Push to `main`. GitHub Actions builds the app and publishes to the **`gh-pages`** branch.
-2. Open **Settings → Pages → Build and deployment**.
-3. Set **Source** to **Deploy from a branch**.
-4. Set **Branch** to **`gh-pages`** and folder **`/ (root)`**.
-5. Save. Site URL: `https://<username>.github.io/<repo-name>/`
+1. Connect this repo in [Netlify](https://app.netlify.com) (Build command: `npm run build`, Publish directory: `dist` — or use the included `netlify.toml`).
+2. Under **Site configuration → Environment variables**, add:
+   - `VITE_ANTHROPIC_API_KEY` — your Anthropic API key
+3. **Redeploy** after adding or changing env vars (build-time variables are baked into the bundle).
+4. Push to `main` — Netlify rebuilds automatically.
 
-`main` holds source code only. The live site is built automatically — no build files committed to `main`.
+Local dev: copy `.env.example` to `.env.local` and set `VITE_ANTHROPIC_API_KEY`.
 
 ## Project structure
 

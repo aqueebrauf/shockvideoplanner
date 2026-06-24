@@ -1,4 +1,8 @@
-const API_URL = '/api/anthropic/v1/messages';
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+
+function getApiKey() {
+  return import.meta.env.VITE_ANTHROPIC_API_KEY?.trim() || '';
+}
 
 function buildPrompt({
   hookText,
@@ -66,6 +70,22 @@ function parseScreenIdsResponse(text) {
   return parsed.screenIds.filter((id) => Number.isInteger(id));
 }
 
+function formatApiError(status, detail) {
+  if (detail.includes('<html>')) {
+    return `Plan generation failed (${status}).`;
+  }
+
+  try {
+    const parsed = JSON.parse(detail);
+    const message = parsed?.error?.message;
+    if (message) return message;
+  } catch {
+    /* not JSON */
+  }
+
+  return detail.trim() || `Plan generation failed (${status}).`;
+}
+
 export async function generatePlanScreenSequence({
   hookText,
   goalTitles,
@@ -74,9 +94,21 @@ export async function generatePlanScreenSequence({
   ctaText = '',
   customInstruction = '',
 }) {
-  const response = await fetch(API_URL, {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error(
+      'Anthropic API key is not configured. Add VITE_ANTHROPIC_API_KEY to .env.local locally, or in Netlify → Site configuration → Environment variables, then redeploy.'
+    );
+  }
+
+  const response = await fetch(ANTHROPIC_API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 512,
@@ -98,9 +130,7 @@ export async function generatePlanScreenSequence({
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(
-      detail.trim() || `Plan generation failed (${response.status}).`
-    );
+    throw new Error(formatApiError(response.status, detail));
   }
 
   const data = await response.json();

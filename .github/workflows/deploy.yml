@@ -14,7 +14,6 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,20 +30,9 @@ jobs:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
 
-      - name: Publish build to docs/ and repo root
-        run: |
-          rm -rf docs assets
-          cp -r dist docs
-          touch docs/.nojekyll
-          cp dist/index.html index.html
-          cp dist/404.html 404.html
-          cp -r dist/assets assets
-
-      - name: Commit and push site files
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs index.html 404.html assets
-          git diff --staged --quiet && echo "No changes to deploy" && exit 0
-          git commit -m "Deploy to GitHub Pages [skip ci]"
-          git push
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true

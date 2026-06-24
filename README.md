@@ -22,15 +22,13 @@ Resource data lives in JSON under `src/data/`. Edit these files (or use Cursor/s
 
 ## GitHub Pages setup
 
-1. Push this project to GitHub.
+1. Push to `main`. GitHub Actions builds the app and publishes to the **`gh-pages`** branch.
 2. Open **Settings → Pages → Build and deployment**.
 3. Set **Source** to **Deploy from a branch**.
-4. Set **Branch** to **`main`** and folder to **`/ (root)`**.
-5. Save. The site will be at `https://<username>.github.io/<repo-name>/`.
+4. Set **Branch** to **`gh-pages`** and folder **`/ (root)`**.
+5. Save. Site URL: `https://<username>.github.io/<repo-name>/`
 
-Every push to `main` rebuilds the app and updates the production files at the repo root (and in `docs/` as backup).
-
-Local development uses `index.dev.html`; run `npm run dev` as usual.
+`main` holds source code only. The live site is built automatically — no build files committed to `main`.
 
 ## Project structure
 

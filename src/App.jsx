@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink } from 'react-router-dom';
+import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Plan from './pages/Plan';
 import Generator from './pages/Generator';
@@ -13,13 +13,16 @@ function NavIcon({ children }) {
 }
 
 export default function App() {
+  const { pathname } = useLocation();
+  const isPlanPage = pathname === '/plan';
+
   return (
     <div className="app-shell">
       <header className="app-header">
         <h1>Shock Video Planner</h1>
       </header>
 
-      <main className="app-main">
+      <main className={`app-main${isPlanPage ? ' app-main--wide' : ''}`}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/plan" element={<Plan />} />

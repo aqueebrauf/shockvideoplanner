@@ -2,7 +2,7 @@ import { CATEGORIES } from '../../lib/hashtagsStorage';
 import { useHashtags } from '../../hooks/useHashtags';
 
 export default function Hashtags() {
-  const { hashtags, updateHashtag } = useHashtags();
+  const { hashtags, updateHashtag, addHashtag, deleteHashtag } = useHashtags();
 
   return (
     <>
@@ -15,18 +15,18 @@ export default function Hashtags() {
               <th className="col-posts">Instagram Posts</th>
               <th className="col-notes">Notes</th>
               <th className="col-category">Category</th>
+              <th className="col-actions" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {hashtags.length === 0 ? (
               <tr>
-                <td colSpan={4} className="empty-state">
-                  No hashtags yet. Add rows to{' '}
-                  <code>src/data/hashtags.json</code> or ask Cursor to populate them.
+                <td colSpan={5} className="empty-state">
+                  No hashtags yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
             ) : (
-              hashtags.map((row) => (
+              hashtags.map((row, index) => (
                 <tr key={row.id}>
                   <td>
                     <input
@@ -37,7 +37,7 @@ export default function Hashtags() {
                       onChange={(e) =>
                         updateHashtag(row.id, { hashtag: e.target.value })
                       }
-                      aria-label={`Hashtag ${row.id}`}
+                      aria-label={`Hashtag ${index + 1}`}
                     />
                   </td>
                   <td className="col-posts">
@@ -53,7 +53,7 @@ export default function Hashtags() {
                           posts: raw === '' ? null : Number(raw),
                         });
                       }}
-                      aria-label={`Instagram posts for ${row.hashtag || row.id}`}
+                      aria-label={`Instagram posts for ${row.hashtag || index + 1}`}
                     />
                   </td>
                   <td className="col-notes">
@@ -69,7 +69,7 @@ export default function Hashtags() {
                         e.target.style.height = 'auto';
                         e.target.style.height = `${e.target.scrollHeight}px`;
                       }}
-                      aria-label={`Notes for ${row.hashtag || row.id}`}
+                      aria-label={`Notes for ${row.hashtag || index + 1}`}
                     />
                   </td>
                   <td className="col-category">
@@ -79,7 +79,7 @@ export default function Hashtags() {
                       onChange={(e) =>
                         updateHashtag(row.id, { category: e.target.value })
                       }
-                      aria-label={`Category for ${row.hashtag || row.id}`}
+                      aria-label={`Category for ${row.hashtag || index + 1}`}
                     >
                       {CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -88,12 +88,25 @@ export default function Hashtags() {
                       ))}
                     </select>
                   </td>
+                  <td className="col-actions">
+                    <button
+                      type="button"
+                      className="btn-ghost btn-danger"
+                      onClick={() => deleteHashtag(row.id)}
+                      aria-label={`Delete hashtag ${index + 1}`}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+      <button type="button" className="btn-add-row" onClick={addHashtag}>
+        + Add row
+      </button>
     </>
   );
 }

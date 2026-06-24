@@ -1,27 +1,39 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import baseline from '../data/goals.json';
 import {
-  loadOverrides,
-  mergeGoals,
-  patchGoal,
-  saveOverrides,
+  loadGoals,
+  nextGoalId,
+  normalizeGoal,
+  saveGoals,
 } from '../lib/goalsStorage';
 
-export function useGoals() {
-  const [overrides, setOverrides] = useState(loadOverrides);
+function commit(setGoals, updater) {
+  setGoals((prev) => {
+    const next = updater(prev).map(normalizeGoal);
+    saveGoals(next);
+    return next;
+  });
+}
 
-  const goals = useMemo(
-    () => mergeGoals(baseline, overrides),
-    [overrides]
-  );
+export function useGoals() {
+  const [goals, setGoals] = useState(() => loadGoals(baseline));
 
   const updateGoal = useCallback((id, patch) => {
-    setOverrides((prev) => {
-      const next = patchGoal(prev, id, patch);
-      saveOverrides(next);
-      return next;
-    });
+    commit(setGoals, (prev) =>
+      prev.map((g) => (g.id === id ? { ...g, ...patch } : g))
+    );
   }, []);
 
-  return { goals, updateGoal };
+  const addGoal = useCallback(() => {
+    commit(setGoals, (prev) => [
+      ...prev,
+      { id: nextGoalId(prev), title: '', link: '', date: '' },
+    ]);
+  }, []);
+
+  const deleteGoal = useCallback((id) => {
+    commit(setGoals, (prev) => prev.filter((g) => g.id !== id));
+  }, []);
+
+  return { goals, updateGoal, addGoal, deleteGoal };
 }

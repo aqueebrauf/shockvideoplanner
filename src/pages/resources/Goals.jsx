@@ -1,7 +1,7 @@
 import { useGoals } from '../../hooks/useGoals';
 
 export default function Goals() {
-  const { goals, updateGoal } = useGoals();
+  const { goals, updateGoal, addGoal, deleteGoal } = useGoals();
 
   return (
     <>
@@ -12,21 +12,22 @@ export default function Goals() {
             <tr>
               <th className="col-id">#</th>
               <th>Title</th>
+              <th className="col-date">Date</th>
               <th className="col-link">Link</th>
+              <th className="col-actions" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {goals.length === 0 ? (
               <tr>
-                <td colSpan={3} className="empty-state">
-                  No goals yet. Add rows to{' '}
-                  <code>src/data/goals.json</code> or ask Cursor to populate them.
+                <td colSpan={5} className="empty-state">
+                  No goals yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
             ) : (
-              goals.map((row) => (
+              goals.map((row, index) => (
                 <tr key={row.id}>
-                  <td className="col-id">{row.id}</td>
+                  <td className="col-id">{index + 1}</td>
                   <td>
                     <input
                       type="text"
@@ -36,7 +37,19 @@ export default function Goals() {
                       onChange={(e) =>
                         updateGoal(row.id, { title: e.target.value })
                       }
-                      aria-label={`Title for goal ${row.id}`}
+                      aria-label={`Title for goal ${index + 1}`}
+                    />
+                  </td>
+                  <td className="col-date">
+                    <input
+                      type="text"
+                      className="cell-input cell-input--date"
+                      value={row.date}
+                      placeholder="Jun 20"
+                      onChange={(e) =>
+                        updateGoal(row.id, { date: e.target.value })
+                      }
+                      aria-label={`Date for goal ${index + 1}`}
                     />
                   </td>
                   <td className="col-link">
@@ -49,7 +62,7 @@ export default function Goals() {
                         onChange={(e) =>
                           updateGoal(row.id, { link: e.target.value })
                         }
-                        aria-label={`Link for goal ${row.id}`}
+                        aria-label={`Link for goal ${index + 1}`}
                       />
                       {row.link.trim() && (
                         <a
@@ -57,12 +70,22 @@ export default function Goals() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="link-open"
-                          aria-label={`Open link for goal ${row.id}`}
+                          aria-label={`Open link for goal ${index + 1}`}
                         >
                           Open
                         </a>
                       )}
                     </div>
+                  </td>
+                  <td className="col-actions">
+                    <button
+                      type="button"
+                      className="btn-ghost btn-danger"
+                      onClick={() => deleteGoal(row.id)}
+                      aria-label={`Delete goal ${index + 1}`}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))
@@ -70,6 +93,9 @@ export default function Goals() {
           </tbody>
         </table>
       </div>
+      <button type="button" className="btn-add-row" onClick={addGoal}>
+        + Add row
+      </button>
     </>
   );
 }

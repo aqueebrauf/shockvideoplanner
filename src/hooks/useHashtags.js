@@ -1,27 +1,45 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import baseline from '../data/hashtags.json';
 import {
-  loadOverrides,
-  mergeHashtags,
-  patchHashtag,
-  saveOverrides,
+  loadHashtags,
+  nextHashtagId,
+  normalizeHashtag,
+  saveHashtags,
 } from '../lib/hashtagsStorage';
 
-export function useHashtags() {
-  const [overrides, setOverrides] = useState(loadOverrides);
+function commit(setHashtags, updater) {
+  setHashtags((prev) => {
+    const next = updater(prev).map(normalizeHashtag);
+    saveHashtags(next);
+    return next;
+  });
+}
 
-  const hashtags = useMemo(
-    () => mergeHashtags(baseline, overrides),
-    [overrides]
-  );
+export function useHashtags() {
+  const [hashtags, setHashtags] = useState(() => loadHashtags(baseline));
 
   const updateHashtag = useCallback((id, patch) => {
-    setOverrides((prev) => {
-      const next = patchHashtag(prev, id, patch);
-      saveOverrides(next);
-      return next;
-    });
+    commit(setHashtags, (prev) =>
+      prev.map((h) => (h.id === id ? { ...h, ...patch } : h))
+    );
   }, []);
 
-  return { hashtags, updateHashtag };
+  const addHashtag = useCallback(() => {
+    commit(setHashtags, (prev) => [
+      ...prev,
+      {
+        id: nextHashtagId(prev),
+        hashtag: '',
+        posts: null,
+        category: 'broad',
+        notes: '',
+      },
+    ]);
+  }, []);
+
+  const deleteHashtag = useCallback((id) => {
+    commit(setHashtags, (prev) => prev.filter((h) => h.id !== id));
+  }, []);
+
+  return { hashtags, updateHashtag, addHashtag, deleteHashtag };
 }

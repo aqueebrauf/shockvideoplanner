@@ -17,7 +17,7 @@ Resource data lives in JSON under `src/data/`. Edit these files (or use Cursor/s
 
 - **Screens** — `src/data/screens.json`
 - **Hashtags** — `src/data/hashtags.json` (fields: `id`, `hashtag`, `posts`, `notes`, `category`)
-- **Goals** — `src/data/goals.json` (fields: `id`, `title`, `link`)
+- **Goals** — `src/data/goals.json` (fields: `id`, `title`, `date`, `link`)
 
 ## GitHub Pages setup
 

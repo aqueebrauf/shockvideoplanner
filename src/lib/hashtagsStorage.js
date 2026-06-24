@@ -1,28 +1,30 @@
-const STORAGE_KEY = 'shock-hashtags-overrides';
+const STORAGE_KEY = 'shock-hashtags-data';
+const LEGACY_KEY = 'shock-hashtags-overrides';
 
 export const CATEGORIES = ['broad', 'medium', 'niche'];
 
-export function loadOverrides() {
+export function normalizeHashtag(row) {
+  return {
+    id: row.id,
+    hashtag: row.hashtag ?? '',
+    posts: row.posts ?? null,
+    category: row.category ?? 'broad',
+    notes: row.notes ?? '',
+  };
+}
+
+function loadLegacyOverrides() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(LEGACY_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
   }
 }
 
-export function saveOverrides(overrides) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
-}
-
-export function mergeHashtags(baseline, overrides) {
+function mergeLegacy(baseline, overrides) {
   return baseline.map((row) => {
-    const base = {
-      ...row,
-      posts: row.posts ?? null,
-      category: row.category ?? 'broad',
-      notes: row.notes ?? '',
-    };
+    const base = normalizeHashtag(row);
     const saved = overrides[String(row.id)];
     if (!saved) return base;
 
@@ -36,7 +38,33 @@ export function mergeHashtags(baseline, overrides) {
   });
 }
 
-export function patchHashtag(overrides, id, patch) {
-  const key = String(id);
-  return { ...overrides, [key]: { ...overrides[key], ...patch } };
+export function loadHashtags(baseline) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.map(normalizeHashtag);
+    }
+  } catch {
+    /* fall through */
+  }
+
+  const legacy = loadLegacyOverrides();
+  if (Object.keys(legacy).length > 0) {
+    const migrated = mergeLegacy(baseline, legacy);
+    saveHashtags(migrated);
+    localStorage.removeItem(LEGACY_KEY);
+    return migrated;
+  }
+
+  return baseline.map(normalizeHashtag);
+}
+
+export function saveHashtags(hashtags) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(hashtags));
+}
+
+export function nextHashtagId(hashtags) {
+  if (hashtags.length === 0) return 1;
+  return Math.max(...hashtags.map((h) => h.id)) + 1;
 }

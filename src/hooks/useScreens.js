@@ -1,27 +1,39 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import baseline from '../data/screens.json';
 import {
-  loadOverrides,
-  mergeScreens,
-  patchScreen,
-  saveOverrides,
+  loadScreens,
+  nextScreenId,
+  normalizeScreen,
+  saveScreens,
 } from '../lib/screensStorage';
 
-export function useScreens() {
-  const [overrides, setOverrides] = useState(loadOverrides);
+function commit(setScreens, updater) {
+  setScreens((prev) => {
+    const next = updater(prev).map(normalizeScreen);
+    saveScreens(next);
+    return next;
+  });
+}
 
-  const screens = useMemo(
-    () => mergeScreens(baseline, overrides),
-    [overrides]
-  );
+export function useScreens() {
+  const [screens, setScreens] = useState(() => loadScreens(baseline));
 
   const updateScreen = useCallback((id, patch) => {
-    setOverrides((prev) => {
-      const next = patchScreen(prev, id, patch);
-      saveOverrides(next);
-      return next;
-    });
+    commit(setScreens, (prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...patch } : s))
+    );
   }, []);
 
-  return { screens, updateScreen };
+  const addScreen = useCallback(() => {
+    commit(setScreens, (prev) => [
+      ...prev,
+      { id: nextScreenId(prev), name: '', image: null },
+    ]);
+  }, []);
+
+  const deleteScreen = useCallback((id) => {
+    commit(setScreens, (prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  return { screens, updateScreen, addScreen, deleteScreen };
 }

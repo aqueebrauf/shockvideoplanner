@@ -22,7 +22,7 @@ export default function Generator() {
   const { goals } = useGoals();
   const { ctas } = useCtas();
   const { screens } = useScreens();
-  const { addGeneratedPlan } = usePlan();
+  const { addGeneratedPlans } = usePlan();
   const sortedGoals = useMemo(() => sortGoalsByRecent(goals), [goals]);
 
   const [hookText, setHookText] = useState('');
@@ -47,11 +47,11 @@ export default function Generator() {
       return;
     }
 
-    const goalTitles = selectedGoalIds
-      .map((id) => goals.find((goal) => goal.id === id)?.title.trim())
-      .filter(Boolean);
+    const selectedGoals = selectedGoalIds
+      .map((id) => goals.find((goal) => goal.id === id))
+      .filter((goal) => goal?.title?.trim());
 
-    if (goalTitles.length === 0) {
+    if (selectedGoals.length === 0) {
       setError('Selected goals need titles.');
       return;
     }
@@ -60,23 +60,34 @@ export default function Generator() {
     setIsGenerating(true);
 
     try {
-      const planScreens = await generatePlanScreenSequence({
+      const sharedInput = {
         hookText: trimmedHook,
-        goalTitles,
         screens,
         referenceLink,
         ctaText: selectedCta?.text ?? '',
         customInstruction,
-      });
+      };
 
-      const newPlanId = addGeneratedPlan({
-        screens: planScreens,
-        hook: trimmedHook,
-        goalName: goalTitles.join(', '),
-        referenceVideoLink: referenceLink.trim(),
-      });
+      const generatedRows = await Promise.all(
+        selectedGoals.map(async (goal) => {
+          const goalTitle = goal.title.trim();
+          const planScreens = await generatePlanScreenSequence({
+            ...sharedInput,
+            goalTitles: [goalTitle],
+          });
 
-      navigate('/plan', { state: { highlightId: newPlanId } });
+          return {
+            screens: planScreens,
+            hook: trimmedHook,
+            goalName: goalTitle,
+            referenceVideoLink: referenceLink.trim(),
+          };
+        })
+      );
+
+      const newPlanIds = addGeneratedPlans(generatedRows);
+
+      navigate('/plan', { state: { highlightId: newPlanIds[0] } });
     } catch (err) {
       setError(err.message || 'Could not generate plan.');
     } finally {
@@ -89,6 +100,7 @@ export default function Generator() {
       <h2 className="page-title">Generator</h2>
       <p className="page-subtitle">
         Combine a hook, reference video, and goals to draft reel instructions.
+        Each selected goal creates its own plan row.
       </p>
 
       <form className="generator-form" onSubmit={(event) => event.preventDefault()}>

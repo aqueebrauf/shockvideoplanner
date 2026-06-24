@@ -72,7 +72,35 @@ function usePlanState() {
     []
   );
 
-  return { plan, updatePlan, addPlan, deletePlan, addGeneratedPlan };
+  const addGeneratedPlans = useCallback((entries) => {
+    if (entries.length === 0) return [];
+
+    const newIds = [];
+
+    commit(setPlan, (prev) => {
+      let nextId = nextPlanId(prev);
+      const newRows = entries.map((entry) => {
+        const id = nextId;
+        nextId += 1;
+        newIds.push(id);
+        return {
+          id,
+          generatedDate: formatPlanDate(),
+          hook: entry.hook ?? '',
+          goalName: entry.goalName ?? '',
+          screens: entry.screens.map(normalizeScreen),
+          referenceVideoLink: entry.referenceVideoLink ?? '',
+          caption: '',
+        };
+      });
+
+      return [...prev, ...newRows];
+    });
+
+    return newIds;
+  }, []);
+
+  return { plan, updatePlan, addPlan, deletePlan, addGeneratedPlan, addGeneratedPlans };
 }
 
 export function PlanProvider({ children }) {

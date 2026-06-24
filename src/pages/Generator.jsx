@@ -1,16 +1,30 @@
 import { useMemo, useState } from 'react';
 import GoalMultiSelect from '../components/GoalMultiSelect';
+import { useCtas } from '../hooks/useCtas';
 import { useGoals } from '../hooks/useGoals';
+import { DEFAULT_CTA_ID } from '../lib/ctasStorage';
 import { sortGoalsByRecent } from '../lib/goalDateLabel';
+
+function resolveCtaId(ctas, selectedId) {
+  if (ctas.some((c) => c.id === selectedId)) return selectedId;
+  const linkInBio = ctas.find((c) =>
+    c.text.toLowerCase().includes('link in bio')
+  );
+  return linkInBio?.id ?? ctas[0]?.id ?? '';
+}
 
 export default function Generator() {
   const { goals } = useGoals();
+  const { ctas } = useCtas();
   const sortedGoals = useMemo(() => sortGoalsByRecent(goals), [goals]);
 
   const [hookText, setHookText] = useState('');
   const [referenceLink, setReferenceLink] = useState('');
   const [selectedGoalIds, setSelectedGoalIds] = useState([]);
+  const [selectedCtaId, setSelectedCtaId] = useState(DEFAULT_CTA_ID);
   const [customInstruction, setCustomInstruction] = useState('');
+
+  const effectiveCtaId = resolveCtaId(ctas, selectedCtaId);
 
   return (
     <>
@@ -60,6 +74,29 @@ export default function Generator() {
         </div>
 
         <div className="form-field">
+          <label className="form-label" htmlFor="cta-select">
+            CTA
+          </label>
+          <select
+            id="cta-select"
+            className="cell-select generator-select"
+            value={effectiveCtaId}
+            onChange={(event) => setSelectedCtaId(Number(event.target.value))}
+            disabled={ctas.length === 0}
+          >
+            {ctas.length === 0 ? (
+              <option value="">Add CTAs in Resources</option>
+            ) : (
+              ctas.map((cta) => (
+                <option key={cta.id} value={cta.id}>
+                  {cta.text || `CTA ${cta.id}`}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
+
+        <div className="form-field">
           <label className="form-label" htmlFor="custom-instruction">
             Custom instruction
           </label>
@@ -67,7 +104,7 @@ export default function Generator() {
             id="custom-instruction"
             className="cell-input generator-textarea"
             rows={4}
-            placeholder="Extra notes for tone, pacing, CTA, etc."
+            placeholder="Extra notes for tone, pacing, etc."
             value={customInstruction}
             onChange={(event) => setCustomInstruction(event.target.value)}
           />

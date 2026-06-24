@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "generatedDate": "Jun 24",
+    "hook": "POV: you're one semester away from your dream GPA",
+    "goalName": "9+CGPA in 4th sem",
+    "screens": [
+      {
+        "name": "Hook screen",
+        "copy": "POV: you're one semester away from 9+ CGPA"
+      },
+      {
+        "name": "Problem",
+        "copy": "Most students wait until finals week to actually start studying"
+      },
+      {
+        "name": "Solution",
+        "copy": "Study 2 focused hours daily using Pomodoro blocks"
+      },
+      {
+        "name": "CTA",
+        "copy": "Comment 'PLAN' for my full semester study schedule"
+      }
+    ],
+    "referenceVideoLink": "https://drive.google.com/open?id=15dpnrweeofU6v6yLKYSvN8yYGirIYMWT&usp=drive_copy",
+    "caption": "Stop cramming. Start this daily routine 🎯 #study #cgpa #college"
+  }
+]

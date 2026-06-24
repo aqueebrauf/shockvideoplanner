@@ -434,6 +434,102 @@ button {
   text-decoration: underline;
 }
 
+.link-open--button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.75rem;
+  background: var(--accent-soft);
+  border: 1px solid rgba(108, 140, 255, 0.35);
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.link-open--button:hover {
+  background: rgba(108, 140, 255, 0.2);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.cell-muted {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.data-table--plan .col-hook,
+.data-table--plan .col-goal-name {
+  min-width: 10rem;
+}
+
+.data-table--plan .col-screens-copy {
+  min-width: 18rem;
+}
+
+.data-table--plan .col-ref-video {
+  width: 6rem;
+  text-align: center;
+}
+
+.data-table--plan .col-caption {
+  min-width: 14rem;
+}
+
+.screens-copy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.screens-copy-list--empty {
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.screens-copy-empty {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.screen-copy-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.screen-copy-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.screen-copy-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cell-input--screen-name {
+  font-weight: 500;
+}
+
+.cell-input--screen-copy,
+.cell-input--caption {
+  min-height: 3rem;
+  resize: vertical;
+}
+
+.btn-ghost--compact {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.6875rem;
+}
+
 .cell-error {
   font-size: 0.7rem;
   color: #f87171;
@@ -486,6 +582,10 @@ button {
 .generator-textarea {
   min-height: 5.5rem;
   resize: vertical;
+}
+
+.generator-select {
+  max-width: 100%;
 }
 
 .btn-generate {

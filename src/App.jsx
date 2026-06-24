@@ -1,10 +1,12 @@
 import { Routes, Route, NavLink } from 'react-router-dom';
 import Home from './pages/Home';
+import Plan from './pages/Plan';
 import Generator from './pages/Generator';
 import Resources from './pages/Resources';
 import Screens from './pages/resources/Screens';
 import Hashtags from './pages/resources/Hashtags';
 import Goals from './pages/resources/Goals';
+import Ctas from './pages/resources/Ctas';
 
 function NavIcon({ children }) {
   return <span aria-hidden="true">{children}</span>;
@@ -20,12 +22,14 @@ export default function App() {
       <main className="app-main">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/plan" element={<Plan />} />
           <Route path="/generator" element={<Generator />} />
           <Route path="/resources" element={<Resources />}>
             <Route index element={<Screens />} />
             <Route path="screens" element={<Screens />} />
             <Route path="hashtags" element={<Hashtags />} />
             <Route path="goals" element={<Goals />} />
+            <Route path="ctas" element={<Ctas />} />
           </Route>
         </Routes>
       </main>
@@ -39,6 +43,16 @@ export default function App() {
             </svg>
           </NavIcon>
           Home
+        </NavLink>
+        <NavLink to="/plan">
+          <NavIcon>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+              <rect x="9" y="3" width="6" height="4" rx="1" />
+              <path d="M9 12h6M9 16h6" />
+            </svg>
+          </NavIcon>
+          Plan
         </NavLink>
         <NavLink to="/generator">
           <NavIcon>

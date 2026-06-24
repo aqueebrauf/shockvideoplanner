@@ -13,6 +13,25 @@ const MONTHS = {
   dec: 11,
 };
 
+const MONTH_LABELS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+export function formatPlanDate(date = new Date()) {
+  return `${MONTH_LABELS[date.getMonth()]} ${date.getDate()}`;
+}
+
 export function parseGoalDate(dateStr) {
   if (!dateStr?.trim()) return null;
 

@@ -10,8 +10,8 @@ export function sortPlansByRecent(plan) {
     const dateB = parseGoalDate(b.generatedDate);
 
     if (!dateA && !dateB) return b.id - a.id;
-    if (!dateA) return 1;
-    if (!dateB) return -1;
+    if (!dateA) return b.id - a.id;
+    if (!dateB) return b.id - a.id;
 
     const diff = dateB - dateA;
     if (diff !== 0) return diff;

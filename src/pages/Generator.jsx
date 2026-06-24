@@ -69,8 +69,14 @@ export default function Generator() {
         customInstruction,
       });
 
-      addGeneratedPlan(planScreens);
-      navigate('/plan');
+      const newPlanId = addGeneratedPlan({
+        screens: planScreens,
+        hook: trimmedHook,
+        goalName: goalTitles.join(', '),
+        referenceVideoLink: referenceLink.trim(),
+      });
+
+      navigate('/plan', { state: { highlightId: newPlanId } });
     } catch (err) {
       setError(err.message || 'Could not generate plan.');
     } finally {

@@ -1,4 +1,5 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import ScreensCopyModal from '../components/ScreensCopyModal';
 import { usePlan } from '../hooks/usePlan';
 import { formatPlanSerial, sortPlansByRecent } from '../lib/planSort';
@@ -105,8 +106,24 @@ function CaptionCell({ value, onChange, serial }) {
 
 export default function Plan() {
   const { plan, updatePlan, addPlan, deletePlan } = usePlan();
+  const { state } = useLocation();
+  const highlightId = state?.highlightId;
   const [screensModalRow, setScreensModalRow] = useState(null);
   const sortedPlan = useMemo(() => sortPlansByRecent(plan), [plan]);
+
+  useEffect(() => {
+    if (!highlightId) return undefined;
+
+    const row = document.querySelector(`[data-plan-id="${highlightId}"]`);
+    row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    row?.classList.add('plan-row--highlight');
+
+    const timer = window.setTimeout(() => {
+      row?.classList.remove('plan-row--highlight');
+    }, 2400);
+
+    return () => window.clearTimeout(timer);
+  }, [highlightId, sortedPlan.length]);
 
   return (
     <div className="plan-page">
@@ -144,7 +161,7 @@ export default function Plan() {
                 const serial = formatPlanSerial(row.id);
 
                 return (
-                  <tr key={row.id}>
+                  <tr key={row.id} data-plan-id={row.id}>
                     <td className="col-id sheet-cell-static">{serial}</td>
                     <td className="col-hook">
                       <SheetCell

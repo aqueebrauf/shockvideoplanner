@@ -484,6 +484,11 @@ button {
   margin-left: 0.25rem;
 }
 
+.plan-row--highlight td {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  transition: background 0.4s ease;
+}
+
 .data-table-wrap--sheet {
   overflow: auto;
   -webkit-overflow-scrolling: touch;

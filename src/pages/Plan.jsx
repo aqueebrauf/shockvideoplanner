@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import ScreensCopyModal from '../components/ScreensCopyModal';
 import { usePlan } from '../hooks/usePlan';
 import { formatPlanSerial, sortPlansByRecent } from '../lib/planSort';
+import { normalizeExternalUrl } from '../lib/externalUrl';
 
 function SheetCell({
   value,
@@ -196,7 +197,7 @@ export default function Plan() {
                     <td className="col-ref-video sheet-cell-static">
                       {row.referenceVideoLink.trim() ? (
                         <a
-                          href={row.referenceVideoLink}
+                          href={normalizeExternalUrl(row.referenceVideoLink)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="link-open link-open--button link-open--sheet"

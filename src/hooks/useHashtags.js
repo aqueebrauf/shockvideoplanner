@@ -32,7 +32,6 @@ export function useHashtags() {
         hashtag: '',
         posts: null,
         category: 'broad',
-        notes: '',
       },
     ]);
   }, []);

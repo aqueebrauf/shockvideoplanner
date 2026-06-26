@@ -13,7 +13,6 @@ export default function Hashtags() {
             <tr>
               <th>Hashtag</th>
               <th className="col-posts">Instagram Posts</th>
-              <th className="col-notes">Notes</th>
               <th className="col-category">Category</th>
               <th className="col-actions" aria-label="Actions" />
             </tr>
@@ -21,7 +20,7 @@ export default function Hashtags() {
           <tbody>
             {hashtags.length === 0 ? (
               <tr>
-                <td colSpan={5} className="empty-state">
+                <td colSpan={4} className="empty-state">
                   No hashtags yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
@@ -54,22 +53,6 @@ export default function Hashtags() {
                         });
                       }}
                       aria-label={`Instagram posts for ${row.hashtag || index + 1}`}
-                    />
-                  </td>
-                  <td className="col-notes">
-                    <textarea
-                      className="cell-input"
-                      value={row.notes}
-                      rows={1}
-                      placeholder="Add a note…"
-                      onChange={(e) =>
-                        updateHashtag(row.id, { notes: e.target.value })
-                      }
-                      onInput={(e) => {
-                        e.target.style.height = 'auto';
-                        e.target.style.height = `${e.target.scrollHeight}px`;
-                      }}
-                      aria-label={`Notes for ${row.hashtag || index + 1}`}
                     />
                   </td>
                   <td className="col-category">

@@ -6,6 +6,7 @@ import { useGoals } from '../hooks/useGoals';
 import { usePlan } from '../hooks/usePlan';
 import { useScreens } from '../hooks/useScreens';
 import { DEFAULT_CTA_ID } from '../lib/ctasStorage';
+import { normalizeExternalUrl } from '../lib/externalUrl';
 import {
   buildPlanScreensFromSequence,
   DEFAULT_SEQUENCE_ID,
@@ -78,7 +79,7 @@ export default function Generator() {
           screens: planScreens,
           hook: trimmedHook,
           goalName: goalTitle,
-          referenceVideoLink: referenceLink.trim(),
+          referenceVideoLink: normalizeExternalUrl(referenceLink),
         };
       });
 

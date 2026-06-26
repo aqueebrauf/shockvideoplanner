@@ -7,6 +7,7 @@ import Screens from './pages/resources/Screens';
 import Hashtags from './pages/resources/Hashtags';
 import Goals from './pages/resources/Goals';
 import Ctas from './pages/resources/Ctas';
+import Captions from './pages/resources/Captions';
 
 function NavIcon({ children }) {
   return <span aria-hidden="true">{children}</span>;
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="hashtags" element={<Hashtags />} />
             <Route path="goals" element={<Goals />} />
             <Route path="ctas" element={<Ctas />} />
+            <Route path="captions" element={<Captions />} />
           </Route>
         </Routes>
       </main>

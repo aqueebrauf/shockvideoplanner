@@ -5,6 +5,7 @@ const resourceTabs = [
   { to: '/resources/hashtags', label: 'Hashtags' },
   { to: '/resources/goals', label: 'Goals' },
   { to: '/resources/ctas', label: 'CTAs' },
+  { to: '/resources/captions', label: 'Captions' },
 ];
 
 export default function Resources() {

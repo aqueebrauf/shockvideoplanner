@@ -1,3 +1,5 @@
+import { normalizeExternalUrl } from './externalUrl';
+
 const STORAGE_KEY = 'shock-plan-data';
 
 export function normalizeScreen(screen) {
@@ -16,7 +18,7 @@ export function normalizePlan(row) {
     screens: Array.isArray(row.screens)
       ? row.screens.map(normalizeScreen)
       : [],
-    referenceVideoLink: row.referenceVideoLink ?? '',
+    referenceVideoLink: normalizeExternalUrl(row.referenceVideoLink ?? ''),
     caption: row.caption ?? '',
   };
 }

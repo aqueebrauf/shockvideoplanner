@@ -8,6 +8,7 @@ import {
   normalizeScreen,
   savePlan,
 } from '../lib/planStorage';
+import { normalizeExternalUrl } from '../lib/externalUrl';
 
 const PlanContext = createContext(null);
 

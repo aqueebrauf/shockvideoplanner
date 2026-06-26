@@ -9,7 +9,6 @@ export function normalizeHashtag(row) {
     hashtag: row.hashtag ?? '',
     posts: row.posts ?? null,
     category: row.category ?? 'broad',
-    notes: row.notes ?? '',
   };
 }
 
@@ -33,7 +32,6 @@ function mergeLegacy(baseline, overrides) {
       hashtag: saved.hashtag ?? base.hashtag,
       posts: saved.posts ?? base.posts,
       category: saved.category ?? base.category,
-      notes: saved.notes ?? base.notes,
     };
   });
 }

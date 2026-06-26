@@ -375,10 +375,6 @@ button {
   width: 8rem;
 }
 
-.data-table .col-notes {
-  min-width: 12rem;
-}
-
 .data-table .col-category {
   width: 8rem;
 }
@@ -402,6 +398,26 @@ button {
 .data-table .col-actions {
   width: 5rem;
   white-space: nowrap;
+}
+
+.data-table .col-caption-style {
+  width: 9rem;
+  min-width: 8rem;
+}
+
+.data-table .col-caption-structure {
+  width: 12rem;
+  min-width: 10rem;
+}
+
+.data-table .col-caption-guide {
+  width: 16rem;
+  min-width: 12rem;
+}
+
+.data-table .col-caption-example {
+  width: 16rem;
+  min-width: 12rem;
 }
 
 .cell-input--date {

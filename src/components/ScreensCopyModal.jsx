@@ -1,67 +1,46 @@
-import { useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function ScreensCopyModal({ row, onClose }) {
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose();
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [onClose]);
-
   const title = row.goalName.trim() || row.hook.trim() || 'Plan screens';
 
   return (
-    <div
-      className="modal-overlay"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="modal-panel"
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="screens-modal-title"
-      >
-        <header className="modal-panel__header">
-          <div>
-            <h3 id="screens-modal-title">Screens with Copy</h3>
-            <p className="modal-panel__subtitle">{title}</p>
-          </div>
-          <button
-            type="button"
-            className="modal-panel__close"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </header>
-        <div className="modal-panel__body">
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85dvh] overflow-hidden sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Screens with Copy</DialogTitle>
+          <DialogDescription>{title}</DialogDescription>
+        </DialogHeader>
+
+        <div className="overflow-y-auto pr-1">
           {row.screens.length === 0 ? (
-            <p className="modal-empty">No screens in this plan.</p>
+            <p className="text-sm text-muted-foreground">No screens in this plan.</p>
           ) : (
-            <ol className="screen-read-list">
+            <ol className="flex flex-col gap-3">
               {row.screens.map((screen, index) => (
-                <li key={index} className="screen-read-item">
-                  <p className="screen-read-item__name">
-                    {screen.name.trim() || `Screen ${index + 1}`}
-                  </p>
-                  <p className="screen-read-item__copy">
-                    {screen.copy.trim() || '—'}
-                  </p>
+                <li key={index}>
+                  <Card size="sm">
+                    <CardContent className="space-y-2">
+                      <p className="text-sm font-medium">
+                        {screen.name.trim() || `Screen ${index + 1}`}
+                      </p>
+                      <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
+                        {screen.copy.trim() || '—'}
+                      </p>
+                    </CardContent>
+                  </Card>
                 </li>
               ))}
             </ol>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

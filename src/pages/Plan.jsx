@@ -2,6 +2,9 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useLocation } from 'react-router-dom';
 import DataStatus from '../components/DataStatus';
 import ScreensCopyModal from '../components/ScreensCopyModal';
+import PageHeader from '@/components/layout/PageHeader';
+import { AddRowButton } from '@/components/table/TableActions';
+import { Button } from '@/components/ui/button';
 import { usePlan } from '../hooks/usePlan';
 import { formatPlanSerial, sortPlansByRecent } from '../lib/planSort';
 import { normalizeExternalUrl } from '../lib/externalUrl';
@@ -129,14 +132,13 @@ export default function Plan() {
 
   return (
     <div className="plan-page">
-      <div className="plan-page__header">
-        <h2 className="page-title">Plan</h2>
-        <p className="page-subtitle">
-          Generated reel plans with hooks, screen copy, and captions.
-        </p>
+      <PageHeader
+        title="Plan"
+        description="Generated reel plans with hooks, screen copy, and captions."
+      >
         <DataStatus loading={loading} error={error} />
-        <p className="table-hint">Edits save automatically for the whole team.</p>
-      </div>
+        <p className="text-sm text-muted-foreground">Edits save automatically for the whole team.</p>
+      </PageHeader>
 
       <div className="data-table-wrap data-table-wrap--sheet">
         <table className="data-table data-table--sheet">
@@ -155,7 +157,7 @@ export default function Plan() {
           <tbody>
             {sortedPlan.length === 0 ? (
               <tr>
-                <td colSpan={8} className="empty-state">
+                <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
                   No plans yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
@@ -186,29 +188,35 @@ export default function Plan() {
                         ariaLabel={`Goal name for plan ${serial}`}
                       />
                     </td>
-                    <td className="col-screens sheet-cell-static">
-                      <button
+                    <td className="col-screens sheet-cell-static px-3 py-2 text-center">
+                      <Button
                         type="button"
-                        className="link-open link-open--button link-open--sheet"
+                        variant="outline"
+                        size="sm"
                         onClick={() => setScreensModalRow(row)}
                         aria-label={`Screens for plan ${serial}`}
                       >
                         Screens
-                      </button>
+                      </Button>
                     </td>
-                    <td className="col-ref-video sheet-cell-static">
+                    <td className="col-ref-video sheet-cell-static px-3 py-2 text-center">
                       {row.referenceVideoLink.trim() ? (
-                        <a
-                          href={normalizeExternalUrl(row.referenceVideoLink)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="link-open link-open--button link-open--sheet"
+                        <Button
+                          render={
+                            <a
+                              href={normalizeExternalUrl(row.referenceVideoLink)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            />
+                          }
+                          variant="outline"
+                          size="sm"
                           aria-label={`Reference video for plan ${serial}`}
                         >
                           Reference
-                        </a>
+                        </Button>
                       ) : (
-                        <span className="cell-muted">—</span>
+                        <span className="text-sm text-muted-foreground">—</span>
                       )}
                     </td>
                     <td className="col-caption">
@@ -220,15 +228,16 @@ export default function Plan() {
                         }
                       />
                     </td>
-                    <td className="col-actions sheet-cell-static">
-                      <button
+                    <td className="col-actions sheet-cell-static px-2 py-2 text-center">
+                      <Button
                         type="button"
-                        className="btn-ghost btn-danger btn-ghost--sheet"
+                        variant="destructive"
+                        size="sm"
                         onClick={() => deletePlan(row.id)}
                         aria-label={`Delete plan ${serial}`}
                       >
                         Delete
-                      </button>
+                      </Button>
                     </td>
                     <td className="col-date">
                       <SheetCell
@@ -247,9 +256,7 @@ export default function Plan() {
           </tbody>
         </table>
       </div>
-      <button type="button" className="btn-add-row" onClick={addPlan}>
-        + Add row
-      </button>
+      <AddRowButton onClick={addPlan} />
 
       {screensModalRow && (
         <ScreensCopyModal

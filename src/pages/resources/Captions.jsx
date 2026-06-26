@@ -1,4 +1,6 @@
 import DataStatus from '../../components/DataStatus';
+import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
+import { TableTextarea } from '@/components/table/TableField';
 import { useCaptions } from '../../hooks/useCaptions';
 
 function autoResize(e) {
@@ -8,8 +10,7 @@ function autoResize(e) {
 
 function CaptionTextarea({ value, onChange, placeholder, ariaLabel }) {
   return (
-    <textarea
-      className="cell-input"
+    <TableTextarea
       value={value}
       rows={1}
       placeholder={placeholder}
@@ -26,7 +27,7 @@ export default function Captions() {
   return (
     <>
       <DataStatus loading={loading} error={error} />
-      <p className="table-hint">
+      <p className="mb-3 text-sm text-muted-foreground">
         Caption style templates for the AI caption writer. Edits save automatically for the
         whole team.
       </p>
@@ -34,26 +35,26 @@ export default function Captions() {
         <table className="data-table">
           <thead>
             <tr>
-              <th className="col-id">#</th>
-              <th className="col-caption-style">Style</th>
-              <th className="col-caption-structure">Structure</th>
-              <th className="col-caption-guide">How to write</th>
-              <th className="col-caption-example">Example</th>
-              <th className="col-actions" aria-label="Actions" />
+              <th className="w-12">#</th>
+              <th className="min-w-36">Style</th>
+              <th className="min-w-48">Structure</th>
+              <th className="min-w-48">How to write</th>
+              <th className="min-w-48">Example</th>
+              <th className="w-24" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {captions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="empty-state">
+                <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                   No caption styles yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
             ) : (
               captions.map((row, index) => (
                 <tr key={row.id}>
-                  <td className="col-id">{index + 1}</td>
-                  <td className="col-caption-style">
+                  <td className="text-muted-foreground tabular-nums">{index + 1}</td>
+                  <td>
                     <CaptionTextarea
                       value={row.style}
                       placeholder="Style name"
@@ -63,7 +64,7 @@ export default function Captions() {
                       }
                     />
                   </td>
-                  <td className="col-caption-structure">
+                  <td>
                     <CaptionTextarea
                       value={row.structure}
                       placeholder="Line structure"
@@ -73,7 +74,7 @@ export default function Captions() {
                       }
                     />
                   </td>
-                  <td className="col-caption-guide">
+                  <td>
                     <CaptionTextarea
                       value={row.guide}
                       placeholder="Writing instructions"
@@ -83,7 +84,7 @@ export default function Captions() {
                       }
                     />
                   </td>
-                  <td className="col-caption-example">
+                  <td>
                     <CaptionTextarea
                       value={row.example}
                       placeholder="Example caption"
@@ -93,15 +94,11 @@ export default function Captions() {
                       }
                     />
                   </td>
-                  <td className="col-actions">
-                    <button
-                      type="button"
-                      className="btn-ghost btn-danger"
+                  <td>
+                    <DeleteRowButton
                       onClick={() => deleteCaption(row.id)}
-                      aria-label={`Delete caption style ${index + 1}`}
-                    >
-                      Delete
-                    </button>
+                      label={`Delete caption style ${index + 1}`}
+                    />
                   </td>
                 </tr>
               ))
@@ -109,9 +106,7 @@ export default function Captions() {
           </tbody>
         </table>
       </div>
-      <button type="button" className="btn-add-row" onClick={addCaption}>
-        + Add row
-      </button>
+      <AddRowButton onClick={addCaption} />
     </>
   );
 }

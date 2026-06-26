@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { compressImage } from '../lib/compressImage';
 
 export default function ImageCell({ image, onChange }) {
@@ -30,10 +31,10 @@ export default function ImageCell({ image, onChange }) {
   if (!image) {
     return (
       <div className="image-cell">
-        <button type="button" className="btn-ghost" onClick={openPicker} disabled={busy}>
+        <Button type="button" variant="outline" size="sm" onClick={openPicker} disabled={busy}>
           {busy ? 'Uploading…' : 'Add image'}
-        </button>
-        {error && <span className="cell-error">{error}</span>}
+        </Button>
+        {error && <span className="text-xs text-destructive">{error}</span>}
         <input
           ref={inputRef}
           type="file"
@@ -50,17 +51,17 @@ export default function ImageCell({ image, onChange }) {
   }
 
   return (
-    <div className="image-cell image-cell--filled">
+    <div className="image-cell">
       <img src={image} alt="Screen example" className="image-cell__preview" />
       <div className="image-cell__actions">
-        <button type="button" className="btn-ghost" onClick={openPicker} disabled={busy}>
+        <Button type="button" variant="outline" size="sm" onClick={openPicker} disabled={busy}>
           Replace
-        </button>
-        <button type="button" className="btn-ghost btn-danger" onClick={() => onChange(null)}>
+        </Button>
+        <Button type="button" variant="destructive" size="sm" onClick={() => onChange(null)}>
           Remove
-        </button>
+        </Button>
       </div>
-      {error && <span className="cell-error">{error}</span>}
+      {error && <span className="text-xs text-destructive">{error}</span>}
       <input
         ref={inputRef}
         type="file"

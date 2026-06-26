@@ -1,4 +1,7 @@
 import DataStatus from '../../components/DataStatus';
+import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
+import { TableInput } from '@/components/table/TableField';
+import { cn } from '@/lib/utils';
 import { CATEGORIES } from '../../lib/hashtagsStorage';
 import { useHashtags } from '../../hooks/useHashtags';
 
@@ -8,21 +11,23 @@ export default function Hashtags() {
   return (
     <>
       <DataStatus loading={loading} error={error} />
-      <p className="table-hint">Edits save automatically for the whole team.</p>
+      <p className="mb-3 text-sm text-muted-foreground">
+        Edits save automatically for the whole team.
+      </p>
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>
             <tr>
               <th>Hashtag</th>
-              <th className="col-posts">Instagram Posts</th>
-              <th className="col-category">Category</th>
-              <th className="col-actions" aria-label="Actions" />
+              <th className="w-32">Instagram Posts</th>
+              <th className="w-32">Category</th>
+              <th className="w-24" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {hashtags.length === 0 ? (
               <tr>
-                <td colSpan={4} className="empty-state">
+                <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
                   No hashtags yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
@@ -30,9 +35,8 @@ export default function Hashtags() {
               hashtags.map((row, index) => (
                 <tr key={row.id}>
                   <td>
-                    <input
+                    <TableInput
                       type="text"
-                      className="cell-input"
                       value={row.hashtag}
                       placeholder="#example"
                       onChange={(e) =>
@@ -41,10 +45,10 @@ export default function Hashtags() {
                       aria-label={`Hashtag ${index + 1}`}
                     />
                   </td>
-                  <td className="col-posts">
-                    <input
+                  <td>
+                    <TableInput
                       type="number"
-                      className="cell-input cell-input--number"
+                      className="max-w-28 tabular-nums"
                       value={row.posts ?? ''}
                       min={0}
                       placeholder="0"
@@ -57,9 +61,12 @@ export default function Hashtags() {
                       aria-label={`Instagram posts for ${row.hashtag || index + 1}`}
                     />
                   </td>
-                  <td className="col-category">
+                  <td>
                     <select
-                      className={`cell-select cell-select--${row.category}`}
+                      className={cn(
+                        'h-9 w-full min-w-0 rounded-none border-0 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                        `cell-select--${row.category}`
+                      )}
                       value={row.category}
                       onChange={(e) =>
                         updateHashtag(row.id, { category: e.target.value })
@@ -73,15 +80,11 @@ export default function Hashtags() {
                       ))}
                     </select>
                   </td>
-                  <td className="col-actions">
-                    <button
-                      type="button"
-                      className="btn-ghost btn-danger"
+                  <td>
+                    <DeleteRowButton
                       onClick={() => deleteHashtag(row.id)}
-                      aria-label={`Delete hashtag ${index + 1}`}
-                    >
-                      Delete
-                    </button>
+                      label={`Delete hashtag ${index + 1}`}
+                    />
                   </td>
                 </tr>
               ))
@@ -89,9 +92,7 @@ export default function Hashtags() {
           </tbody>
         </table>
       </div>
-      <button type="button" className="btn-add-row" onClick={addHashtag}>
-        + Add row
-      </button>
+      <AddRowButton onClick={addHashtag} />
     </>
   );
 }

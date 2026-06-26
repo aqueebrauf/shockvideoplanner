@@ -1,4 +1,7 @@
 import DataStatus from '../../components/DataStatus';
+import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
+import { TableInput } from '@/components/table/TableField';
+import { Button } from '@/components/ui/button';
 import { useGoals } from '../../hooks/useGoals';
 
 export default function Goals() {
@@ -7,33 +10,34 @@ export default function Goals() {
   return (
     <>
       <DataStatus loading={loading} error={error} />
-      <p className="table-hint">Edits save automatically for the whole team.</p>
+      <p className="mb-3 text-sm text-muted-foreground">
+        Edits save automatically for the whole team.
+      </p>
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>
             <tr>
-              <th className="col-id">#</th>
+              <th className="w-12">#</th>
               <th>Title</th>
-              <th className="col-date">Date</th>
-              <th className="col-link">Link</th>
-              <th className="col-actions" aria-label="Actions" />
+              <th className="w-28">Date</th>
+              <th className="min-w-56">Link</th>
+              <th className="w-24" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {goals.length === 0 ? (
               <tr>
-                <td colSpan={5} className="empty-state">
+                <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
                   No goals yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
             ) : (
               goals.map((row, index) => (
                 <tr key={row.id}>
-                  <td className="col-id">{index + 1}</td>
+                  <td className="text-muted-foreground tabular-nums">{index + 1}</td>
                   <td>
-                    <input
+                    <TableInput
                       type="text"
-                      className="cell-input"
                       value={row.title}
                       placeholder="Goal title"
                       onChange={(e) =>
@@ -42,10 +46,9 @@ export default function Goals() {
                       aria-label={`Title for goal ${index + 1}`}
                     />
                   </td>
-                  <td className="col-date">
-                    <input
+                  <td>
+                    <TableInput
                       type="text"
-                      className="cell-input cell-input--date"
                       value={row.date}
                       placeholder="Jun 20"
                       onChange={(e) =>
@@ -54,11 +57,10 @@ export default function Goals() {
                       aria-label={`Date for goal ${index + 1}`}
                     />
                   </td>
-                  <td className="col-link">
+                  <td>
                     <div className="link-cell">
-                      <input
+                      <TableInput
                         type="url"
-                        className="cell-input"
                         value={row.link}
                         placeholder="https://"
                         onChange={(e) =>
@@ -66,28 +68,30 @@ export default function Goals() {
                         }
                         aria-label={`Link for goal ${index + 1}`}
                       />
-                      {row.link.trim() && (
-                        <a
-                          href={row.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="link-open"
+                      {row.link.trim() ? (
+                        <Button
+                          render={
+                            <a
+                              href={row.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            />
+                          }
+                          variant="link"
+                          size="sm"
+                          className="shrink-0 px-0"
                           aria-label={`Open link for goal ${index + 1}`}
                         >
                           Open
-                        </a>
-                      )}
+                        </Button>
+                      ) : null}
                     </div>
                   </td>
-                  <td className="col-actions">
-                    <button
-                      type="button"
-                      className="btn-ghost btn-danger"
+                  <td>
+                    <DeleteRowButton
                       onClick={() => deleteGoal(row.id)}
-                      aria-label={`Delete goal ${index + 1}`}
-                    >
-                      Delete
-                    </button>
+                      label={`Delete goal ${index + 1}`}
+                    />
                   </td>
                 </tr>
               ))
@@ -95,9 +99,7 @@ export default function Goals() {
           </tbody>
         </table>
       </div>
-      <button type="button" className="btn-add-row" onClick={addGoal}>
-        + Add row
-      </button>
+      <AddRowButton onClick={addGoal} />
     </>
   );
 }

@@ -1,10 +1,22 @@
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+
 export default function DataStatus({ loading, error }) {
   if (loading) {
-    return <p className="table-hint">Loading…</p>;
+    return (
+      <div className="mb-3 flex items-center gap-2">
+        <Skeleton className="h-4 w-24" />
+        <span className="text-sm text-muted-foreground">Loading…</span>
+      </div>
+    );
   }
 
   if (error) {
-    return <p className="table-hint table-hint--error">{error}</p>;
+    return (
+      <Alert variant="destructive" className="mb-3">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
   }
 
   return null;

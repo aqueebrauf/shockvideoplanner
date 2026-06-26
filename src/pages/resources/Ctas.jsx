@@ -1,4 +1,6 @@
 import DataStatus from '../../components/DataStatus';
+import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
+import { TableInput } from '@/components/table/TableField';
 import { useCtas } from '../../hooks/useCtas';
 
 export default function Ctas() {
@@ -7,31 +9,32 @@ export default function Ctas() {
   return (
     <>
       <DataStatus loading={loading} error={error} />
-      <p className="table-hint">Edits save automatically for the whole team.</p>
+      <p className="mb-3 text-sm text-muted-foreground">
+        Edits save automatically for the whole team.
+      </p>
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>
             <tr>
-              <th className="col-id">#</th>
+              <th className="w-12">#</th>
               <th>CTA</th>
-              <th className="col-actions" aria-label="Actions" />
+              <th className="w-24" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {ctas.length === 0 ? (
               <tr>
-                <td colSpan={3} className="empty-state">
+                <td colSpan={3} className="px-4 py-12 text-center text-muted-foreground">
                   No CTAs yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
             ) : (
               ctas.map((row, index) => (
                 <tr key={row.id}>
-                  <td className="col-id">{index + 1}</td>
+                  <td className="text-muted-foreground tabular-nums">{index + 1}</td>
                   <td>
-                    <input
+                    <TableInput
                       type="text"
-                      className="cell-input"
                       value={row.text}
                       placeholder="CTA text"
                       onChange={(e) =>
@@ -40,15 +43,11 @@ export default function Ctas() {
                       aria-label={`CTA ${index + 1}`}
                     />
                   </td>
-                  <td className="col-actions">
-                    <button
-                      type="button"
-                      className="btn-ghost btn-danger"
+                  <td>
+                    <DeleteRowButton
                       onClick={() => deleteCta(row.id)}
-                      aria-label={`Delete CTA ${index + 1}`}
-                    >
-                      Delete
-                    </button>
+                      label={`Delete CTA ${index + 1}`}
+                    />
                   </td>
                 </tr>
               ))
@@ -56,9 +55,7 @@ export default function Ctas() {
           </tbody>
         </table>
       </div>
-      <button type="button" className="btn-add-row" onClick={addCta}>
-        + Add row
-      </button>
+      <AddRowButton onClick={addCta} />
     </>
   );
 }

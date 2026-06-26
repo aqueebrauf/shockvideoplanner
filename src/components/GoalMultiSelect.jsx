@@ -1,4 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { ChevronDown, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { formatGoalDateLabel } from '../lib/goalDateLabel';
 
 export default function GoalMultiSelect({ goals, selectedIds, onChange }) {
@@ -50,49 +54,35 @@ export default function GoalMultiSelect({ goals, selectedIds, onChange }) {
 
   return (
     <div className="goal-multiselect" ref={rootRef}>
-      <button
+      <Button
         type="button"
-        className={`goal-multiselect__trigger${open ? ' goal-multiselect__trigger--open' : ''}`}
+        variant="outline"
+        className={cn('h-auto min-h-8 w-full justify-between px-2.5 py-2 font-normal', open && 'ring-3 ring-ring/50')}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listboxId}
         onClick={() => setOpen((value) => !value)}
       >
-        <span
-          className={
-            selectedGoals.length === 0
-              ? 'goal-multiselect__placeholder'
-              : 'goal-multiselect__value'
-          }
-        >
+        <span className={selectedGoals.length === 0 ? 'text-muted-foreground' : undefined}>
           {triggerLabel}
         </span>
-        <svg
-          className="goal-multiselect__chevron"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          aria-hidden="true"
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
+        <ChevronDown className={cn('size-4 text-muted-foreground transition-transform', open && 'rotate-180')} />
+      </Button>
 
       {selectedGoals.length > 0 && (
-        <div className="goal-multiselect__chips">
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {selectedGoals.map((goal) => (
-            <span key={goal.id} className="goal-multiselect__chip">
+            <Badge key={goal.id} variant="secondary" className="gap-1 pr-1">
               {goal.title}
               <button
                 type="button"
-                className="goal-multiselect__chip-remove"
+                className="inline-flex size-4 items-center justify-center rounded-full hover:bg-muted"
                 aria-label={`Remove ${goal.title}`}
                 onClick={() => toggleGoal(goal.id)}
               >
-                ×
+                <X className="size-3" />
               </button>
-            </span>
+            </Badge>
           ))}
         </div>
       )}
@@ -100,19 +90,23 @@ export default function GoalMultiSelect({ goals, selectedIds, onChange }) {
       {open && (
         <div className="goal-multiselect__panel" id={listboxId} role="listbox" aria-multiselectable="true">
           {goals.length === 0 ? (
-            <p className="goal-multiselect__empty">No goals yet. Add some in Resources.</p>
+            <p className="px-2 py-3 text-center text-sm text-muted-foreground">
+              No goals yet. Add some in Resources.
+            </p>
           ) : (
             <>
               {selectedGoals.length > 0 && (
-                <button
+                <Button
                   type="button"
-                  className="goal-multiselect__clear"
+                  variant="ghost"
+                  size="sm"
+                  className="mb-1 w-full justify-start"
                   onClick={clearAll}
                 >
                   Clear selection
-                </button>
+                </Button>
               )}
-              <ul className="goal-multiselect__list">
+              <ul className="m-0 list-none p-0">
                 {goals.map((goal) => {
                   const checked = selectedIds.includes(goal.id);
                   const dateLabel = formatGoalDateLabel(goal.date);
@@ -123,11 +117,11 @@ export default function GoalMultiSelect({ goals, selectedIds, onChange }) {
                         type="button"
                         role="option"
                         aria-selected={checked}
-                        className={`goal-multiselect__option${checked ? ' goal-multiselect__option--selected' : ''}`}
+                        className={cn('goal-multiselect__option', checked && 'goal-multiselect__option--selected')}
                         onClick={() => toggleGoal(goal.id)}
                       >
                         <span
-                          className={`goal-multiselect__checkbox${checked ? ' goal-multiselect__checkbox--checked' : ''}`}
+                          className={cn('goal-multiselect__checkbox', checked && 'goal-multiselect__checkbox--checked')}
                           aria-hidden="true"
                         >
                           {checked && (
@@ -136,14 +130,13 @@ export default function GoalMultiSelect({ goals, selectedIds, onChange }) {
                             </svg>
                           )}
                         </span>
-                        <span className="goal-multiselect__option-text">{goal.title}</span>
+                        <span className="min-w-0 flex-1 truncate">{goal.title}</span>
                         {dateLabel && (
                           <span
-                            className={`date-tag${
-                              dateLabel === 'Today' || dateLabel === 'Yesterday'
-                                ? ' date-tag--recent'
-                                : ''
-                            }`}
+                            className={cn(
+                              'date-tag',
+                              (dateLabel === 'Today' || dateLabel === 'Yesterday') && 'date-tag--recent'
+                            )}
                           >
                             {dateLabel}
                           </span>

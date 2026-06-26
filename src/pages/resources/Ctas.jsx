@@ -1,11 +1,13 @@
+import DataStatus from '../../components/DataStatus';
 import { useCtas } from '../../hooks/useCtas';
 
 export default function Ctas() {
-  const { ctas, updateCta, addCta, deleteCta } = useCtas();
+  const { ctas, loading, error, updateCta, addCta, deleteCta } = useCtas();
 
   return (
     <>
-      <p className="table-hint">Edits save automatically in this browser.</p>
+      <DataStatus loading={loading} error={error} />
+      <p className="table-hint">Edits save automatically for the whole team.</p>
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>

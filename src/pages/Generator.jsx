@@ -41,7 +41,7 @@ export default function Generator() {
   const effectiveCtaId = resolveCtaId(ctas, selectedCtaId);
   const selectedCta = ctas.find((cta) => cta.id === effectiveCtaId);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     const trimmedHook = hookText.trim();
     if (!trimmedHook) {
       setError('Hook text is required.');
@@ -83,7 +83,7 @@ export default function Generator() {
         };
       });
 
-      const newPlanIds = addGeneratedPlans(generatedRows);
+      const newPlanIds = await addGeneratedPlans(generatedRows);
 
       navigate('/plan', { state: { highlightId: newPlanIds[0] } });
     } catch (err) {

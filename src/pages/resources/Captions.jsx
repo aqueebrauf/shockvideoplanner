@@ -1,3 +1,4 @@
+import DataStatus from '../../components/DataStatus';
 import { useCaptions } from '../../hooks/useCaptions';
 
 function autoResize(e) {
@@ -20,13 +21,14 @@ function CaptionTextarea({ value, onChange, placeholder, ariaLabel }) {
 }
 
 export default function Captions() {
-  const { captions, updateCaption, addCaption, deleteCaption } = useCaptions();
+  const { captions, loading, error, updateCaption, addCaption, deleteCaption } = useCaptions();
 
   return (
     <>
+      <DataStatus loading={loading} error={error} />
       <p className="table-hint">
-        Caption style templates for the AI caption writer. Edits save automatically in this
-        browser.
+        Caption style templates for the AI caption writer. Edits save automatically for the
+        whole team.
       </p>
       <div className="data-table-wrap">
         <table className="data-table">

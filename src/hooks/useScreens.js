@@ -1,39 +1,42 @@
-import { useCallback, useState } from 'react';
-import baseline from '../data/screens.json';
+import { useCallback } from 'react';
 import {
-  loadScreens,
+  deleteScreenById,
+  fetchScreens,
   nextScreenId,
   normalizeScreen,
-  saveScreens,
+  upsertScreen,
 } from '../lib/screensStorage';
-
-function commit(setScreens, updater) {
-  setScreens((prev) => {
-    const next = updater(prev).map(normalizeScreen);
-    saveScreens(next);
-    return next;
-  });
-}
+import { uploadScreenImage } from '../lib/screenImageStorage';
+import { useRemoteCollection } from './useRemoteCollection';
 
 export function useScreens() {
-  const [screens, setScreens] = useState(() => loadScreens(baseline));
+  const { items, loading, error, updateItem, addItem, deleteItem } = useRemoteCollection({
+    fetchAll: fetchScreens,
+    upsertOne: upsertScreen,
+    deleteById: deleteScreenById,
+    normalize: normalizeScreen,
+    createEmpty: (id) => ({ id, name: '', image: null, suggestedCopy: '' }),
+    getNextId: nextScreenId,
+  });
 
-  const updateScreen = useCallback((id, patch) => {
-    commit(setScreens, (prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...patch } : s))
-    );
-  }, []);
+  const updateScreen = useCallback(
+    async (id, patch) => {
+      let nextPatch = patch;
+      if (typeof patch.image === 'string' && patch.image.startsWith('data:')) {
+        const url = await uploadScreenImage(id, patch.image);
+        nextPatch = { ...patch, image: url };
+      }
+      await updateItem(id, nextPatch);
+    },
+    [updateItem]
+  );
 
-  const addScreen = useCallback(() => {
-    commit(setScreens, (prev) => [
-      ...prev,
-      { id: nextScreenId(prev), name: '', image: null, suggestedCopy: '' },
-    ]);
-  }, []);
-
-  const deleteScreen = useCallback((id) => {
-    commit(setScreens, (prev) => prev.filter((s) => s.id !== id));
-  }, []);
-
-  return { screens, updateScreen, addScreen, deleteScreen };
+  return {
+    screens: items,
+    loading,
+    error,
+    updateScreen,
+    addScreen: addItem,
+    deleteScreen: deleteItem,
+  };
 }

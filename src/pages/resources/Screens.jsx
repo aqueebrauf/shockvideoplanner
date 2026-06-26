@@ -1,12 +1,14 @@
+import DataStatus from '../../components/DataStatus';
 import ImageCell from '../../components/ImageCell';
 import { useScreens } from '../../hooks/useScreens';
 
 export default function Screens() {
-  const { screens, updateScreen, addScreen, deleteScreen } = useScreens();
+  const { screens, loading, error, updateScreen, addScreen, deleteScreen } = useScreens();
 
   return (
     <>
-      <p className="table-hint">Edits save automatically in this browser.</p>
+      <DataStatus loading={loading} error={error} />
+      <p className="table-hint">Edits save automatically for the whole team.</p>
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>

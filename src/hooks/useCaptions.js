@@ -1,45 +1,34 @@
-import { useCallback, useState } from 'react';
-import baseline from '../data/captions.json';
 import {
-  loadCaptions,
+  deleteCaptionById,
+  fetchCaptions,
   nextCaptionId,
   normalizeCaption,
-  saveCaptions,
+  upsertCaption,
 } from '../lib/captionsStorage';
-
-function commit(setCaptions, updater) {
-  setCaptions((prev) => {
-    const next = updater(prev).map(normalizeCaption);
-    saveCaptions(next);
-    return next;
-  });
-}
+import { useRemoteCollection } from './useRemoteCollection';
 
 export function useCaptions() {
-  const [captions, setCaptions] = useState(() => loadCaptions(baseline));
+  const { items, loading, error, updateItem, addItem, deleteItem } = useRemoteCollection({
+    fetchAll: fetchCaptions,
+    upsertOne: upsertCaption,
+    deleteById: deleteCaptionById,
+    normalize: normalizeCaption,
+    createEmpty: (id) => ({
+      id,
+      style: '',
+      structure: '',
+      guide: '',
+      example: '',
+    }),
+    getNextId: nextCaptionId,
+  });
 
-  const updateCaption = useCallback((id, patch) => {
-    commit(setCaptions, (prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...patch } : c))
-    );
-  }, []);
-
-  const addCaption = useCallback(() => {
-    commit(setCaptions, (prev) => [
-      ...prev,
-      {
-        id: nextCaptionId(prev),
-        style: '',
-        structure: '',
-        guide: '',
-        example: '',
-      },
-    ]);
-  }, []);
-
-  const deleteCaption = useCallback((id) => {
-    commit(setCaptions, (prev) => prev.filter((c) => c.id !== id));
-  }, []);
-
-  return { captions, updateCaption, addCaption, deleteCaption };
+  return {
+    captions: items,
+    loading,
+    error,
+    updateCaption: updateItem,
+    addCaption: addItem,
+    deleteCaption: deleteItem,
+  };
 }

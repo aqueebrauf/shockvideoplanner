@@ -1,12 +1,14 @@
+import DataStatus from '../../components/DataStatus';
 import { CATEGORIES } from '../../lib/hashtagsStorage';
 import { useHashtags } from '../../hooks/useHashtags';
 
 export default function Hashtags() {
-  const { hashtags, updateHashtag, addHashtag, deleteHashtag } = useHashtags();
+  const { hashtags, loading, error, updateHashtag, addHashtag, deleteHashtag } = useHashtags();
 
   return (
     <>
-      <p className="table-hint">Edits save automatically in this browser.</p>
+      <DataStatus loading={loading} error={error} />
+      <p className="table-hint">Edits save automatically for the whole team.</p>
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>

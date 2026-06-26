@@ -250,6 +250,10 @@ button {
   color: var(--text-muted);
 }
 
+.table-hint--error {
+  color: #c0392b;
+}
+
 .cell-input {
   display: block;
   width: 100%;

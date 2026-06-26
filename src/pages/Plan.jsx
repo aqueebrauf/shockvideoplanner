@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import DataStatus from '../components/DataStatus';
 import ScreensCopyModal from '../components/ScreensCopyModal';
 import { usePlan } from '../hooks/usePlan';
 import { formatPlanSerial, sortPlansByRecent } from '../lib/planSort';
@@ -106,7 +107,7 @@ function CaptionCell({ value, onChange, serial }) {
 }
 
 export default function Plan() {
-  const { plan, updatePlan, addPlan, deletePlan } = usePlan();
+  const { plan, loading, error, updatePlan, addPlan, deletePlan } = usePlan();
   const { state } = useLocation();
   const highlightId = state?.highlightId;
   const [screensModalRow, setScreensModalRow] = useState(null);
@@ -133,7 +134,8 @@ export default function Plan() {
         <p className="page-subtitle">
           Generated reel plans with hooks, screen copy, and captions.
         </p>
-        <p className="table-hint">Edits save automatically in this browser.</p>
+        <DataStatus loading={loading} error={error} />
+        <p className="table-hint">Edits save automatically for the whole team.</p>
       </div>
 
       <div className="data-table-wrap data-table-wrap--sheet">

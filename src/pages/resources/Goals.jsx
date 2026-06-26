@@ -1,11 +1,13 @@
+import DataStatus from '../../components/DataStatus';
 import { useGoals } from '../../hooks/useGoals';
 
 export default function Goals() {
-  const { goals, updateGoal, addGoal, deleteGoal } = useGoals();
+  const { goals, loading, error, updateGoal, addGoal, deleteGoal } = useGoals();
 
   return (
     <>
-      <p className="table-hint">Edits save automatically in this browser.</p>
+      <DataStatus loading={loading} error={error} />
+      <p className="table-hint">Edits save automatically for the whole team.</p>
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>

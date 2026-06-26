@@ -1,4 +1,7 @@
-const STORAGE_KEY = 'shock-ctas-data';
+import { supabase } from './supabase';
+import { nextIdFromRows } from './db/helpers';
+
+export const DEFAULT_CTA_ID = 3;
 
 export function normalizeCta(row) {
   return {
@@ -7,27 +10,34 @@ export function normalizeCta(row) {
   };
 }
 
-export function loadCtas(baseline) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed.map(normalizeCta);
-    }
-  } catch {
-    /* fall through */
-  }
-
-  return baseline.map(normalizeCta);
+function toRow(cta) {
+  return {
+    id: cta.id,
+    text: cta.text,
+  };
 }
 
-export function saveCtas(ctas) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ctas));
+export async function fetchCtas() {
+  const { data, error } = await supabase.from('ctas').select('*').order('id');
+  if (error) throw error;
+  return (data ?? []).map(normalizeCta);
+}
+
+export async function upsertCta(cta) {
+  const { data, error } = await supabase
+    .from('ctas')
+    .upsert(toRow(cta))
+    .select()
+    .single();
+  if (error) throw error;
+  return normalizeCta(data);
+}
+
+export async function deleteCtaById(id) {
+  const { error } = await supabase.from('ctas').delete().eq('id', id);
+  if (error) throw error;
 }
 
 export function nextCtaId(ctas) {
-  if (ctas.length === 0) return 1;
-  return Math.max(...ctas.map((c) => c.id)) + 1;
+  return nextIdFromRows(ctas);
 }
-
-export const DEFAULT_CTA_ID = 3;

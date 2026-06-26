@@ -1,68 +1,53 @@
-const STORAGE_KEY = 'shock-hashtags-data';
-const LEGACY_KEY = 'shock-hashtags-overrides';
+import { supabase } from './supabase';
+import { nextIdFromRows } from './db/helpers';
 
 export const CATEGORIES = ['broad', 'medium', 'niche'];
 
 export function normalizeHashtag(row) {
+  const postsRaw = row.posts ?? null;
+  const posts =
+    postsRaw == null || postsRaw === '' || Number.isNaN(Number(postsRaw))
+      ? null
+      : Math.round(Number(postsRaw));
+
   return {
     id: row.id,
     hashtag: row.hashtag ?? '',
-    posts: row.posts ?? null,
+    posts,
     category: row.category ?? 'broad',
   };
 }
 
-function loadLegacyOverrides() {
-  try {
-    const raw = localStorage.getItem(LEGACY_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+function toRow(hashtag) {
+  return {
+    id: hashtag.id,
+    hashtag: hashtag.hashtag,
+    posts: hashtag.posts,
+    category: hashtag.category,
+  };
 }
 
-function mergeLegacy(baseline, overrides) {
-  return baseline.map((row) => {
-    const base = normalizeHashtag(row);
-    const saved = overrides[String(row.id)];
-    if (!saved) return base;
-
-    return {
-      ...base,
-      hashtag: saved.hashtag ?? base.hashtag,
-      posts: saved.posts ?? base.posts,
-      category: saved.category ?? base.category,
-    };
-  });
+export async function fetchHashtags() {
+  const { data, error } = await supabase.from('hashtags').select('*').order('id');
+  if (error) throw error;
+  return (data ?? []).map(normalizeHashtag);
 }
 
-export function loadHashtags(baseline) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed.map(normalizeHashtag);
-    }
-  } catch {
-    /* fall through */
-  }
-
-  const legacy = loadLegacyOverrides();
-  if (Object.keys(legacy).length > 0) {
-    const migrated = mergeLegacy(baseline, legacy);
-    saveHashtags(migrated);
-    localStorage.removeItem(LEGACY_KEY);
-    return migrated;
-  }
-
-  return baseline.map(normalizeHashtag);
+export async function upsertHashtag(hashtag) {
+  const { data, error } = await supabase
+    .from('hashtags')
+    .upsert(toRow(hashtag))
+    .select()
+    .single();
+  if (error) throw error;
+  return normalizeHashtag(data);
 }
 
-export function saveHashtags(hashtags) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(hashtags));
+export async function deleteHashtagById(id) {
+  const { error } = await supabase.from('hashtags').delete().eq('id', id);
+  if (error) throw error;
 }
 
 export function nextHashtagId(hashtags) {
-  if (hashtags.length === 0) return 1;
-  return Math.max(...hashtags.map((h) => h.id)) + 1;
+  return nextIdFromRows(hashtags);
 }

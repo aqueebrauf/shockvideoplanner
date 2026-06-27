@@ -338,11 +338,11 @@
 }
 
 .home-plan-status-btn--unmarked {
-  @apply border border-black bg-black text-white hover:bg-black/90;
+  @apply border-2 border-black bg-transparent text-black hover:bg-black/5;
 }
 
 .home-plan-status-btn--marked {
-  @apply border border-border bg-white text-black hover:bg-neutral-100;
+  @apply border-2 border-black bg-white text-black hover:bg-neutral-100;
 }
 
 .home-plan-empty {

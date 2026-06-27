@@ -1,4 +1,4 @@
-# Shock Video Planner
+# Smash Video Planner
 
 Internal reel planning tool for editors — scripts, sequences, and reference resources. Data is stored in Supabase (`videoplanner` schema) and shared across the team.
 

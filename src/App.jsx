@@ -33,7 +33,7 @@ const pageTitles = {
 function getPageTitle(pathname) {
   if (pageTitles[pathname]) return pageTitles[pathname];
   if (pathname.startsWith('/resources')) return 'Resources';
-  return 'Shock Video Planner';
+  return 'Smash Video Planner';
 }
 
 export default function App() {

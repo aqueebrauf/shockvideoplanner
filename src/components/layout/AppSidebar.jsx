@@ -57,7 +57,7 @@ export default function AppSidebar() {
                 <img src={logo} alt="" className="size-8 object-contain" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Shock Video Planner</span>
+                <span className="truncate font-semibold">Smash Video Planner</span>
                 <span className="truncate text-xs text-muted-foreground">Smash reel planning</span>
               </div>
             </SidebarMenuButton>

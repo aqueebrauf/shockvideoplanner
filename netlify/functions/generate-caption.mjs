@@ -11,7 +11,21 @@ import {
   validateHashtags,
 } from './lib/hashtagFilter.mjs';
 
-const MODEL = 'claude-sonnet-4-20250514';
+// Dateless ID avoids gateways that strip "0" from dated IDs (e.g. 20250514 → 2-25-514).
+const DEFAULT_MODEL = 'claude-sonnet-4-6';
+const MODEL = process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL;
+
+function anthropicErrorMessage(err) {
+  if (err?.error?.message) return err.error.message;
+  if (err?.message) return err.message;
+  return 'Caption generation failed.';
+}
+
+function anthropicErrorStatus(err) {
+  const status = Number(err?.status ?? err?.response?.status);
+  if (status >= 400 && status < 600) return status;
+  return 500;
+}
 
 function jsonResponse(status, body) {
   return new Response(JSON.stringify(body), {
@@ -183,8 +197,8 @@ export default async (req) => {
     });
   } catch (err) {
     console.error('generate-caption error:', err);
-    return jsonResponse(500, {
-      error: err.message ?? 'Caption generation failed.',
+    return jsonResponse(anthropicErrorStatus(err), {
+      error: anthropicErrorMessage(err),
     });
   }
 };

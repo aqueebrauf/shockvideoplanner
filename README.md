@@ -10,10 +10,11 @@ Hosted on Netlify. Push to `main` to deploy automatically.
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `ANTHROPIC_API_KEY`
+- `ANTHROPIC_MODEL` (optional, defaults to `claude-sonnet-4-6`)
 
 ## Caption generation
 
-- **Model:** Claude Sonnet via Netlify Function (`/api/generate-caption`)
+- **Model:** Claude Sonnet 4.6 (`claude-sonnet-4-6`) via Netlify Function (`/api/generate-caption`)
 - **Style:** Intelligent (default) picks from caption styles in Resources, or pick a style manually
 - **Hashtags:** 3–4 tags from the hashtags table (medium/niche preferred), appended after the caption
 

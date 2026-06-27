@@ -9,8 +9,10 @@ export function findGoal(goals, goalId) {
 }
 
 export function findScreenSequence(screenSequences, sequenceId) {
-  if (!sequenceId) return null;
-  return screenSequences.find((sequence) => sequence.id === sequenceId) ?? null;
+  if (sequenceId == null || sequenceId === '') return null;
+  return (
+    screenSequences.find((sequence) => String(sequence.id) === String(sequenceId)) ?? null
+  );
 }
 
 export function findCaptionStyle(captions, captionStyleId) {

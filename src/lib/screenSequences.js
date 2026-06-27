@@ -1,7 +1,10 @@
 export const DEFAULT_SEQUENCE_ID = 'primary-demo';
 
 export function getScreenSequence(sequenceId, screenSequences) {
-  return screenSequences.find((sequence) => sequence.id === sequenceId) ?? null;
+  if (sequenceId == null || sequenceId === '') return null;
+  return (
+    screenSequences.find((sequence) => String(sequence.id) === String(sequenceId)) ?? null
+  );
 }
 
 export function buildPlanScreensFromSequence(

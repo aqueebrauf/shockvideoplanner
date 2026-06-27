@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import CopyTextButton from '@/components/CopyTextButton';
 import ScreensCopyModal from '@/components/ScreensCopyModal';
 import { Button } from '@/components/ui/button';
@@ -77,9 +77,12 @@ export default function CharacterPlanPanel({ character }) {
   const canGoNewer = planIndex < plansForCharacter.length - 1;
   const viewingNotStarted = statusFilter === PLAN_STATUS_NOT_STARTED;
 
-  const markCurrentPlanComplete = () => {
+  const togglePlanStatus = () => {
     if (!currentPlan) return;
-    updatePlan(currentPlan.id, { status: PLAN_STATUS_COMPLETED }, { immediate: true });
+    const nextStatus = viewingNotStarted
+      ? PLAN_STATUS_COMPLETED
+      : PLAN_STATUS_NOT_STARTED;
+    updatePlan(currentPlan.id, { status: nextStatus }, { immediate: true });
   };
 
   if (loading) {
@@ -118,19 +121,20 @@ export default function CharacterPlanPanel({ character }) {
         {currentPlan ? (
           <>
             <div className="home-plan-panel">
-              <div className="home-plan-field home-plan-field--hook">
-                <span className="home-plan-field__label">Hook</span>
-                <p className="home-plan-field__value home-plan-field__value--scroll whitespace-pre-wrap">
-                  {currentPlan.hook.trim() || '—'}
-                </p>
-              </div>
+              <div className="home-plan-content">
+                <div className="home-plan-field">
+                  <span className="home-plan-field__label">Hook</span>
+                  <p className="home-plan-field__value home-plan-field__value--scroll whitespace-pre-wrap">
+                    {currentPlan.hook.trim() || '—'}
+                  </p>
+                </div>
 
-              <div className="home-plan-field home-plan-field--compact">
-                <span className="home-plan-field__label">Goal name</span>
-                <p className="home-plan-field__value">{goalTitle || '—'}</p>
-              </div>
+                <div className="home-plan-field home-plan-field--compact">
+                  <span className="home-plan-field__label">Goal name</span>
+                  <p className="home-plan-field__value">{goalTitle || '—'}</p>
+                </div>
 
-              <div className="home-plan-actions">
+                <div className="home-plan-actions">
                 <Button
                   type="button"
                   variant="outline"
@@ -155,6 +159,7 @@ export default function CharacterPlanPanel({ character }) {
                   label={`Copy caption for plan ${planSerial}`}
                   className="home-plan-action-btn"
                 />
+                </div>
               </div>
             </div>
 
@@ -163,6 +168,7 @@ export default function CharacterPlanPanel({ character }) {
                 type="button"
                 variant="outline"
                 size="default"
+                className="home-plan-nav-btn"
                 disabled={!canGoOlder}
                 onClick={() => setPlanIndex((index) => index - 1)}
                 aria-label="Previous plan"
@@ -170,22 +176,26 @@ export default function CharacterPlanPanel({ character }) {
                 <ChevronLeft className="size-4" />
                 Prev
               </Button>
-              {viewingNotStarted ? (
-                <Button
-                  type="button"
-                  size="default"
-                  onClick={markCurrentPlanComplete}
-                  aria-label={`Mark plan ${planSerial} as complete`}
-                >
-                  Mark as complete
-                </Button>
-              ) : (
-                <span aria-hidden="true" />
-              )}
+              <Button
+                type="button"
+                variant={viewingNotStarted ? 'default' : 'outline'}
+                size="icon"
+                className="home-plan-status-btn"
+                onClick={togglePlanStatus}
+                aria-label={
+                  viewingNotStarted
+                    ? `Mark plan ${planSerial} as complete`
+                    : `Mark plan ${planSerial} as not started`
+                }
+                title={viewingNotStarted ? 'Mark as complete' : 'Mark as not started'}
+              >
+                <Check className="size-5" />
+              </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="default"
+                className="home-plan-nav-btn"
                 disabled={!canGoNewer}
                 onClick={() => setPlanIndex((index) => index + 1)}
                 aria-label="Next plan"

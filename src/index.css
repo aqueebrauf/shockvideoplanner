@@ -290,23 +290,23 @@
 }
 
 .home-plan-panel {
-  @apply flex min-h-0 flex-1 flex-col gap-4 rounded-lg border bg-card p-4 md:p-6;
+  @apply flex min-h-0 flex-1 flex-col items-start rounded-lg border bg-card p-4 md:p-6;
+}
+
+.home-plan-content {
+  @apply flex w-full shrink-0 flex-col gap-4;
 }
 
 .home-plan-field {
-  @apply flex min-h-0 flex-col gap-2;
-}
-
-.home-plan-field--hook {
-  @apply min-h-0 flex-1;
+  @apply flex flex-col gap-2;
 }
 
 .home-plan-field--compact {
-  @apply shrink-0 gap-1.5;
+  @apply gap-1.5;
 }
 
 .home-plan-field__label {
-  @apply shrink-0 text-xs font-medium uppercase tracking-wide text-muted-foreground;
+  @apply text-xs font-medium uppercase tracking-wide text-muted-foreground;
 }
 
 .home-plan-field__value {
@@ -314,7 +314,7 @@
 }
 
 .home-plan-field__value--scroll {
-  @apply min-h-0 flex-1 overflow-y-auto;
+  @apply max-h-[min(40vh,16rem)] overflow-y-auto;
 }
 
 .home-plan-actions {
@@ -329,8 +329,12 @@
   @apply flex shrink-0 items-center gap-2;
 }
 
-.home-plan-controls > * {
+.home-plan-nav-btn {
   @apply h-11 flex-1;
+}
+
+.home-plan-status-btn {
+  @apply size-11 shrink-0;
 }
 
 .home-plan-empty {

@@ -70,7 +70,19 @@ export default function Generator() {
   const [generateProgress, setGenerateProgress] = useState('');
 
   const effectiveCtaId = resolveCtaId(ctas, selectedCtaId);
-  const selectedCta = ctas.find((cta) => cta.id === effectiveCtaId);
+  const selectedCta = ctas.find((cta) => String(cta.id) === String(effectiveCtaId));
+  const selectedSequence = screenSequences.find(
+    (sequence) => String(sequence.id) === String(selectedSequenceId)
+  );
+  const sequenceSelectLabel = selectedSequence?.name?.trim() || 'Select a sequence';
+  const ctaSelectLabel = selectedCta
+    ? selectedCta.text?.trim() || 'Untitled CTA'
+    : 'Add CTAs in Resources';
+  const captionStyleSelectLabel =
+    selectedCaptionStyle === CAPTION_STYLE_INTELLIGENT
+      ? 'Intelligent (recommended)'
+      : captions.find((caption) => String(caption.id) === selectedCaptionStyle)?.style?.trim() ||
+        'Untitled style';
 
   useEffect(() => {
     if (characters.length === 0 || charactersInitialized) return;
@@ -81,7 +93,7 @@ export default function Generator() {
 
   useEffect(() => {
     if (screenSequences.length === 0) return;
-    if (!screenSequences.some((sequence) => sequence.id === selectedSequenceId)) {
+    if (!screenSequences.some((sequence) => String(sequence.id) === String(selectedSequenceId))) {
       setSelectedSequenceId(screenSequences[0]?.id ?? DEFAULT_SEQUENCE_ID);
     }
   }, [screenSequences, selectedSequenceId]);
@@ -100,7 +112,7 @@ export default function Generator() {
       setError('Select at least one character.');
       return;
     }
-    if (!screenSequences.some((sequence) => sequence.id === selectedSequenceId)) {
+    if (!screenSequences.some((sequence) => String(sequence.id) === String(selectedSequenceId))) {
       setError('Select a screen sequence.');
       return;
     }
@@ -259,16 +271,21 @@ export default function Generator() {
                 Screen sequence <span className="text-destructive">*</span>
               </Label>
               <Select
-                value={selectedSequenceId}
-                onValueChange={setSelectedSequenceId}
+                value={String(selectedSequenceId)}
+                onValueChange={(value) => {
+                  const match = screenSequences.find(
+                    (sequence) => String(sequence.id) === value
+                  );
+                  setSelectedSequenceId(match?.id ?? value);
+                }}
                 disabled={generating}
               >
                 <SelectTrigger id="screen-sequence" className="w-full">
-                  <SelectValue placeholder="Select a sequence" />
+                  <SelectValue placeholder="Select a sequence">{sequenceSelectLabel}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {screenSequences.map((sequence) => (
-                    <SelectItem key={sequence.id} value={sequence.id}>
+                    <SelectItem key={sequence.id} value={String(sequence.id)}>
                       {sequence.name}
                     </SelectItem>
                   ))}
@@ -279,17 +296,17 @@ export default function Generator() {
             <div className="space-y-2">
               <Label htmlFor="cta-select">CTA</Label>
               <Select
-                value={effectiveCtaId ? String(effectiveCtaId) : undefined}
+                value={effectiveCtaId != null && effectiveCtaId !== '' ? String(effectiveCtaId) : ''}
                 onValueChange={(value) => setSelectedCtaId(Number(value))}
                 disabled={ctas.length === 0 || generating}
               >
                 <SelectTrigger id="cta-select" className="w-full">
-                  <SelectValue placeholder="Add CTAs in Resources" />
+                  <SelectValue placeholder="Add CTAs in Resources">{ctaSelectLabel}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {ctas.map((cta) => (
                     <SelectItem key={cta.id} value={String(cta.id)}>
-                      {cta.text || `CTA ${cta.id}`}
+                      {cta.text?.trim() || 'Untitled CTA'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -304,7 +321,9 @@ export default function Generator() {
                 disabled={generating}
               >
                 <SelectTrigger id="caption-style" className="w-full">
-                  <SelectValue placeholder="Select caption style" />
+                  <SelectValue placeholder="Select caption style">
+                    {captionStyleSelectLabel}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={CAPTION_STYLE_INTELLIGENT}>
@@ -312,7 +331,7 @@ export default function Generator() {
                   </SelectItem>
                   {captions.map((caption) => (
                     <SelectItem key={caption.id} value={String(caption.id)}>
-                      {caption.style || `Style ${caption.id}`}
+                      {caption.style?.trim() || 'Untitled style'}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -168,7 +168,7 @@ export default function CharacterPlanPanel({ character }) {
                 type="button"
                 variant="outline"
                 size="default"
-                className="home-plan-nav-btn"
+                className="home-plan-control-btn"
                 disabled={!canGoOlder}
                 onClick={() => setPlanIndex((index) => index - 1)}
                 aria-label="Previous plan"
@@ -179,9 +179,9 @@ export default function CharacterPlanPanel({ character }) {
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
+                size="default"
                 className={cn(
-                  'home-plan-status-btn',
+                  'home-plan-control-btn home-plan-status-btn',
                   viewingNotStarted
                     ? 'home-plan-status-btn--unmarked'
                     : 'home-plan-status-btn--marked'
@@ -200,7 +200,7 @@ export default function CharacterPlanPanel({ character }) {
                 type="button"
                 variant="outline"
                 size="default"
-                className="home-plan-nav-btn"
+                className="home-plan-control-btn"
                 disabled={!canGoNewer}
                 onClick={() => setPlanIndex((index) => index + 1)}
                 aria-label="Next plan"

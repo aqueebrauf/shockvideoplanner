@@ -326,15 +326,15 @@
 }
 
 .home-plan-controls {
-  @apply flex shrink-0 items-center gap-2;
+  @apply flex shrink-0 items-stretch gap-2;
 }
 
-.home-plan-nav-btn {
-  @apply h-11 flex-1;
+.home-plan-control-btn {
+  @apply h-11 min-w-0 flex-1;
 }
 
 .home-plan-status-btn {
-  @apply size-11 shrink-0 rounded-lg;
+  @apply rounded-lg;
 }
 
 .home-plan-status-btn--unmarked {

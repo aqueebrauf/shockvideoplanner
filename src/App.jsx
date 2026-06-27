@@ -54,7 +54,7 @@ export default function App() {
         </header>
 
         <main
-          className={`flex flex-1 flex-col gap-4 p-4 md:p-6${
+          className={`flex min-h-0 flex-1 flex-col gap-4 p-4 md:p-6${
             isPlanPage ? ' max-w-none' : ' mx-auto w-full max-w-6xl'
           }`}
         >

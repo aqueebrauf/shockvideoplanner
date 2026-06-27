@@ -186,15 +186,7 @@
 }
 
 .caption-cell .cell-input--caption {
-  @apply pr-9;
-}
-
-.caption-cell__copy {
-  @apply absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-md border bg-muted text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-40;
-}
-
-.caption-cell__copy svg {
-  @apply size-3.5;
+  @apply pr-8;
 }
 
 .image-cell {
@@ -261,20 +253,56 @@
   @apply border-primary/30 bg-primary/10 text-primary;
 }
 
+.home-page {
+  @apply flex min-h-0 flex-1 flex-col gap-4;
+}
+
+.home-character-panel {
+  @apply flex min-h-0 flex-1 flex-col gap-4;
+}
+
+.home-plan-stats {
+  @apply grid shrink-0 grid-cols-3 gap-3;
+}
+
+.home-plan-stat {
+  @apply flex flex-col gap-1 rounded-lg border bg-card px-4 py-3;
+}
+
+.home-plan-stat__label {
+  @apply text-xs font-medium uppercase tracking-wide text-muted-foreground;
+}
+
+.home-plan-stat__value {
+  @apply text-2xl font-semibold tabular-nums;
+}
+
 .home-plan-nav {
-  @apply mb-4 flex items-center justify-center gap-3;
+  @apply flex shrink-0 items-center justify-center gap-3;
 }
 
 .home-plan-panel {
-  @apply flex flex-col gap-5 rounded-lg border bg-card p-4 md:p-6;
+  @apply flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-lg border bg-card p-4 md:p-6;
+}
+
+.home-plan-panel__meta {
+  @apply grid shrink-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,12rem)_auto];
 }
 
 .home-plan-field {
-  @apply flex flex-col gap-2;
+  @apply flex min-h-0 flex-col gap-2;
+}
+
+.home-plan-field--compact {
+  @apply gap-1.5;
+}
+
+.home-plan-field--caption {
+  @apply min-h-0 flex-1;
 }
 
 .home-plan-field__header {
-  @apply flex items-center justify-between gap-2;
+  @apply flex shrink-0 items-center justify-between gap-2;
 }
 
 .home-plan-field__label {
@@ -283,4 +311,8 @@
 
 .home-plan-field__value {
   @apply text-sm leading-relaxed;
+}
+
+.home-plan-field__value--scroll {
+  @apply min-h-0 flex-1 overflow-y-auto rounded-md border bg-muted/30 p-3;
 }

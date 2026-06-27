@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import DataStatus from '../components/DataStatus';
+import CopyTextButton from '../components/CopyTextButton';
 import ScreensCopyModal from '../components/ScreensCopyModal';
 import PageHeader from '@/components/layout/PageHeader';
 import { AddRowButton } from '@/components/table/TableActions';
 import { Button } from '@/components/ui/button';
 import { usePlan } from '../hooks/usePlan';
+import { useCharacters } from '../hooks/useCharacters';
 import { formatPlanSerial, sortPlansByRecent } from '../lib/planSort';
 import { normalizeExternalUrl } from '../lib/externalUrl';
 
@@ -15,6 +17,7 @@ import { PLAN_STATUSES } from '../lib/planStatus';
 function SheetCell({
   value,
   onChange,
+  onBlur,
   ariaLabel,
   placeholder,
   minRows = 1,
@@ -59,25 +62,14 @@ function SheetCell({
         onChange(e.target.value);
         requestAnimationFrame(resize);
       }}
+      onBlur={onBlur}
       aria-label={ariaLabel}
     />
   );
 }
 
-function CaptionCell({ value, onChange, serial }) {
-  const [copied, setCopied] = useState(false);
-
-  const copyCaption = async () => {
-    if (!value.trim()) return;
-
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
-    } catch {
-      /* clipboard unavailable */
-    }
-  };
+function CaptionCell({ value, onChange, onBlur, serial }) {
+  const hasCopyableCaption = Boolean(value.trim());
 
   return (
     <div className="caption-cell">
@@ -85,35 +77,23 @@ function CaptionCell({ value, onChange, serial }) {
         value={value}
         placeholder="Caption"
         onChange={onChange}
+        onBlur={onBlur}
         ariaLabel={`Caption for plan ${serial}`}
         minRows={3}
-        className="cell-input--caption"
+        className={hasCopyableCaption ? 'cell-input--caption' : ''}
       />
-      <button
-        type="button"
-        className="caption-cell__copy"
-        onClick={copyCaption}
-        disabled={!value.trim()}
-        aria-label={`Copy caption for plan ${serial}`}
-        title={copied ? 'Copied' : 'Copy caption'}
-      >
-        {copied ? (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M5 13l4 4L19 7" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <rect x="9" y="9" width="13" height="13" rx="2" />
-            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-          </svg>
-        )}
-      </button>
+      <CopyTextButton
+        value={value}
+        label={`Copy caption for plan ${serial}`}
+        className="absolute right-1.5 top-1.5"
+      />
     </div>
   );
 }
 
 export default function Plan() {
-  const { plan, loading, error, updatePlan, addPlan, deletePlan } = usePlan();
+  const { plan, loading, error, updatePlan, flushPlan, addPlan, deletePlan } = usePlan();
+  const { characters } = useCharacters();
   const { state } = useLocation();
   const highlightId = state?.highlightId;
   const [screensModalRow, setScreensModalRow] = useState(null);
@@ -181,6 +161,7 @@ export default function Plan() {
                         onChange={(value) =>
                           updatePlan(row.id, { hook: value })
                         }
+                        onBlur={() => flushPlan(row.id)}
                         ariaLabel={`Hook for plan ${serial}`}
                       />
                     </td>
@@ -191,18 +172,36 @@ export default function Plan() {
                         onChange={(value) =>
                           updatePlan(row.id, { goalName: value })
                         }
+                        onBlur={() => flushPlan(row.id)}
                         ariaLabel={`Goal name for plan ${serial}`}
                       />
                     </td>
-                    <td className="col-character-name">
-                      <SheetCell
+                    <td className="col-character-name sheet-cell-static">
+                      <select
+                        className="h-9 w-full min-w-0 rounded-none border-0 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                         value={row.characterName}
-                        placeholder="Character"
-                        onChange={(value) =>
-                          updatePlan(row.id, { characterName: value })
+                        onChange={(e) =>
+                          updatePlan(
+                            row.id,
+                            { characterName: e.target.value },
+                            { immediate: true }
+                          )
                         }
-                        ariaLabel={`Character for plan ${serial}`}
-                      />
+                        aria-label={`Character for plan ${serial}`}
+                      >
+                        <option value="">—</option>
+                        {characters.map((character) => (
+                          <option key={character.id} value={character.name}>
+                            {character.name.trim() || `Character ${character.id}`}
+                          </option>
+                        ))}
+                        {row.characterName &&
+                        !characters.some(
+                          (character) => character.name === row.characterName
+                        ) ? (
+                          <option value={row.characterName}>{row.characterName}</option>
+                        ) : null}
+                      </select>
                     </td>
                     <td className="col-screens sheet-cell-static text-center">
                       <Button
@@ -242,6 +241,7 @@ export default function Plan() {
                         onChange={(value) =>
                           updatePlan(row.id, { caption: value })
                         }
+                        onBlur={() => flushPlan(row.id)}
                       />
                     </td>
                     <td className="col-status sheet-cell-static">
@@ -249,7 +249,11 @@ export default function Plan() {
                         className="h-9 w-full min-w-0 rounded-none border-0 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                         value={row.status}
                         onChange={(e) =>
-                          updatePlan(row.id, { status: e.target.value })
+                          updatePlan(
+                            row.id,
+                            { status: e.target.value },
+                            { immediate: true }
+                          )
                         }
                         aria-label={`Status for plan ${serial}`}
                       >
@@ -278,6 +282,7 @@ export default function Plan() {
                         onChange={(value) =>
                           updatePlan(row.id, { generatedDate: value })
                         }
+                        onBlur={() => flushPlan(row.id)}
                         ariaLabel={`Generated date for plan ${serial}`}
                       />
                     </td>

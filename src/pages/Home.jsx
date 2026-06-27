@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import CharacterPlanPanel from '@/components/home/CharacterPlanPanel';
-import ScreenSequencesTable from '@/components/home/ScreenSequencesTable';
 import DataStatus from '@/components/DataStatus';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCharacters } from '@/hooks/useCharacters';
@@ -23,12 +22,12 @@ export default function Home() {
   const selectedCharacter = characters.find((character) => character.id === selectedCharacterId);
 
   return (
-    <>
+    <div className="home-page">
       {characters.length > 0 && selectedCharacterId !== null ? (
         <Tabs
           value={String(selectedCharacterId)}
           onValueChange={(value) => setSelectedCharacterId(Number(value))}
-          className="mb-6"
+          className="shrink-0"
         >
           <TabsList variant="line">
             {characters.map((character) => (
@@ -49,8 +48,6 @@ export default function Home() {
       ) : null}
 
       {selectedCharacter ? <CharacterPlanPanel character={selectedCharacter} /> : null}
-
-      <ScreenSequencesTable />
-    </>
+    </div>
   );
 }

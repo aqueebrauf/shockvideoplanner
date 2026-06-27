@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { formatPlanDate } from '../lib/goalDateLabel';
 import { PLAN_STATUS_NOT_STARTED } from '../lib/planStatus';
 import {
@@ -11,12 +11,16 @@ import {
   upsertPlans,
 } from '../lib/planStorage';
 
+const SAVE_DELAY_MS = 500;
+
 const PlanContext = createContext(null);
 
 function usePlanState() {
   const [plan, setPlan] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const pendingRowsRef = useRef(new Map());
+  const saveTimersRef = useRef(new Map());
 
   const reload = useCallback(async () => {
     const data = await fetchPlans();
@@ -41,22 +45,21 @@ function usePlanState() {
     };
   }, []);
 
-  const updatePlan = useCallback(
-    async (id, patch) => {
-      let updated = null;
-      setPlan((prev) => {
-        const next = prev.map((row) => {
-          if (row.id !== id) return row;
-          updated = normalizePlan({ ...row, ...patch });
-          return updated;
-        });
-        return next;
-      });
+  useEffect(() => {
+    return () => {
+      saveTimersRef.current.forEach((timer) => clearTimeout(timer));
+      saveTimersRef.current.clear();
+    };
+  }, []);
 
-      if (!updated) return;
+  const persistPlan = useCallback(
+    async (id) => {
+      const row = pendingRowsRef.current.get(id);
+      if (!row) return;
 
       try {
-        await upsertPlan(updated);
+        await upsertPlan(row);
+        pendingRowsRef.current.delete(id);
         setError(null);
       } catch (err) {
         setError(err.message ?? 'Failed to save plan');
@@ -64,6 +67,57 @@ function usePlanState() {
       }
     },
     [reload]
+  );
+
+  const scheduleSave = useCallback(
+    (id, immediate = false) => {
+      const existing = saveTimersRef.current.get(id);
+      if (existing) clearTimeout(existing);
+
+      if (immediate) {
+        saveTimersRef.current.delete(id);
+        return persistPlan(id);
+      }
+
+      saveTimersRef.current.set(
+        id,
+        setTimeout(() => {
+          saveTimersRef.current.delete(id);
+          persistPlan(id);
+        }, SAVE_DELAY_MS)
+      );
+    },
+    [persistPlan]
+  );
+
+  const updatePlan = useCallback(
+    (id, patch, options = {}) => {
+      let updated = null;
+      setPlan((prev) => {
+        const next = prev.map((row) => {
+          if (row.id !== id) return row;
+          updated = normalizePlan({ ...row, ...patch });
+          pendingRowsRef.current.set(id, updated);
+          return updated;
+        });
+        return next;
+      });
+
+      if (!updated) return;
+
+      scheduleSave(id, options.immediate);
+    },
+    [scheduleSave]
+  );
+
+  const flushPlan = useCallback(
+    (id) => {
+      const existing = saveTimersRef.current.get(id);
+      if (existing) clearTimeout(existing);
+      saveTimersRef.current.delete(id);
+      return persistPlan(id);
+    },
+    [persistPlan]
   );
 
   const addPlan = useCallback(async () => {
@@ -97,6 +151,11 @@ function usePlanState() {
 
   const deletePlan = useCallback(
     async (id) => {
+      const existing = saveTimersRef.current.get(id);
+      if (existing) clearTimeout(existing);
+      saveTimersRef.current.delete(id);
+      pendingRowsRef.current.delete(id);
+
       setPlan((prev) => prev.filter((row) => row.id !== id));
 
       try {
@@ -189,6 +248,7 @@ function usePlanState() {
     loading,
     error,
     updatePlan,
+    flushPlan,
     addPlan,
     deletePlan,
     addGeneratedPlan,

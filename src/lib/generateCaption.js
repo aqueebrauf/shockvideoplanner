@@ -3,6 +3,7 @@ const API_PATH = '/api/generate-caption';
 export async function generateCaption({
   hook,
   goalName,
+  characterName = '',
   screens,
   ctaText,
   captionStyle = 'intelligent',
@@ -14,6 +15,7 @@ export async function generateCaption({
     body: JSON.stringify({
       hook,
       goalName,
+      characterName,
       screens,
       ctaText,
       captionStyle,

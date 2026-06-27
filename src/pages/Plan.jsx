@@ -9,6 +9,9 @@ import { usePlan } from '../hooks/usePlan';
 import { formatPlanSerial, sortPlansByRecent } from '../lib/planSort';
 import { normalizeExternalUrl } from '../lib/externalUrl';
 
+import { screenSequenceButtonLabel } from '../lib/planDisplay';
+import { PLAN_STATUSES } from '../lib/planStatus';
+
 function SheetCell({
   value,
   onChange,
@@ -147,9 +150,11 @@ export default function Plan() {
               <th className="col-id">#</th>
               <th className="col-hook">Hook</th>
               <th className="col-goal-name">Goal name</th>
+              <th className="col-character-name">Character</th>
               <th className="col-screens">Screens</th>
               <th className="col-ref-video">Reference</th>
               <th className="col-caption">Caption</th>
+              <th className="col-status">Status</th>
               <th className="col-actions" aria-label="Actions" />
               <th className="col-date">Generated</th>
             </tr>
@@ -157,13 +162,14 @@ export default function Plan() {
           <tbody>
             {sortedPlan.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
                   No plans yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
             ) : (
               sortedPlan.map((row) => {
                 const serial = formatPlanSerial(row.id);
+                const sequenceLabel = screenSequenceButtonLabel(row.screenSequenceName);
 
                 return (
                   <tr key={row.id} data-plan-id={row.id}>
@@ -188,15 +194,25 @@ export default function Plan() {
                         ariaLabel={`Goal name for plan ${serial}`}
                       />
                     </td>
+                    <td className="col-character-name">
+                      <SheetCell
+                        value={row.characterName}
+                        placeholder="Character"
+                        onChange={(value) =>
+                          updatePlan(row.id, { characterName: value })
+                        }
+                        ariaLabel={`Character for plan ${serial}`}
+                      />
+                    </td>
                     <td className="col-screens sheet-cell-static text-center">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => setScreensModalRow(row)}
-                        aria-label={`Screens for plan ${serial}`}
+                        aria-label={`${sequenceLabel} for plan ${serial}`}
                       >
-                        Screens
+                        {sequenceLabel}
                       </Button>
                     </td>
                     <td className="col-ref-video sheet-cell-static text-center">
@@ -227,6 +243,22 @@ export default function Plan() {
                           updatePlan(row.id, { caption: value })
                         }
                       />
+                    </td>
+                    <td className="col-status sheet-cell-static">
+                      <select
+                        className="h-9 w-full min-w-0 rounded-none border-0 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                        value={row.status}
+                        onChange={(e) =>
+                          updatePlan(row.id, { status: e.target.value })
+                        }
+                        aria-label={`Status for plan ${serial}`}
+                      >
+                        {PLAN_STATUSES.map(({ value, label }) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="col-actions sheet-cell-static text-center">
                       <Button

@@ -1,9 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  BookOpen,
   Clapperboard,
   Hash,
   Home,
+  Users,
   LayoutGrid,
   ListChecks,
   MessageSquareQuote,
@@ -22,6 +22,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import logo from '@/assets/logo.png';
 
 const mainNav = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -35,6 +36,7 @@ const resourceNav = [
   { to: '/resources/goals', label: 'Goals', icon: Target },
   { to: '/resources/ctas', label: 'CTAs', icon: MessageSquareQuote },
   { to: '/resources/captions', label: 'Captions', icon: ListChecks },
+  { to: '/resources/characters', label: 'Characters', icon: Users },
 ];
 
 function isActivePath(pathname, to, end = false) {
@@ -51,8 +53,8 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" className="pointer-events-none">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <BookOpen className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+                <img src={logo} alt="" className="size-8 object-contain" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Shock Video Planner</span>

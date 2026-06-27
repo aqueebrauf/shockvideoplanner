@@ -33,6 +33,7 @@ Respond with valid JSON only (no markdown fences):
 export function buildUserPrompt({
   hook,
   goalName,
+  characterName = '',
   screens,
   ctaText,
   captionStyle,
@@ -70,6 +71,10 @@ ${s.example}`
     ? `\nEDITOR CUSTOM INSTRUCTIONS (high priority):\n${customInstruction.trim()}`
     : '';
 
+  const characterBlock = characterName?.trim()
+    ? `\nCHARACTER (voice/persona for this reel):\n${characterName.trim()}`
+    : '';
+
   return `${styleInstruction}
 
 HOOK:
@@ -77,6 +82,7 @@ ${hook}
 
 GOAL:
 ${goalName}
+${characterBlock}
 
 CTA (must appear in caption):
 ${ctaText}

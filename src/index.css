@@ -157,7 +157,7 @@
 }
 
 .data-table--sheet {
-  @apply min-w-[52rem] border-separate border-spacing-0;
+  @apply min-w-[60rem] border-separate border-spacing-0;
 }
 
 .data-table--sheet th,
@@ -259,4 +259,28 @@
 
 .date-tag--recent {
   @apply border-primary/30 bg-primary/10 text-primary;
+}
+
+.home-plan-nav {
+  @apply mb-4 flex items-center justify-center gap-3;
+}
+
+.home-plan-panel {
+  @apply flex flex-col gap-5 rounded-lg border bg-card p-4 md:p-6;
+}
+
+.home-plan-field {
+  @apply flex flex-col gap-2;
+}
+
+.home-plan-field__header {
+  @apply flex items-center justify-between gap-2;
+}
+
+.home-plan-field__label {
+  @apply text-xs font-medium uppercase tracking-wide text-muted-foreground;
+}
+
+.home-plan-field__value {
+  @apply text-sm leading-relaxed;
 }

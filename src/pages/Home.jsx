@@ -1,43 +1,56 @@
-import PageHeader from '@/components/layout/PageHeader';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import CharacterPlanPanel from '@/components/home/CharacterPlanPanel';
+import ScreenSequencesTable from '@/components/home/ScreenSequencesTable';
+import DataStatus from '@/components/DataStatus';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCharacters } from '@/hooks/useCharacters';
 
 export default function Home() {
+  const { characters, loading, error } = useCharacters();
+  const [selectedCharacterId, setSelectedCharacterId] = useState(null);
+
+  useEffect(() => {
+    if (characters.length === 0) return;
+
+    setSelectedCharacterId((current) => {
+      if (current && characters.some((character) => character.id === current)) {
+        return current;
+      }
+      return characters[0].id;
+    });
+  }, [characters]);
+
+  const selectedCharacter = characters.find((character) => character.id === selectedCharacterId);
+
   return (
     <>
-      <PageHeader
-        title="Reel planning hub"
-        description="Scripts, sequences, and instructions for editors will appear here."
-      />
+      {characters.length > 0 && selectedCharacterId !== null ? (
+        <Tabs
+          value={String(selectedCharacterId)}
+          onValueChange={(value) => setSelectedCharacterId(Number(value))}
+          className="mb-6"
+        >
+          <TabsList variant="line">
+            {characters.map((character) => (
+              <TabsTrigger key={character.id} value={String(character.id)}>
+                {character.name.trim() || `Character ${character.id}`}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Plan reels</CardTitle>
-            <CardDescription>
-              Review generated hooks, screen copy, and captions in the plan sheet.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Use the sidebar to open Plan or jump straight to Generator to draft new rows.
-            </p>
-          </CardContent>
-        </Card>
+      <DataStatus loading={loading} error={error} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Shared resources</CardTitle>
-            <CardDescription>
-              Screens, goals, CTAs, hashtags, and caption styles stay in sync for the team.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Edits save automatically — pick a resource section from the sidebar to get started.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {!loading && characters.length === 0 ? (
+        <p className="py-12 text-center text-sm text-muted-foreground">
+          Add characters in Resources to get started.
+        </p>
+      ) : null}
+
+      {selectedCharacter ? <CharacterPlanPanel character={selectedCharacter} /> : null}
+
+      <ScreenSequencesTable />
     </>
   );
 }

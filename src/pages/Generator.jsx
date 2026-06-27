@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CharacterMultiSelect from '@/components/CharacterMultiSelect';
 import GoalMultiSelect from '@/components/GoalMultiSelect';
 import PageHeader from '@/components/layout/PageHeader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useCaptions } from '@/hooks/useCaptions';
+import { useCharacters } from '@/hooks/useCharacters';
 import { useCtas } from '@/hooks/useCtas';
 import { useGoals } from '@/hooks/useGoals';
 import { usePlan } from '@/hooks/usePlan';
@@ -27,6 +29,7 @@ import { sortGoalsByRecent } from '@/lib/goalDateLabel';
 import {
   buildPlanScreensFromSequence,
   DEFAULT_SEQUENCE_ID,
+  getScreenSequence,
   SCREEN_SEQUENCES,
 } from '@/lib/screenSequences';
 
@@ -43,6 +46,7 @@ function resolveCtaId(ctas, selectedId) {
 export default function Generator() {
   const navigate = useNavigate();
   const { goals } = useGoals();
+  const { characters } = useCharacters();
   const { ctas } = useCtas();
   const { captions } = useCaptions();
   const { screens } = useScreens();
@@ -52,6 +56,8 @@ export default function Generator() {
   const [hookText, setHookText] = useState('');
   const [referenceLink, setReferenceLink] = useState('');
   const [selectedGoalIds, setSelectedGoalIds] = useState([]);
+  const [selectedCharacterIds, setSelectedCharacterIds] = useState([]);
+  const [charactersInitialized, setCharactersInitialized] = useState(false);
   const [selectedSequenceId, setSelectedSequenceId] = useState(DEFAULT_SEQUENCE_ID);
   const [selectedCtaId, setSelectedCtaId] = useState(DEFAULT_CTA_ID);
   const [selectedCaptionStyle, setSelectedCaptionStyle] = useState(
@@ -65,6 +71,13 @@ export default function Generator() {
   const effectiveCtaId = resolveCtaId(ctas, selectedCtaId);
   const selectedCta = ctas.find((cta) => cta.id === effectiveCtaId);
 
+  useEffect(() => {
+    if (characters.length === 0 || charactersInitialized) return;
+
+    setSelectedCharacterIds(characters.map((character) => character.id));
+    setCharactersInitialized(true);
+  }, [characters, charactersInitialized]);
+
   const handleGenerate = async () => {
     const trimmedHook = hookText.trim();
     if (!trimmedHook) {
@@ -73,6 +86,10 @@ export default function Generator() {
     }
     if (selectedGoalIds.length === 0) {
       setError('Select at least one goal.');
+      return;
+    }
+    if (selectedCharacterIds.length === 0) {
+      setError('Select at least one character.');
       return;
     }
     if (!SCREEN_SEQUENCES.some((sequence) => sequence.id === selectedSequenceId)) {
@@ -84,23 +101,38 @@ export default function Generator() {
       .map((id) => goals.find((goal) => goal.id === id))
       .filter((goal) => goal?.title?.trim());
 
+    const selectedCharacters = selectedCharacterIds
+      .map((id) => characters.find((character) => character.id === id))
+      .filter((character) => character?.name?.trim());
+
     if (selectedGoals.length === 0) {
       setError('Selected goals need titles.');
+      return;
+    }
+
+    if (selectedCharacters.length === 0) {
+      setError('Selected characters need names.');
       return;
     }
 
     setError('');
     setGenerating(true);
 
+    const selectedSequence = getScreenSequence(selectedSequenceId);
+    const screenSequenceName = selectedSequence?.name ?? '';
+
     try {
       const generatedRows = [];
+      const generationPairs = selectedGoals.flatMap((goal) =>
+        selectedCharacters.map((character) => ({ goal, character }))
+      );
+      const totalRows = generationPairs.length;
 
-      for (let index = 0; index < selectedGoals.length; index += 1) {
-        const goal = selectedGoals[index];
+      for (let index = 0; index < generationPairs.length; index += 1) {
+        const { goal, character } = generationPairs[index];
         const goalTitle = goal.title.trim();
-        setGenerateProgress(
-          `Generating caption ${index + 1} of ${selectedGoals.length}…`
-        );
+        const characterName = character.name.trim();
+        setGenerateProgress(`Generating caption ${index + 1} of ${totalRows}…`);
 
         const planScreens = buildPlanScreensFromSequence(selectedSequenceId, screens, {
           ctaText: selectedCta?.text ?? '',
@@ -116,6 +148,7 @@ export default function Generator() {
         const result = await generateCaption({
           hook: trimmedHook,
           goalName: goalTitle,
+          characterName,
           screens: planScreens,
           ctaText: selectedCta?.text ?? '',
           captionStyle,
@@ -126,6 +159,8 @@ export default function Generator() {
           screens: planScreens,
           hook: trimmedHook,
           goalName: goalTitle,
+          characterName,
+          screenSequenceName,
           referenceVideoLink: normalizeExternalUrl(referenceLink),
           caption: result.caption,
           captionStyle: result.captionStyle,
@@ -147,7 +182,7 @@ export default function Generator() {
     <>
       <PageHeader
         title="Generator"
-        description="Combine a hook, reference video, and goals to draft reel instructions. Each selected goal creates its own plan row with an AI caption."
+        description="Combine a hook, reference video, goals, and characters to draft reel instructions. Each selected goal and character creates its own plan row with an AI caption."
       />
 
       <Card className="max-w-2xl">
@@ -178,6 +213,18 @@ export default function Generator() {
                 onChange={(event) => setReferenceLink(event.target.value)}
                 disabled={generating}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label id="characters-label">Characters</Label>
+              <CharacterMultiSelect
+                characters={characters}
+                selectedIds={selectedCharacterIds}
+                onChange={setSelectedCharacterIds}
+              />
+              <p className="text-xs text-muted-foreground">
+                All characters are selected by default. Each selected character gets its own plan row.
+              </p>
             </div>
 
             <div className="space-y-2">

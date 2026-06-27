@@ -28,7 +28,7 @@ export default function ScreensCopyModal({ row, onClose }) {
                   <Card size="sm">
                     <CardContent className="space-y-2">
                       <p className="text-sm font-medium">
-                        {screen.name.trim() || `Screen ${index + 1}`}
+                        {index + 1}. {screen.name.trim() || `Screen ${index + 1}`}
                       </p>
                       <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
                         {screen.copy.trim() || '—'}

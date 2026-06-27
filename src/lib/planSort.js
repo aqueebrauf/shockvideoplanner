@@ -19,3 +19,19 @@ export function sortPlansByRecent(plan) {
     return b.id - a.id;
   });
 }
+
+export function sortPlansByOldest(plan) {
+  return [...plan].sort((a, b) => {
+    const dateA = parseGoalDate(a.generatedDate);
+    const dateB = parseGoalDate(b.generatedDate);
+
+    if (!dateA && !dateB) return a.id - b.id;
+    if (!dateA) return a.id - b.id;
+    if (!dateB) return a.id - b.id;
+
+    const diff = dateA - dateB;
+    if (diff !== 0) return diff;
+
+    return a.id - b.id;
+  });
+}

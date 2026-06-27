@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { formatPlanDate } from '../lib/goalDateLabel';
+import { PLAN_STATUS_NOT_STARTED } from '../lib/planStatus';
 import {
   deletePlanById,
   fetchPlans,
@@ -73,11 +74,14 @@ function usePlanState() {
         generatedDate: '',
         hook: '',
         goalName: '',
+        characterName: '',
+        screenSequenceName: '',
         screens: [],
         referenceVideoLink: '',
         caption: '',
         captionStyle: '',
         hashtagsUsed: [],
+        status: PLAN_STATUS_NOT_STARTED,
       });
       return [...prev, created];
     });
@@ -107,7 +111,7 @@ function usePlanState() {
   );
 
   const addGeneratedPlan = useCallback(
-    async ({ screens, hook = '', goalName = '', referenceVideoLink = '' }) => {
+    async ({ screens, hook = '', goalName = '', characterName = '', referenceVideoLink = '' }) => {
       let created = null;
       setPlan((prev) => {
         created = normalizePlan({
@@ -115,11 +119,13 @@ function usePlanState() {
           generatedDate: formatPlanDate(),
           hook,
           goalName,
+          characterName,
           screens: screens.map(normalizeScreen),
           referenceVideoLink,
           caption: '',
           captionStyle: '',
           hashtagsUsed: [],
+          status: PLAN_STATUS_NOT_STARTED,
         });
         return [...prev, created];
       });
@@ -150,11 +156,14 @@ function usePlanState() {
             generatedDate: formatPlanDate(),
             hook: entry.hook ?? '',
             goalName: entry.goalName ?? '',
+            characterName: entry.characterName ?? '',
+            screenSequenceName: entry.screenSequenceName ?? '',
             screens: entry.screens.map(normalizeScreen),
             referenceVideoLink: entry.referenceVideoLink ?? '',
             caption: entry.caption ?? '',
             captionStyle: entry.captionStyle ?? '',
             hashtagsUsed: entry.hashtagsUsed ?? [],
+            status: PLAN_STATUS_NOT_STARTED,
           });
           startId += 1;
           return row;

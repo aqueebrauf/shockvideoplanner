@@ -1,4 +1,5 @@
 import { normalizeExternalUrl } from './externalUrl';
+import { normalizePlanStatus } from './planStatus';
 import { supabase } from './supabase';
 import { nextIdFromRows } from './db/helpers';
 
@@ -18,6 +19,8 @@ export function normalizePlan(row) {
     generatedDate: row.generatedDate ?? row.generated_date ?? '',
     hook: row.hook ?? '',
     goalName: row.goalName ?? row.goal_name ?? '',
+    characterName: row.characterName ?? row.character_name ?? '',
+    screenSequenceName: row.screenSequenceName ?? row.screen_sequence_name ?? '',
     screens: Array.isArray(row.screens)
       ? row.screens.map(normalizeScreen)
       : [],
@@ -27,6 +30,7 @@ export function normalizePlan(row) {
     caption: row.caption ?? '',
     captionStyle: row.captionStyle ?? row.caption_style ?? '',
     hashtagsUsed,
+    status: normalizePlanStatus(row.status),
   };
 }
 
@@ -36,11 +40,14 @@ function toRow(plan) {
     generated_date: plan.generatedDate,
     hook: plan.hook,
     goal_name: plan.goalName,
+    character_name: plan.characterName ?? '',
+    screen_sequence_name: plan.screenSequenceName ?? '',
     screens: plan.screens.map(normalizeScreen),
     reference_video_link: plan.referenceVideoLink,
     caption: plan.caption,
     caption_style: plan.captionStyle ?? '',
     hashtags_used: plan.hashtagsUsed ?? [],
+    status: normalizePlanStatus(plan.status),
   };
 }
 

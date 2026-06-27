@@ -92,6 +92,7 @@ export default async (req) => {
 
   const hook = body.hook?.trim();
   const goalName = body.goalName?.trim();
+  const characterName = body.characterName?.trim() ?? '';
   const ctaText = body.ctaText?.trim() ?? '';
   const screens = Array.isArray(body.screens) ? body.screens : [];
   const captionStyle = body.captionStyle?.trim() || 'intelligent';
@@ -132,6 +133,7 @@ export default async (req) => {
           content: buildUserPrompt({
             hook,
             goalName,
+            characterName,
             screens,
             ctaText,
             captionStyle,

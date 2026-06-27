@@ -31,10 +31,12 @@ export function getCharacterPlanStats(plans, characterId) {
   };
 }
 
-export function filterPlansForHomeByCharacterId(plans, characterId) {
+export function filterPlansForHomeByCharacterId(
+  plans,
+  characterId,
+  status = PLAN_STATUS_NOT_STARTED
+) {
   return sortPlansByOldest(
-    filterPlansByCharacterId(plans, characterId).filter(
-      (row) => row.status === PLAN_STATUS_NOT_STARTED
-    )
+    filterPlansByCharacterId(plans, characterId).filter((row) => row.status === status)
   );
 }

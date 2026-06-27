@@ -3,7 +3,7 @@ import { Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export default function CopyTextButton({ value, label, className, text }) {
+export default function CopyTextButton({ value, label, className, text, size = 'sm' }) {
   const [copied, setCopied] = useState(false);
   const copyableText = value?.trim();
 
@@ -26,7 +26,7 @@ export default function CopyTextButton({ value, label, className, text }) {
       <Button
         type="button"
         variant="outline"
-        size="sm"
+        size={size}
         className={className}
         onClick={copy}
         aria-label={label}

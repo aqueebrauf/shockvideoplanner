@@ -8,7 +8,7 @@ node_modules
 
 # Build
 dist
-assets
+/assets
 docs
 404.html
 

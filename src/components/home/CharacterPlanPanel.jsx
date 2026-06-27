@@ -178,9 +178,14 @@ export default function CharacterPlanPanel({ character }) {
               </Button>
               <Button
                 type="button"
-                variant={viewingNotStarted ? 'default' : 'outline'}
+                variant="ghost"
                 size="icon"
-                className="home-plan-status-btn"
+                className={cn(
+                  'home-plan-status-btn',
+                  viewingNotStarted
+                    ? 'home-plan-status-btn--unmarked'
+                    : 'home-plan-status-btn--marked'
+                )}
                 onClick={togglePlanStatus}
                 aria-label={
                   viewingNotStarted

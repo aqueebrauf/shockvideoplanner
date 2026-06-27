@@ -337,6 +337,14 @@
   @apply size-11 shrink-0;
 }
 
+.home-plan-status-btn--unmarked {
+  @apply border border-black bg-black text-white hover:bg-black/90;
+}
+
+.home-plan-status-btn--marked {
+  @apply border border-border bg-white text-black hover:bg-neutral-100;
+}
+
 .home-plan-empty {
   @apply flex flex-1 items-center justify-center py-8 text-center text-sm text-muted-foreground;
 }

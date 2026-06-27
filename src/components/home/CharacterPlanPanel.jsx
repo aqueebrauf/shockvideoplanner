@@ -178,7 +178,7 @@ export default function CharacterPlanPanel({ character }) {
               </Button>
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 className={cn(
                   'home-plan-status-btn',

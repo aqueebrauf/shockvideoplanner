@@ -334,15 +334,15 @@
 }
 
 .home-plan-status-btn {
-  @apply size-11 shrink-0;
+  @apply size-11 shrink-0 rounded-lg;
 }
 
 .home-plan-status-btn--unmarked {
-  @apply border-2 border-black bg-transparent text-black hover:bg-black/5;
+  @apply !border-2 !border-zinc-400 !bg-transparent !text-zinc-400 shadow-none hover:!border-zinc-300 hover:!bg-zinc-500/10 hover:!text-zinc-200;
 }
 
 .home-plan-status-btn--marked {
-  @apply border-2 border-black bg-white text-black hover:bg-neutral-100;
+  @apply !border-2 !border-zinc-300 !bg-white !text-zinc-900 shadow-none hover:!bg-neutral-100;
 }
 
 .home-plan-empty {

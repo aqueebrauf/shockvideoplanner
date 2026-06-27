@@ -3,13 +3,17 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import CopyTextButton from '@/components/CopyTextButton';
 import ScreensCopyModal from '@/components/ScreensCopyModal';
 import { Button } from '@/components/ui/button';
+import { useGoals } from '@/hooks/useGoals';
 import { usePlan } from '@/hooks/usePlan';
+import { useScreenSequences } from '@/hooks/useScreenSequences';
 import {
-  filterPlansForHomeByCharacter,
+  filterPlansForHomeByCharacterId,
   getCharacterPlanStats,
   screenSequenceButtonLabel,
 } from '@/lib/planDisplay';
+import { resolveGoalTitle, resolveScreenSequenceName } from '@/lib/planResolvers';
 import { formatPlanSerial } from '@/lib/planSort';
+import { PLAN_STATUS_COMPLETED } from '@/lib/planStatus';
 
 function PlanStat({ label, value }) {
   return (
@@ -21,18 +25,20 @@ function PlanStat({ label, value }) {
 }
 
 export default function CharacterPlanPanel({ character }) {
-  const { plan, loading } = usePlan();
+  const { plan, loading, updatePlan } = usePlan();
+  const { goals } = useGoals();
+  const { screenSequences } = useScreenSequences();
   const [planIndex, setPlanIndex] = useState(0);
   const [screensModalRow, setScreensModalRow] = useState(null);
 
   const stats = useMemo(
-    () => getCharacterPlanStats(plan, character.name),
-    [plan, character.name]
+    () => getCharacterPlanStats(plan, character.id),
+    [plan, character.id]
   );
 
   const plansForCharacter = useMemo(
-    () => filterPlansForHomeByCharacter(plan, character.name),
-    [plan, character.name]
+    () => filterPlansForHomeByCharacterId(plan, character.id),
+    [plan, character.id]
   );
 
   useEffect(() => {
@@ -50,9 +56,20 @@ export default function CharacterPlanPanel({ character }) {
   const canGoOlder = planIndex > 0;
   const canGoNewer = planIndex < totalPlans - 1;
 
+  const markCurrentPlanComplete = () => {
+    if (!currentPlan) return;
+    updatePlan(currentPlan.id, { status: PLAN_STATUS_COMPLETED }, { immediate: true });
+  };
+
   if (loading) {
     return null;
   }
+
+  const goalTitle = currentPlan ? resolveGoalTitle(currentPlan, goals) : '';
+  const sequenceLabel = currentPlan
+    ? screenSequenceButtonLabel(resolveScreenSequenceName(currentPlan, screenSequences))
+    : 'Screens';
+  const planSerial = currentPlan ? formatPlanSerial(currentPlan.id) : '';
 
   return (
     <div className="home-character-panel">
@@ -64,83 +81,83 @@ export default function CharacterPlanPanel({ character }) {
 
       {currentPlan ? (
         <>
-          <div className="home-plan-nav">
+          <div className="home-plan-panel">
+            <div className="home-plan-field">
+              <span className="home-plan-field__label">Hook</span>
+              <p className="home-plan-field__value whitespace-pre-wrap">
+                {currentPlan.hook.trim() || '—'}
+              </p>
+            </div>
+
+            <div className="home-plan-field home-plan-field--compact">
+              <span className="home-plan-field__label">Goal name</span>
+              <p className="home-plan-field__value">{goalTitle || '—'}</p>
+            </div>
+
+            <div className="home-plan-actions">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="home-plan-action-btn"
+                onClick={() => setScreensModalRow(currentPlan)}
+                aria-label={`${sequenceLabel} for plan ${planSerial}`}
+              >
+                {sequenceLabel}
+              </Button>
+              <CopyTextButton
+                value={currentPlan.hook}
+                text="Copy Hook"
+                label={`Copy hook for plan ${planSerial}`}
+                className="home-plan-action-btn"
+              />
+              <CopyTextButton
+                value={currentPlan.caption}
+                text="Copy caption"
+                label={`Copy caption for plan ${planSerial}`}
+                className="home-plan-action-btn"
+              />
+            </div>
+          </div>
+
+          <div className="home-plan-controls">
             <Button
               type="button"
               variant="outline"
-              size="icon-sm"
+              size="sm"
               disabled={!canGoOlder}
               onClick={() => setPlanIndex((index) => index - 1)}
-              aria-label="Older plan"
+              aria-label="Previous plan"
             >
               <ChevronLeft className="size-4" />
+              Prev
             </Button>
-            <span className="text-sm tabular-nums text-muted-foreground">
-              {planIndex + 1} of {totalPlans}
-            </span>
+            <Button
+              type="button"
+              size="sm"
+              onClick={markCurrentPlanComplete}
+              aria-label={`Mark plan ${planSerial} as complete`}
+            >
+              Mark as complete
+            </Button>
             <Button
               type="button"
               variant="outline"
-              size="icon-sm"
+              size="sm"
               disabled={!canGoNewer}
               onClick={() => setPlanIndex((index) => index + 1)}
-              aria-label="Newer plan"
+              aria-label="Next plan"
             >
+              Next
               <ChevronRight className="size-4" />
             </Button>
           </div>
-
-          <div className="home-plan-panel">
-            <div className="home-plan-panel__meta">
-              <div className="home-plan-field">
-                <div className="home-plan-field__header">
-                  <span className="home-plan-field__label">Hook</span>
-                  <CopyTextButton
-                    value={currentPlan.hook}
-                    label={`Copy hook for plan ${formatPlanSerial(currentPlan.id)}`}
-                  />
-                </div>
-                <p className="home-plan-field__value whitespace-pre-wrap">
-                  {currentPlan.hook.trim() || '—'}
-                </p>
-              </div>
-
-              <div className="home-plan-field home-plan-field--compact">
-                <span className="home-plan-field__label">Goal name</span>
-                <p className="home-plan-field__value">{currentPlan.goalName.trim() || '—'}</p>
-              </div>
-
-              <div className="home-plan-field home-plan-field--compact">
-                <span className="home-plan-field__label">Screen sequence</span>
-                <div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setScreensModalRow(currentPlan)}
-                    aria-label={`${screenSequenceButtonLabel(currentPlan.screenSequenceName)} for plan ${formatPlanSerial(currentPlan.id)}`}
-                  >
-                    {screenSequenceButtonLabel(currentPlan.screenSequenceName)}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="home-plan-field home-plan-field--caption">
-              <div className="home-plan-field__header">
-                <span className="home-plan-field__label">Caption</span>
-                <CopyTextButton
-                  value={currentPlan.caption}
-                  label={`Copy caption for plan ${formatPlanSerial(currentPlan.id)}`}
-                />
-              </div>
-              <p className="home-plan-field__value home-plan-field__value--scroll whitespace-pre-wrap">
-                {currentPlan.caption.trim() || '—'}
-              </p>
-            </div>
-          </div>
         </>
-      ) : null}
+      ) : (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          No plans to work on. All plans are completed.
+        </p>
+      )}
 
       {screensModalRow && (
         <ScreensCopyModal row={screensModalRow} onClose={() => setScreensModalRow(null)} />

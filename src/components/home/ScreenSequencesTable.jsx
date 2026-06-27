@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
+import { useScreenSequences } from '@/hooks/useScreenSequences';
 import { useScreens } from '@/hooks/useScreens';
-import { SCREEN_SEQUENCES } from '@/lib/screenSequences';
 
 function buildSequenceSteps(sequence, screenById) {
   return [
@@ -12,6 +12,7 @@ function buildSequenceSteps(sequence, screenById) {
 
 export default function ScreenSequencesTable() {
   const { screens } = useScreens();
+  const { screenSequences } = useScreenSequences();
 
   const screenById = useMemo(
     () => Object.fromEntries(screens.map((screen) => [screen.id, screen])),
@@ -29,7 +30,7 @@ export default function ScreenSequencesTable() {
           </tr>
         </thead>
         <tbody>
-          {SCREEN_SEQUENCES.map((sequence, index) => {
+          {screenSequences.map((sequence, index) => {
             const steps = buildSequenceSteps(sequence, screenById);
 
             return (

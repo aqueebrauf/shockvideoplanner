@@ -127,9 +127,10 @@ function usePlanState() {
         id: nextPlanId(prev),
         generatedDate: '',
         hook: '',
-        goalName: '',
-        characterName: '',
-        screenSequenceName: '',
+        characterId: null,
+        goalId: null,
+        screenSequenceId: '',
+        captionStyleId: null,
         screens: [],
         referenceVideoLink: '',
         caption: '',
@@ -170,15 +171,23 @@ function usePlanState() {
   );
 
   const addGeneratedPlan = useCallback(
-    async ({ screens, hook = '', goalName = '', characterName = '', referenceVideoLink = '' }) => {
+    async ({
+      screens,
+      hook = '',
+      characterId = null,
+      goalId = null,
+      referenceVideoLink = '',
+    }) => {
       let created = null;
       setPlan((prev) => {
         created = normalizePlan({
           id: nextPlanId(prev),
           generatedDate: formatPlanDate(),
           hook,
-          goalName,
-          characterName,
+          characterId,
+          goalId,
+          screenSequenceId: '',
+          captionStyleId: null,
           screens: screens.map(normalizeScreen),
           referenceVideoLink,
           caption: '',
@@ -214,9 +223,10 @@ function usePlanState() {
             id: startId,
             generatedDate: formatPlanDate(),
             hook: entry.hook ?? '',
-            goalName: entry.goalName ?? '',
-            characterName: entry.characterName ?? '',
-            screenSequenceName: entry.screenSequenceName ?? '',
+            characterId: entry.characterId ?? null,
+            goalId: entry.goalId ?? null,
+            screenSequenceId: entry.screenSequenceId ?? '',
+            captionStyleId: entry.captionStyleId ?? null,
             screens: entry.screens.map(normalizeScreen),
             referenceVideoLink: entry.referenceVideoLink ?? '',
             caption: entry.caption ?? '',

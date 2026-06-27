@@ -21,16 +21,16 @@ import { useCharacters } from '@/hooks/useCharacters';
 import { useCtas } from '@/hooks/useCtas';
 import { useGoals } from '@/hooks/useGoals';
 import { usePlan } from '@/hooks/usePlan';
+import { useScreenSequences } from '@/hooks/useScreenSequences';
 import { useScreens } from '@/hooks/useScreens';
 import { DEFAULT_CTA_ID } from '@/lib/ctasStorage';
 import { normalizeExternalUrl } from '@/lib/externalUrl';
 import { generateCaption } from '@/lib/generateCaption';
 import { sortGoalsByRecent } from '@/lib/goalDateLabel';
+import { resolveCharacterName, resolveGoalTitle } from '@/lib/planResolvers';
 import {
   buildPlanScreensFromSequence,
   DEFAULT_SEQUENCE_ID,
-  getScreenSequence,
-  SCREEN_SEQUENCES,
 } from '@/lib/screenSequences';
 
 export const CAPTION_STYLE_INTELLIGENT = 'intelligent';
@@ -50,6 +50,7 @@ export default function Generator() {
   const { ctas } = useCtas();
   const { captions } = useCaptions();
   const { screens } = useScreens();
+  const { screenSequences } = useScreenSequences();
   const { addGeneratedPlans } = usePlan();
   const sortedGoals = useMemo(() => sortGoalsByRecent(goals), [goals]);
 
@@ -78,6 +79,13 @@ export default function Generator() {
     setCharactersInitialized(true);
   }, [characters, charactersInitialized]);
 
+  useEffect(() => {
+    if (screenSequences.length === 0) return;
+    if (!screenSequences.some((sequence) => sequence.id === selectedSequenceId)) {
+      setSelectedSequenceId(screenSequences[0]?.id ?? DEFAULT_SEQUENCE_ID);
+    }
+  }, [screenSequences, selectedSequenceId]);
+
   const handleGenerate = async () => {
     const trimmedHook = hookText.trim();
     if (!trimmedHook) {
@@ -92,7 +100,7 @@ export default function Generator() {
       setError('Select at least one character.');
       return;
     }
-    if (!SCREEN_SEQUENCES.some((sequence) => sequence.id === selectedSequenceId)) {
+    if (!screenSequences.some((sequence) => sequence.id === selectedSequenceId)) {
       setError('Select a screen sequence.');
       return;
     }
@@ -118,9 +126,6 @@ export default function Generator() {
     setError('');
     setGenerating(true);
 
-    const selectedSequence = getScreenSequence(selectedSequenceId);
-    const screenSequenceName = selectedSequence?.name ?? '';
-
     try {
       const generatedRows = [];
       const generationPairs = selectedGoals.flatMap((goal) =>
@@ -130,14 +135,24 @@ export default function Generator() {
 
       for (let index = 0; index < generationPairs.length; index += 1) {
         const { goal, character } = generationPairs[index];
-        const goalTitle = goal.title.trim();
-        const characterName = character.name.trim();
+        const goalTitle = resolveGoalTitle({ goalId: goal.id }, [goal]);
+        const characterName = resolveCharacterName({ characterId: character.id }, [character]);
         setGenerateProgress(`Generating caption ${index + 1} of ${totalRows}…`);
 
-        const planScreens = buildPlanScreensFromSequence(selectedSequenceId, screens, {
-          ctaText: selectedCta?.text ?? '',
-          hookText: trimmedHook,
-        });
+        const planScreens = buildPlanScreensFromSequence(
+          selectedSequenceId,
+          screens,
+          screenSequences,
+          {
+            ctaText: selectedCta?.text ?? '',
+            hookText: trimmedHook,
+          }
+        );
+
+        const captionStyleId =
+          selectedCaptionStyle === CAPTION_STYLE_INTELLIGENT
+            ? null
+            : Number(selectedCaptionStyle);
 
         const captionStyle =
           selectedCaptionStyle === CAPTION_STYLE_INTELLIGENT
@@ -158,9 +173,10 @@ export default function Generator() {
         generatedRows.push({
           screens: planScreens,
           hook: trimmedHook,
-          goalName: goalTitle,
-          characterName,
-          screenSequenceName,
+          characterId: character.id,
+          goalId: goal.id,
+          screenSequenceId: selectedSequenceId,
+          captionStyleId,
           referenceVideoLink: normalizeExternalUrl(referenceLink),
           caption: result.caption,
           captionStyle: result.captionStyle,
@@ -251,7 +267,7 @@ export default function Generator() {
                   <SelectValue placeholder="Select a sequence" />
                 </SelectTrigger>
                 <SelectContent>
-                  {SCREEN_SEQUENCES.map((sequence) => (
+                  {screenSequences.map((sequence) => (
                     <SelectItem key={sequence.id} value={sequence.id}>
                       {sequence.name}
                     </SelectItem>

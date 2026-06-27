@@ -1,28 +1,15 @@
-import {
-  deleteCharacterById,
-  fetchCharacters,
-  nextCharacterId,
-  normalizeCharacter,
-  upsertCharacter,
-} from '../lib/charactersStorage';
-import { useRemoteCollection } from './useRemoteCollection';
+import { useResources } from '@/providers/ResourcesProvider';
 
 export function useCharacters() {
-  const { items, loading, error, updateItem, addItem, deleteItem } = useRemoteCollection({
-    fetchAll: fetchCharacters,
-    upsertOne: upsertCharacter,
-    deleteById: deleteCharacterById,
-    normalize: normalizeCharacter,
-    createEmpty: (id) => ({ id, name: '' }),
-    getNextId: nextCharacterId,
-  });
+  const { characters } = useResources();
 
   return {
-    characters: items,
-    loading,
-    error,
-    updateCharacter: updateItem,
-    addCharacter: addItem,
-    deleteCharacter: deleteItem,
+    characters: characters.items,
+    loading: characters.loading,
+    error: characters.error,
+    updateCharacter: characters.updateItem,
+    addCharacter: characters.addItem,
+    deleteCharacter: characters.deleteItem,
+    reloadCharacters: characters.reload,
   };
 }

@@ -10,6 +10,12 @@ export function normalizeScreen(screen) {
   };
 }
 
+function readNullableId(value) {
+  if (value == null || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function normalizePlan(row) {
   const hashtagsRaw = row.hashtagsUsed ?? row.hashtags_used;
   const hashtagsUsed = Array.isArray(hashtagsRaw) ? hashtagsRaw : [];
@@ -18,9 +24,10 @@ export function normalizePlan(row) {
     id: row.id,
     generatedDate: row.generatedDate ?? row.generated_date ?? '',
     hook: row.hook ?? '',
-    goalName: row.goalName ?? row.goal_name ?? '',
-    characterName: row.characterName ?? row.character_name ?? '',
-    screenSequenceName: row.screenSequenceName ?? row.screen_sequence_name ?? '',
+    characterId: readNullableId(row.characterId ?? row.character_id),
+    goalId: readNullableId(row.goalId ?? row.goal_id),
+    screenSequenceId: row.screenSequenceId ?? row.screen_sequence_id ?? '',
+    captionStyleId: readNullableId(row.captionStyleId ?? row.caption_style_id),
     screens: Array.isArray(row.screens)
       ? row.screens.map(normalizeScreen)
       : [],
@@ -39,9 +46,10 @@ function toRow(plan) {
     id: plan.id,
     generated_date: plan.generatedDate,
     hook: plan.hook,
-    goal_name: plan.goalName,
-    character_name: plan.characterName ?? '',
-    screen_sequence_name: plan.screenSequenceName ?? '',
+    character_id: plan.characterId,
+    goal_id: plan.goalId,
+    screen_sequence_id: plan.screenSequenceId || null,
+    caption_style_id: plan.captionStyleId,
     screens: plan.screens.map(normalizeScreen),
     reference_video_link: plan.referenceVideoLink,
     caption: plan.caption,

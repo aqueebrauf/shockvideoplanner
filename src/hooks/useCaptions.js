@@ -1,36 +1,15 @@
-import {
-  deleteCaptionById,
-  fetchCaptions,
-  nextCaptionId,
-  normalizeCaption,
-  upsertCaption,
-} from '../lib/captionsStorage';
-import { useRemoteCollection } from './useRemoteCollection';
+import { useResources } from '@/providers/ResourcesProvider';
 
 export function useCaptions() {
-  const { items, loading, error, updateItem, addItem, deleteItem } = useRemoteCollection({
-    fetchAll: fetchCaptions,
-    upsertOne: upsertCaption,
-    deleteById: deleteCaptionById,
-    normalize: normalizeCaption,
-    createEmpty: (id) => ({
-      id,
-      style: '',
-      hookSignals: '',
-      structure: '',
-      guide: '',
-      example: '',
-      maxChars: null,
-    }),
-    getNextId: nextCaptionId,
-  });
+  const { captions } = useResources();
 
   return {
-    captions: items,
-    loading,
-    error,
-    updateCaption: updateItem,
-    addCaption: addItem,
-    deleteCaption: deleteItem,
+    captions: captions.items,
+    loading: captions.loading,
+    error: captions.error,
+    updateCaption: captions.updateItem,
+    addCaption: captions.addItem,
+    deleteCaption: captions.deleteItem,
+    reloadCaptions: captions.reload,
   };
 }

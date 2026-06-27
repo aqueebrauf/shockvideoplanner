@@ -1,23 +1,9 @@
 import { useCallback } from 'react';
-import {
-  deleteScreenById,
-  fetchScreens,
-  nextScreenId,
-  normalizeScreen,
-  upsertScreen,
-} from '../lib/screensStorage';
-import { uploadScreenImage } from '../lib/screenImageStorage';
-import { useRemoteCollection } from './useRemoteCollection';
+import { useResources } from '@/providers/ResourcesProvider';
+import { uploadScreenImage } from '@/lib/screenImageStorage';
 
 export function useScreens() {
-  const { items, loading, error, updateItem, addItem, deleteItem } = useRemoteCollection({
-    fetchAll: fetchScreens,
-    upsertOne: upsertScreen,
-    deleteById: deleteScreenById,
-    normalize: normalizeScreen,
-    createEmpty: (id) => ({ id, name: '', image: null, suggestedCopy: '' }),
-    getNextId: nextScreenId,
-  });
+  const { screens } = useResources();
 
   const updateScreen = useCallback(
     async (id, patch) => {
@@ -26,17 +12,18 @@ export function useScreens() {
         const url = await uploadScreenImage(id, patch.image);
         nextPatch = { ...patch, image: url };
       }
-      await updateItem(id, nextPatch);
+      await screens.updateItem(id, nextPatch);
     },
-    [updateItem]
+    [screens]
   );
 
   return {
-    screens: items,
-    loading,
-    error,
+    screens: screens.items,
+    loading: screens.loading,
+    error: screens.error,
     updateScreen,
-    addScreen: addItem,
-    deleteScreen: deleteItem,
+    addScreen: screens.addItem,
+    deleteScreen: screens.deleteItem,
+    reloadScreens: screens.reload,
   };
 }

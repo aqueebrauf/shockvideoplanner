@@ -1,28 +1,15 @@
-import {
-  deleteGoalById,
-  fetchGoals,
-  nextGoalId,
-  normalizeGoal,
-  upsertGoal,
-} from '../lib/goalsStorage';
-import { useRemoteCollection } from './useRemoteCollection';
+import { useResources } from '@/providers/ResourcesProvider';
 
 export function useGoals() {
-  const { items, loading, error, updateItem, addItem, deleteItem } = useRemoteCollection({
-    fetchAll: fetchGoals,
-    upsertOne: upsertGoal,
-    deleteById: deleteGoalById,
-    normalize: normalizeGoal,
-    createEmpty: (id) => ({ id, title: '', link: '', date: '' }),
-    getNextId: nextGoalId,
-  });
+  const { goals } = useResources();
 
   return {
-    goals: items,
-    loading,
-    error,
-    updateGoal: updateItem,
-    addGoal: addItem,
-    deleteGoal: deleteItem,
+    goals: goals.items,
+    loading: goals.loading,
+    error: goals.error,
+    updateGoal: goals.updateItem,
+    addGoal: goals.addItem,
+    deleteGoal: goals.deleteItem,
+    reloadGoals: goals.reload,
   };
 }

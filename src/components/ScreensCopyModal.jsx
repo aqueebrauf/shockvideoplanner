@@ -6,9 +6,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
+import { useGoals } from '@/hooks/useGoals';
+import { resolveGoalTitle } from '@/lib/planResolvers';
 
 export default function ScreensCopyModal({ row, onClose }) {
-  const title = row.goalName.trim() || row.hook.trim() || 'Plan screens';
+  const { goals } = useGoals();
+  const goalTitle = resolveGoalTitle(row, goals);
+  const title = goalTitle || row.hook.trim() || 'Plan screens';
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

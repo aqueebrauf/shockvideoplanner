@@ -1,28 +1,15 @@
-import {
-  deleteCtaById,
-  fetchCtas,
-  nextCtaId,
-  normalizeCta,
-  upsertCta,
-} from '../lib/ctasStorage';
-import { useRemoteCollection } from './useRemoteCollection';
+import { useResources } from '@/providers/ResourcesProvider';
 
 export function useCtas() {
-  const { items, loading, error, updateItem, addItem, deleteItem } = useRemoteCollection({
-    fetchAll: fetchCtas,
-    upsertOne: upsertCta,
-    deleteById: deleteCtaById,
-    normalize: normalizeCta,
-    createEmpty: (id) => ({ id, text: '' }),
-    getNextId: nextCtaId,
-  });
+  const { ctas } = useResources();
 
   return {
-    ctas: items,
-    loading,
-    error,
-    updateCta: updateItem,
-    addCta: addItem,
-    deleteCta: deleteItem,
+    ctas: ctas.items,
+    loading: ctas.loading,
+    error: ctas.error,
+    updateCta: ctas.updateItem,
+    addCta: ctas.addItem,
+    deleteCta: ctas.deleteItem,
+    reloadCtas: ctas.reload,
   };
 }

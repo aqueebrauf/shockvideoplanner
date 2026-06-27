@@ -8,8 +8,11 @@ import { AddRowButton } from '@/components/table/TableActions';
 import { Button } from '@/components/ui/button';
 import { usePlan } from '../hooks/usePlan';
 import { useCharacters } from '../hooks/useCharacters';
+import { useGoals } from '../hooks/useGoals';
+import { useScreenSequences } from '../hooks/useScreenSequences';
 import { formatPlanSerial, sortPlansByRecent } from '../lib/planSort';
 import { normalizeExternalUrl } from '../lib/externalUrl';
+import { resolveGoalTitle, resolveScreenSequenceName } from '../lib/planResolvers';
 
 import { screenSequenceButtonLabel } from '../lib/planDisplay';
 import { PLAN_STATUSES } from '../lib/planStatus';
@@ -94,6 +97,8 @@ function CaptionCell({ value, onChange, onBlur, serial }) {
 export default function Plan() {
   const { plan, loading, error, updatePlan, flushPlan, addPlan, deletePlan } = usePlan();
   const { characters } = useCharacters();
+  const { goals } = useGoals();
+  const { screenSequences } = useScreenSequences();
   const { state } = useLocation();
   const highlightId = state?.highlightId;
   const [screensModalRow, setScreensModalRow] = useState(null);
@@ -149,7 +154,10 @@ export default function Plan() {
             ) : (
               sortedPlan.map((row) => {
                 const serial = formatPlanSerial(row.id);
-                const sequenceLabel = screenSequenceButtonLabel(row.screenSequenceName);
+                const sequenceLabel = screenSequenceButtonLabel(
+                  resolveScreenSequenceName(row, screenSequences)
+                );
+                const goalTitle = resolveGoalTitle(row, goals);
 
                 return (
                   <tr key={row.id} data-plan-id={row.id}>
@@ -165,25 +173,41 @@ export default function Plan() {
                         ariaLabel={`Hook for plan ${serial}`}
                       />
                     </td>
-                    <td className="col-goal-name">
-                      <SheetCell
-                        value={row.goalName}
-                        placeholder="Goal name"
-                        onChange={(value) =>
-                          updatePlan(row.id, { goalName: value })
+                    <td className="col-goal-name sheet-cell-static">
+                      <select
+                        className="h-9 w-full min-w-0 rounded-none border-0 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                        value={row.goalId ?? ''}
+                        onChange={(e) =>
+                          updatePlan(
+                            row.id,
+                            { goalId: e.target.value ? Number(e.target.value) : null },
+                            { immediate: true }
+                          )
                         }
-                        onBlur={() => flushPlan(row.id)}
-                        ariaLabel={`Goal name for plan ${serial}`}
-                      />
+                        aria-label={`Goal for plan ${serial}`}
+                      >
+                        <option value="">—</option>
+                        {goals.map((goal) => (
+                          <option key={goal.id} value={goal.id}>
+                            {goal.title.trim() || `Goal ${goal.id}`}
+                          </option>
+                        ))}
+                        {row.goalId != null &&
+                        !goals.some((goal) => goal.id === row.goalId) ? (
+                          <option value={row.goalId}>
+                            {goalTitle || `Goal ${row.goalId}`}
+                          </option>
+                        ) : null}
+                      </select>
                     </td>
                     <td className="col-character-name sheet-cell-static">
                       <select
                         className="h-9 w-full min-w-0 rounded-none border-0 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                        value={row.characterName}
+                        value={row.characterId ?? ''}
                         onChange={(e) =>
                           updatePlan(
                             row.id,
-                            { characterName: e.target.value },
+                            { characterId: e.target.value ? Number(e.target.value) : null },
                             { immediate: true }
                           )
                         }
@@ -191,15 +215,15 @@ export default function Plan() {
                       >
                         <option value="">—</option>
                         {characters.map((character) => (
-                          <option key={character.id} value={character.name}>
+                          <option key={character.id} value={character.id}>
                             {character.name.trim() || `Character ${character.id}`}
                           </option>
                         ))}
-                        {row.characterName &&
-                        !characters.some(
-                          (character) => character.name === row.characterName
-                        ) ? (
-                          <option value={row.characterName}>{row.characterName}</option>
+                        {row.characterId != null &&
+                        !characters.some((character) => character.id === row.characterId) ? (
+                          <option value={row.characterId}>
+                            {`Character ${row.characterId}`}
+                          </option>
                         ) : null}
                       </select>
                     </td>

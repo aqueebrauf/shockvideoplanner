@@ -6,15 +6,13 @@ export function screenSequenceButtonLabel(name) {
   return label || 'Screens';
 }
 
-export function filterPlansByCharacter(plans, characterName) {
-  const needle = characterName?.trim().toLowerCase();
-  if (!needle) return [];
-
-  return plans.filter((row) => row.characterName?.trim().toLowerCase() === needle);
+export function filterPlansByCharacterId(plans, characterId) {
+  if (characterId == null) return [];
+  return plans.filter((row) => row.characterId === characterId);
 }
 
-export function getCharacterPlanStats(plans, characterName) {
-  const characterPlans = filterPlansByCharacter(plans, characterName);
+export function getCharacterPlanStats(plans, characterId) {
+  const characterPlans = filterPlansByCharacterId(plans, characterId);
   let completed = 0;
   let notStarted = 0;
 
@@ -33,9 +31,9 @@ export function getCharacterPlanStats(plans, characterName) {
   };
 }
 
-export function filterPlansForHomeByCharacter(plans, characterName) {
+export function filterPlansForHomeByCharacterId(plans, characterId) {
   return sortPlansByOldest(
-    filterPlansByCharacter(plans, characterName).filter(
+    filterPlansByCharacterId(plans, characterId).filter(
       (row) => row.status === PLAN_STATUS_NOT_STARTED
     )
   );

@@ -1,23 +1,16 @@
 export const DEFAULT_SEQUENCE_ID = 'primary-demo';
 
-export const SCREEN_SEQUENCES = [
-  {
-    id: 'primary-demo',
-    name: 'Primary Demo',
-    screenIds: [2, 4, 9, 11, 12],
-  },
-];
-
-export function getScreenSequence(id) {
-  return SCREEN_SEQUENCES.find((sequence) => sequence.id === id);
+export function getScreenSequence(sequenceId, screenSequences) {
+  return screenSequences.find((sequence) => sequence.id === sequenceId) ?? null;
 }
 
 export function buildPlanScreensFromSequence(
   sequenceId,
   screens,
+  screenSequences,
   { ctaText = '', hookText = '' } = {}
 ) {
-  const sequence = getScreenSequence(sequenceId);
+  const sequence = getScreenSequence(sequenceId, screenSequences);
   if (!sequence) {
     throw new Error('Select a screen sequence.');
   }

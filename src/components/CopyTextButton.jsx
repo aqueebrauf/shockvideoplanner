@@ -3,11 +3,11 @@ import { Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export default function CopyTextButton({ value, label, className }) {
+export default function CopyTextButton({ value, label, className, text }) {
   const [copied, setCopied] = useState(false);
-  const text = value?.trim();
+  const copyableText = value?.trim();
 
-  if (!text) {
+  if (!copyableText) {
     return null;
   }
 
@@ -20,6 +20,23 @@ export default function CopyTextButton({ value, label, className }) {
       /* clipboard unavailable */
     }
   };
+
+  if (text) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className={className}
+        onClick={copy}
+        aria-label={label}
+        title={copied ? 'Copied' : label}
+      >
+        {copied ? <Check /> : <Copy />}
+        {copied ? 'Copied' : text}
+      </Button>
+    );
+  }
 
   return (
     <Button

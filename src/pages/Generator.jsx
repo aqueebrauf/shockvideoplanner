@@ -15,18 +15,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useCaptions } from '@/hooks/useCaptions';
 import { useCtas } from '@/hooks/useCtas';
 import { useGoals } from '@/hooks/useGoals';
 import { usePlan } from '@/hooks/usePlan';
 import { useScreens } from '@/hooks/useScreens';
 import { DEFAULT_CTA_ID } from '@/lib/ctasStorage';
 import { normalizeExternalUrl } from '@/lib/externalUrl';
+import { generateCaption } from '@/lib/generateCaption';
+import { sortGoalsByRecent } from '@/lib/goalDateLabel';
 import {
   buildPlanScreensFromSequence,
   DEFAULT_SEQUENCE_ID,
   SCREEN_SEQUENCES,
 } from '@/lib/screenSequences';
-import { sortGoalsByRecent } from '@/lib/goalDateLabel';
+
+export const CAPTION_STYLE_INTELLIGENT = 'intelligent';
 
 function resolveCtaId(ctas, selectedId) {
   if (ctas.some((c) => c.id === selectedId)) return selectedId;
@@ -40,6 +44,7 @@ export default function Generator() {
   const navigate = useNavigate();
   const { goals } = useGoals();
   const { ctas } = useCtas();
+  const { captions } = useCaptions();
   const { screens } = useScreens();
   const { addGeneratedPlans } = usePlan();
   const sortedGoals = useMemo(() => sortGoalsByRecent(goals), [goals]);
@@ -49,8 +54,13 @@ export default function Generator() {
   const [selectedGoalIds, setSelectedGoalIds] = useState([]);
   const [selectedSequenceId, setSelectedSequenceId] = useState(DEFAULT_SEQUENCE_ID);
   const [selectedCtaId, setSelectedCtaId] = useState(DEFAULT_CTA_ID);
+  const [selectedCaptionStyle, setSelectedCaptionStyle] = useState(
+    CAPTION_STYLE_INTELLIGENT
+  );
   const [customInstruction, setCustomInstruction] = useState('');
   const [error, setError] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [generateProgress, setGenerateProgress] = useState('');
 
   const effectiveCtaId = resolveCtaId(ctas, selectedCtaId);
   const selectedCta = ctas.find((cta) => cta.id === effectiveCtaId);
@@ -80,28 +90,56 @@ export default function Generator() {
     }
 
     setError('');
+    setGenerating(true);
 
     try {
-      const generatedRows = selectedGoals.map((goal) => {
+      const generatedRows = [];
+
+      for (let index = 0; index < selectedGoals.length; index += 1) {
+        const goal = selectedGoals[index];
         const goalTitle = goal.title.trim();
+        setGenerateProgress(
+          `Generating caption ${index + 1} of ${selectedGoals.length}…`
+        );
+
         const planScreens = buildPlanScreensFromSequence(selectedSequenceId, screens, {
           ctaText: selectedCta?.text ?? '',
           hookText: trimmedHook,
         });
 
-        return {
+        const captionStyle =
+          selectedCaptionStyle === CAPTION_STYLE_INTELLIGENT
+            ? CAPTION_STYLE_INTELLIGENT
+            : captions.find((c) => String(c.id) === selectedCaptionStyle)?.style ??
+              CAPTION_STYLE_INTELLIGENT;
+
+        const result = await generateCaption({
+          hook: trimmedHook,
+          goalName: goalTitle,
+          screens: planScreens,
+          ctaText: selectedCta?.text ?? '',
+          captionStyle,
+          customInstruction: customInstruction.trim(),
+        });
+
+        generatedRows.push({
           screens: planScreens,
           hook: trimmedHook,
           goalName: goalTitle,
           referenceVideoLink: normalizeExternalUrl(referenceLink),
-        };
-      });
+          caption: result.caption,
+          captionStyle: result.captionStyle,
+          hashtagsUsed: result.hashtagsUsed,
+        });
+      }
 
       const newPlanIds = await addGeneratedPlans(generatedRows);
-
       navigate('/plan', { state: { highlightId: newPlanIds[0] } });
     } catch (err) {
       setError(err.message || 'Could not generate plan.');
+    } finally {
+      setGenerating(false);
+      setGenerateProgress('');
     }
   };
 
@@ -109,7 +147,7 @@ export default function Generator() {
     <>
       <PageHeader
         title="Generator"
-        description="Combine a hook, reference video, and goals to draft reel instructions. Each selected goal creates its own plan row."
+        description="Combine a hook, reference video, and goals to draft reel instructions. Each selected goal creates its own plan row with an AI caption."
       />
 
       <Card className="max-w-2xl">
@@ -126,6 +164,7 @@ export default function Generator() {
                 value={hookText}
                 onChange={(event) => setHookText(event.target.value)}
                 required
+                disabled={generating}
               />
             </div>
 
@@ -137,6 +176,7 @@ export default function Generator() {
                 placeholder="https://"
                 value={referenceLink}
                 onChange={(event) => setReferenceLink(event.target.value)}
+                disabled={generating}
               />
             </div>
 
@@ -158,6 +198,7 @@ export default function Generator() {
               <Select
                 value={selectedSequenceId}
                 onValueChange={setSelectedSequenceId}
+                disabled={generating}
               >
                 <SelectTrigger id="screen-sequence" className="w-full">
                   <SelectValue placeholder="Select a sequence" />
@@ -177,7 +218,7 @@ export default function Generator() {
               <Select
                 value={effectiveCtaId ? String(effectiveCtaId) : undefined}
                 onValueChange={(value) => setSelectedCtaId(Number(value))}
-                disabled={ctas.length === 0}
+                disabled={ctas.length === 0 || generating}
               >
                 <SelectTrigger id="cta-select" className="w-full">
                   <SelectValue placeholder="Add CTAs in Resources" />
@@ -193,13 +234,40 @@ export default function Generator() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="caption-style">Caption style</Label>
+              <Select
+                value={selectedCaptionStyle}
+                onValueChange={setSelectedCaptionStyle}
+                disabled={generating}
+              >
+                <SelectTrigger id="caption-style" className="w-full">
+                  <SelectValue placeholder="Select caption style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={CAPTION_STYLE_INTELLIGENT}>
+                    Intelligent (recommended)
+                  </SelectItem>
+                  {captions.map((caption) => (
+                    <SelectItem key={caption.id} value={String(caption.id)}>
+                      {caption.style || `Style ${caption.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Intelligent mode picks the best style for your hook, goal, and CTA.
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="custom-instruction">Custom instruction</Label>
               <Textarea
                 id="custom-instruction"
                 rows={4}
-                placeholder="Extra notes for tone, pacing, etc."
+                placeholder="Extra notes for tone, pacing, audience, etc."
                 value={customInstruction}
                 onChange={(event) => setCustomInstruction(event.target.value)}
+                disabled={generating}
               />
             </div>
 
@@ -209,8 +277,12 @@ export default function Generator() {
               </Alert>
             ) : null}
 
-            <Button type="button" onClick={handleGenerate}>
-              Generate
+            {generateProgress ? (
+              <p className="text-sm text-muted-foreground">{generateProgress}</p>
+            ) : null}
+
+            <Button type="button" onClick={handleGenerate} disabled={generating}>
+              {generating ? 'Generating…' : 'Generate'}
             </Button>
           </form>
         </CardContent>

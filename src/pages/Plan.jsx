@@ -188,7 +188,7 @@ export default function Plan() {
                         ariaLabel={`Goal name for plan ${serial}`}
                       />
                     </td>
-                    <td className="col-screens sheet-cell-static px-3 py-2 text-center">
+                    <td className="col-screens sheet-cell-static text-center">
                       <Button
                         type="button"
                         variant="outline"
@@ -199,7 +199,7 @@ export default function Plan() {
                         Screens
                       </Button>
                     </td>
-                    <td className="col-ref-video sheet-cell-static px-3 py-2 text-center">
+                    <td className="col-ref-video sheet-cell-static text-center">
                       {row.referenceVideoLink.trim() ? (
                         <Button
                           render={
@@ -228,7 +228,7 @@ export default function Plan() {
                         }
                       />
                     </td>
-                    <td className="col-actions sheet-cell-static px-2 py-2 text-center">
+                    <td className="col-actions sheet-cell-static text-center">
                       <Button
                         type="button"
                         variant="destructive"

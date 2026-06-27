@@ -2,7 +2,11 @@ import DataStatus from '../../components/DataStatus';
 import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
 import { TableInput } from '@/components/table/TableField';
 import { cn } from '@/lib/utils';
-import { CATEGORIES } from '../../lib/hashtagsStorage';
+import {
+  CATEGORIES,
+  formatThemes,
+  parseThemesInput,
+} from '../../lib/hashtagsStorage';
 import { useHashtags } from '../../hooks/useHashtags';
 
 export default function Hashtags() {
@@ -12,7 +16,8 @@ export default function Hashtags() {
     <>
       <DataStatus loading={loading} error={error} />
       <p className="mb-3 text-sm text-muted-foreground">
-        Edits save automatically for the whole team.
+        Themes help the caption AI pick relevant tags for each goal. Comma-separated
+        (e.g. study, goals, habits). Edits save automatically for the whole team.
       </p>
       <div className="data-table-wrap">
         <table className="data-table">
@@ -21,13 +26,14 @@ export default function Hashtags() {
               <th>Hashtag</th>
               <th className="w-32">Instagram Posts</th>
               <th className="w-32">Category</th>
+              <th className="min-w-40">Themes</th>
               <th className="w-24" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {hashtags.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
                   No hashtags yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
@@ -79,6 +85,19 @@ export default function Hashtags() {
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    <TableInput
+                      type="text"
+                      value={formatThemes(row.themes)}
+                      placeholder="goals, habits"
+                      onChange={(e) =>
+                        updateHashtag(row.id, {
+                          themes: parseThemesInput(e.target.value),
+                        })
+                      }
+                      aria-label={`Themes for ${row.hashtag || index + 1}`}
+                    />
                   </td>
                   <td>
                     <DeleteRowButton

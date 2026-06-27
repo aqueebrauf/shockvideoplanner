@@ -5,9 +5,11 @@ export function normalizeCaption(row) {
   return {
     id: row.id,
     style: row.style ?? '',
+    hookSignals: row.hookSignals ?? row.hook_signals ?? '',
     structure: row.structure ?? '',
     guide: row.guide ?? '',
     example: row.example ?? '',
+    maxChars: row.maxChars ?? row.max_chars ?? null,
   };
 }
 
@@ -15,9 +17,11 @@ function toRow(caption) {
   return {
     id: caption.id,
     style: caption.style,
+    hook_signals: caption.hookSignals,
     structure: caption.structure,
     guide: caption.guide,
     example: caption.example,
+    max_chars: caption.maxChars,
   };
 }
 

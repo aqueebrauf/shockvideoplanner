@@ -76,6 +76,8 @@ function usePlanState() {
         screens: [],
         referenceVideoLink: '',
         caption: '',
+        captionStyle: '',
+        hashtagsUsed: [],
       });
       return [...prev, created];
     });
@@ -116,6 +118,8 @@ function usePlanState() {
           screens: screens.map(normalizeScreen),
           referenceVideoLink,
           caption: '',
+          captionStyle: '',
+          hashtagsUsed: [],
         });
         return [...prev, created];
       });
@@ -148,7 +152,9 @@ function usePlanState() {
             goalName: entry.goalName ?? '',
             screens: entry.screens.map(normalizeScreen),
             referenceVideoLink: entry.referenceVideoLink ?? '',
-            caption: '',
+            caption: entry.caption ?? '',
+            captionStyle: entry.captionStyle ?? '',
+            hashtagsUsed: entry.hashtagsUsed ?? [],
           });
           startId += 1;
           return row;

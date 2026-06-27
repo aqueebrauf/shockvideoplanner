@@ -15,6 +15,7 @@ export function normalizeHashtag(row) {
     hashtag: row.hashtag ?? '',
     posts,
     category: row.category ?? 'broad',
+    themes: Array.isArray(row.themes) ? row.themes : [],
   };
 }
 
@@ -24,6 +25,7 @@ function toRow(hashtag) {
     hashtag: hashtag.hashtag,
     posts: hashtag.posts,
     category: hashtag.category,
+    themes: hashtag.themes ?? [],
   };
 }
 
@@ -50,4 +52,15 @@ export async function deleteHashtagById(id) {
 
 export function nextHashtagId(hashtags) {
   return nextIdFromRows(hashtags);
+}
+
+export function formatThemes(themes) {
+  return (themes ?? []).join(', ');
+}
+
+export function parseThemesInput(value) {
+  return value
+    .split(',')
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
 }

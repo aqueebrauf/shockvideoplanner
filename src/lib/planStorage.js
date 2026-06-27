@@ -10,6 +10,9 @@ export function normalizeScreen(screen) {
 }
 
 export function normalizePlan(row) {
+  const hashtagsRaw = row.hashtagsUsed ?? row.hashtags_used;
+  const hashtagsUsed = Array.isArray(hashtagsRaw) ? hashtagsRaw : [];
+
   return {
     id: row.id,
     generatedDate: row.generatedDate ?? row.generated_date ?? '',
@@ -22,6 +25,8 @@ export function normalizePlan(row) {
       row.referenceVideoLink ?? row.reference_video_link ?? ''
     ),
     caption: row.caption ?? '',
+    captionStyle: row.captionStyle ?? row.caption_style ?? '',
+    hashtagsUsed,
   };
 }
 
@@ -34,6 +39,8 @@ function toRow(plan) {
     screens: plan.screens.map(normalizeScreen),
     reference_video_link: plan.referenceVideoLink,
     caption: plan.caption,
+    caption_style: plan.captionStyle ?? '',
+    hashtags_used: plan.hashtagsUsed ?? [],
   };
 }
 

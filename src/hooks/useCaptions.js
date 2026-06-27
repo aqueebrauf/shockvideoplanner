@@ -16,9 +16,11 @@ export function useCaptions() {
     createEmpty: (id) => ({
       id,
       style: '',
+      hookSignals: '',
       structure: '',
       guide: '',
       example: '',
+      maxChars: null,
     }),
     getNextId: nextCaptionId,
   });

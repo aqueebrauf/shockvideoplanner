@@ -166,7 +166,11 @@
 }
 
 .data-table--sheet th {
-  @apply sticky top-0 z-10 bg-muted shadow-[0_1px_0_hsl(var(--border))];
+  @apply sticky top-0 z-10 bg-muted px-3 py-2.5 shadow-[0_1px_0_hsl(var(--border))];
+}
+
+.sheet-cell-static {
+  @apply px-3 py-2.5 align-top text-sm leading-normal;
 }
 
 .cell-input--sheet {

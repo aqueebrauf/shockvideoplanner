@@ -1,6 +1,6 @@
 import DataStatus from '../../components/DataStatus';
 import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
-import { TableTextarea } from '@/components/table/TableField';
+import { TableInput, TableTextarea } from '@/components/table/TableField';
 import { useCaptions } from '../../hooks/useCaptions';
 
 function autoResize(e) {
@@ -28,25 +28,27 @@ export default function Captions() {
     <>
       <DataStatus loading={loading} error={error} />
       <p className="mb-3 text-sm text-muted-foreground">
-        Caption style templates for the AI caption writer. Edits save automatically for the
-        whole team.
+        Caption style templates for the AI caption writer. Hook signals drive Intelligent
+        mode style selection. Edits save automatically for the whole team.
       </p>
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>
             <tr>
               <th className="w-12">#</th>
-              <th className="min-w-36">Style</th>
-              <th className="min-w-48">Structure</th>
-              <th className="min-w-48">How to write</th>
-              <th className="min-w-48">Example</th>
+              <th className="min-w-32">Style</th>
+              <th className="min-w-40">Hook signals</th>
+              <th className="min-w-40">Structure</th>
+              <th className="min-w-40">How to write</th>
+              <th className="min-w-40">Example</th>
+              <th className="w-20">Max chars</th>
               <th className="w-24" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {captions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
                   No caption styles yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
@@ -61,6 +63,16 @@ export default function Captions() {
                       ariaLabel={`Style ${index + 1}`}
                       onChange={(e) =>
                         updateCaption(row.id, { style: e.target.value })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <CaptionTextarea
+                      value={row.hookSignals}
+                      placeholder="When to pick this style"
+                      ariaLabel={`Hook signals for ${row.style || index + 1}`}
+                      onChange={(e) =>
+                        updateCaption(row.id, { hookSignals: e.target.value })
                       }
                     />
                   </td>
@@ -92,6 +104,22 @@ export default function Captions() {
                       onChange={(e) =>
                         updateCaption(row.id, { example: e.target.value })
                       }
+                    />
+                  </td>
+                  <td>
+                    <TableInput
+                      type="number"
+                      className="max-w-20 tabular-nums"
+                      value={row.maxChars ?? ''}
+                      min={0}
+                      placeholder="—"
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        updateCaption(row.id, {
+                          maxChars: raw === '' ? null : Number(raw),
+                        });
+                      }}
+                      aria-label={`Max chars for ${row.style || index + 1}`}
                     />
                   </td>
                   <td>

@@ -2,71 +2,82 @@
   {
     "id": 1,
     "style": "Direct Response",
-    "structure": "Line 1: Hook Context\nLine 2: Bridge to Solution\nLine 3: Proof/Benefit\nLine 4: CTA",
-    "guide": "Start with POV or That face when plus a relatable failure point. Keep it under 60 characters. Line 2 must name the app and state the core benefit in 3 to 5 words. Line 3 gives one concrete result with numbers if possible. Line 4 uses Comment KEYWORD or Save this. Total 125 to 220 characters.",
-    "example": "POV: You just missed your goal 30 days in a row 😱\nSo we built Smash to make showing up stupid simple.\nUsers hit 90 percent of goals in 21 days.\nComment GOALS for free link ↓"
+    "hookSignals": "POV hooks, relatable failure moments, that face when, emotional reaction to missing goals or breaking streaks",
+    "structure": "Line 1: Hook echo\nLine 2: Bridge to Smash\nLine 3: Concrete benefit\nLine 4: CTA",
+    "guide": "Line 1 mirrors the video hook in under 60 characters. Line 2 names Smash and states the core benefit in 3 to 5 words. Line 3 gives one concrete outcome the app enables (daily show up, streak repair, weekly check in) without invented stats. Line 4 matches the selected CTA. Total 125 to 220 characters. Max 2 emojis.",
+    "example": "POV: You just missed your goal 30 days in a row 😱\nSmash makes showing up stupid simple.\nDaily check ins + streak repair so you never miss twice.\nComment GOALS for free link ↓",
+    "maxChars": 220
   },
   {
     "id": 2,
     "style": "CTA First",
-    "structure": "Line 1: Strong CTA\nLine 2: Why they should act\nLine 3: What they get",
-    "guide": "Put the call to action in line 1. Use Comment, DM me, Save this. Line 2 explains the payoff in one sentence. Line 3 stacks the benefit. Use for warm audiences who already know the app. Keep under 200 characters.",
-    "example": "Comment GOALS for the link ↓\nYou asked for a goal app that stops you from quitting.\nSmash tracks streaks and calls you out when you skip."
+    "hookSignals": "Warm audience, direct ask, comment bait hooks, save this energy, viewers who already get goal tracking",
+    "structure": "Line 1: Strong CTA\nLine 2: Why act now\nLine 3: What they get",
+    "guide": "Put the call to action in line 1 using the selected CTA wording. Line 2 explains the payoff in one sentence tied to the goal. Line 3 stacks one more benefit from the demo (milestones, journaling, weekly check ins). Under 200 characters. Best when the hook already sold the problem.",
+    "example": "Comment GOALS for the link ↓\nYou asked for a goal app that stops you from quitting.\nSmash tracks streaks and calls you out when you skip.",
+    "maxChars": 200
   },
   {
     "id": 3,
     "style": "Value Bomb",
-    "structure": "Line 1: Numbered hook\nBody: 3 bullets or tips\nLast line: Tie to app",
-    "guide": "Start with a number like 3 reasons or 5 rules. Each bullet is one line with one insight about hitting goals. No fluff. Last line connects the value to your app. 200 to 500 characters total. Great for saves.",
-    "example": "3 reasons you keep failing your goals:\n1. You track results not actions\n2. You have zero accountability when motivation dips\n3. You quit after missing 2 days\nSmash fixes all 3 with daily check ins and streak repair."
+    "hookSignals": "Numbered hooks (3 reasons, 5 rules), listicle energy, educational tone, tips about goal failure or habit building",
+    "structure": "Line 1: Numbered hook\nBody: 3 bullets\nLast line: Tie to Smash",
+    "guide": "Start with a number (3 reasons, 5 rules). Each bullet is one line, one insight about hitting goals. No fluff. Last line connects the value to Smash features shown in the video. 200 to 400 characters. Optimized for saves.",
+    "example": "3 reasons you keep failing your goals:\n1. You track results not actions\n2. You have zero accountability when motivation dips\n3. You quit after missing 2 days\nSmash fixes all 3 with daily check ins and streak repair.",
+    "maxChars": 400
   },
   {
     "id": 4,
     "style": "Curiosity Gap",
-    "structure": "Line 1: Open loop\nLine 2: Hint not answer\nLine 3: CTA to watch",
-    "guide": "Create tension with a bold claim about goal achievement. Do not give the answer in text. Force them to watch the video. End with Watch till end or You need to see this. Keep under 150 characters.",
-    "example": "This one rule made me hit every goal in 2026 😱\nSee what happens at 0:06.\nComment GOALS if you want it."
+    "hookSignals": "Bold claim without revealing answer, watch till end, see what happens, mysterious transformation, one rule changed everything",
+    "structure": "Line 1: Open loop\nLine 2: Hint not answer\nLine 3: CTA",
+    "guide": "Create tension with a bold claim about goal achievement. Do not reveal the answer in the caption — force them to watch. Reference a timestamp or watch till end when the hook supports it. End with CTA matching the selected CTA. Under 150 characters.",
+    "example": "This one rule made me stop quitting every goal 😱\nSee what happens at 0:06.\nComment GOALS if you want it.",
+    "maxChars": 150
   },
   {
     "id": 5,
     "style": "Meme or One Liner",
-    "structure": "Line 1: Relatable joke or POV\nOptional Line 2: App punchline",
-    "guide": "Use a common meme format or POV. Keep it under 50 characters if possible. Must be instantly relatable to people who set goals. Optional second line ties it to the app. Use when video carries 90 percent of the value.",
-    "example": "Me vs the person I said I would be in January:"
+    "hookSignals": "Short meme format, me vs me, January person joke, under 10 word hooks, video carries most of the message",
+    "structure": "Line 1: Relatable joke or POV\nOptional Line 2: Smash punchline",
+    "guide": "Use a common meme format or POV. Keep line 1 under 50 characters. Must be instantly relatable to people who set goals. Optional second line ties to Smash in 5 to 8 words. Use when the demo video carries 90 percent of the value.",
+    "example": "Me vs the person I said I would be in January:\nSmash keeps me honest.",
+    "maxChars": 100
   },
   {
     "id": 6,
-    "style": "Social Proof",
-    "structure": "Line 1: Stat or quote\nLine 2: Context\nLine 3: CTA",
-    "guide": "Start with a number like 18k users or a short testimonial quote. Line 2 explains what they achieved. Line 3 is Comment or Save. Builds trust for cold traffic.",
-    "example": "18,342 people hit their 30 day streak last month\nThey used Smash to stay consistent when motivation died.\nComment GOALS to join them ↓"
+    "style": "Objection Killer",
+    "hookSignals": "Skepticism, another app?, too complicated, won't stick, free?, takes too long — doubt or pushback in the hook",
+    "structure": "Line 1: Yes, it's...\nLine 2: Kill top objection\nLine 3: Proof from demo\nLine 4: CTA",
+    "guide": "Line 1 starts with Yes, it's actually free or Yes, it takes 10 seconds. Line 2 addresses the main doubt about goal apps. Line 3 points to what the video shows (5 second check in, simple UI). Line 4 is CTA. No invented stats.",
+    "example": "Yes, Smash is actually free 😅\nNo fluff. No 50 features. Just daily check ins.\nWatch it take 5 seconds to log your day.\nComment GOALS to try ↓",
+    "maxChars": 250
   },
   {
     "id": 7,
-    "style": "Objection Killer",
-    "structure": "Line 1: Yes, it's...\nLine 2: Kill top objection\nLine 3: Proof\nLine 4: CTA",
-    "guide": "Start with Yes, it's actually free or Yes, it takes 10 seconds. Line 2 addresses the main doubt people have about goal apps. Line 3 gives proof from the demo. Line 4 is CTA. Use when comments show skepticism.",
-    "example": "Yes, Smash is actually free 😅\nNo fluff. No 50 features. Just daily check ins.\nWatch it take 5 seconds to log your day.\nComment GOALS to try ↓"
+    "style": "Before After",
+    "hookSignals": "Transformation arc, used to vs now, quit by week 2 vs streak, before and after contrast in hook or goal",
+    "structure": "Line 1: Before\nLine 2: After\nLine 3: How (Smash)\nLine 4: CTA",
+    "guide": "Line 1 paints the painful before state tied to the goal. Line 2 shows the ideal after state. Line 3 says how Smash bridges them using features from the screen sequence. Line 4 is CTA. Keep each line short.",
+    "example": "Before: Quit every goal by week 2\nAfter: Showing up daily on autopilot\nHow: Smash makes check ins non negotiable\nComment GOALS for free link ↓",
+    "maxChars": 250
   },
   {
     "id": 8,
-    "style": "Before After",
-    "structure": "Line 1: Before\nLine 2: After\nLine 3: How\nLine 4: CTA",
-    "guide": "Line 1 paints the painful before state. Line 2 shows the ideal after state. Line 3 says how the app bridges them. Line 4 is CTA. Keep each line short for readability.",
-    "example": "Before: Quit every goal by week 2\nAfter: 100 day streaks on autopilot\nHow: Smash makes showing up non negotiable\nComment GOALS for free link ↓"
+    "style": "FOMO or Urgency",
+    "hookSignals": "Limited time, before paywall, start today, don't wait, last chance, while it's free",
+    "structure": "Line 1: Scarcity hook\nLine 2: Cost of waiting\nLine 3: CTA with urgency",
+    "guide": "Line 1 uses time or access scarcity without fake countdowns or invented user counts. Line 2 states what happens if they delay starting their goal. Line 3 adds urgency to the CTA. Use sparingly — only when the hook already has urgency. No fabricated statistics.",
+    "example": "Still planning to start that goal next Monday?\nEvery day you wait is another day you don't show up.\nComment GOALS and start today ↓",
+    "maxChars": 200
   },
   {
     "id": 9,
-    "style": "FOMO or Urgency",
-    "structure": "Line 1: Time or scarcity hook\nLine 2: What they lose\nLine 3: CTA with deadline",
-    "guide": "Start with Last day or Join 20k users before or While it's free. Line 2 states what happens if they miss out. Line 3 adds urgency to the CTA. Use sparingly or IG throttles it.",
-    "example": "Join 20k users before we add paywalls next month\nEvery day you wait is another goal you quit\nComment GOALS to lock in free access ↓"
-  },
-  {
-    "id": 10,
     "style": "Book Passage",
-    "structure": "Line 1: Passage from book\nLine 2: Book title plus author\nLine 3: Concept breakdown\nLine 4: Tie to app\nLine 5: CTA",
-    "guide": "Use a passage 50 to 100 words long from a productivity, habits, or goal book. It must tell a full story or explain a concept, not just a one line quote. Line 2 cites the book and author. Line 3 breaks down the idea in simple terms. Line 4 connects the concept to how Smash helps. Line 5 is Comment GOALS or Save this. 300 to 500 characters total. Use when video shows reading, planning, or deep work.",
-    "example": "When I wanted to change my life, I tried to change everything at once. I failed every time. Then I read that you do not need to be extreme, just consistent. Small actions done daily compound into massive results over time. The key is to never miss twice. One missed day is a mistake. Two missed days is the start of a new habit of quitting.\nFrom Atomic Habits by James Clear\nConsistency beats intensity. Your system matters more than motivation.\nSmash is the system that protects your streak so you never miss twice.\nComment GOALS to start yours ↓"
+    "hookSignals": "Book quote, atomic habits, deep work, reading, planning session, journal, philosophy of consistency",
+    "structure": "Line 1: Passage excerpt\nLine 2: Book + author\nLine 3: Concept in plain words\nLine 4: Tie to Smash\nLine 5: CTA",
+    "guide": "Use a passage 40 to 80 words from a real productivity, habits, or goals book (name the book and author). Line 3 breaks down the idea simply. Line 4 connects to how Smash helps (streaks, never miss twice, milestones). Line 5 is CTA. 300 to 450 characters. Use when the video shows reading, planning, or journaling.",
+    "example": "You do not rise to the level of your goals. You fall to the level of your systems.\nFrom Atomic Habits by James Clear\nConsistency beats intensity — your system matters more than motivation.\nSmash is the system that protects your streak so you never miss twice.\nComment GOALS to start yours ↓",
+    "maxChars": 450
   }
 ]

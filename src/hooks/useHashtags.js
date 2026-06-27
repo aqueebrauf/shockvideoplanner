@@ -18,6 +18,7 @@ export function useHashtags() {
       hashtag: '',
       posts: null,
       category: 'broad',
+      themes: [],
     }),
     getNextId: nextHashtagId,
   });

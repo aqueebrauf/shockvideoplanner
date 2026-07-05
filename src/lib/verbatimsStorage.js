@@ -1,10 +1,12 @@
 import { supabase } from './supabase';
 import { nextIdFromRows } from './db/helpers';
+import { normalizeVerbatimStatus, VERBATIM_STATUS } from './verbatimStatus';
 
 export function normalizeVerbatim(row) {
   return {
     id: row.id,
     text: row.text ?? '',
+    status: normalizeVerbatimStatus(row.status),
   };
 }
 
@@ -12,6 +14,7 @@ function toRow(verbatim) {
   return {
     id: verbatim.id,
     text: verbatim.text,
+    status: normalizeVerbatimStatus(verbatim.status ?? VERBATIM_STATUS.NOT_STARTED),
   };
 }
 

@@ -97,8 +97,66 @@ export function validateHashtags(picked, pool, allowedCategories = ['broad', 'me
   return [...new Set(valid)];
 }
 
+function isListItem(line) {
+  return /^\d+[.)]\s/.test(line.trim());
+}
+
+function isListHeader(line, nextLine) {
+  return line.trim().endsWith(':') && nextLine && isListItem(nextLine);
+}
+
+export function normalizeCaptionParagraphs(text) {
+  const normalized = String(text ?? '').replace(/\r\n/g, '\n').trim();
+  if (!normalized) return '';
+
+  if (/\n\n/.test(normalized)) {
+    return normalized
+      .replace(/\n{3,}/g, '\n\n')
+      .split('\n\n')
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean)
+      .join('\n\n');
+  }
+
+  const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
+  const paragraphs = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    const nextLine = lines[index + 1];
+
+    if (isListHeader(line, nextLine)) {
+      const block = [line];
+      index += 1;
+      while (index < lines.length && isListItem(lines[index])) {
+        block.push(lines[index]);
+        index += 1;
+      }
+      paragraphs.push(block.join('\n'));
+      continue;
+    }
+
+    if (isListItem(line)) {
+      const block = [line];
+      index += 1;
+      while (index < lines.length && isListItem(lines[index])) {
+        block.push(lines[index]);
+        index += 1;
+      }
+      paragraphs.push(block.join('\n'));
+      continue;
+    }
+
+    paragraphs.push(line);
+    index += 1;
+  }
+
+  return paragraphs.join('\n\n');
+}
+
 export function assembleCaption(captionBody, hashtags) {
-  const body = captionBody.trim();
+  const body = normalizeCaptionParagraphs(captionBody);
   if (!hashtags.length) return body;
   return `${body}\n\n${hashtags.join(' ')}`;
 }

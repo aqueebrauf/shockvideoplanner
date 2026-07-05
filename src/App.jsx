@@ -17,6 +17,7 @@ import Ctas from './pages/resources/Ctas';
 import Captions from './pages/resources/Captions';
 import Characters from './pages/resources/Characters';
 import Verbatims from './pages/resources/Verbatims';
+import Hooks from './pages/resources/Hooks';
 
 const pageTitles = {
   '/': 'Home',
@@ -30,6 +31,7 @@ const pageTitles = {
   '/resources/captions': 'Captions',
   '/resources/characters': 'Characters',
   '/resources/verbatims': 'Verbatims',
+  '/resources/hooks': 'Hooks',
 };
 
 function getPageTitle(pathname) {
@@ -73,6 +75,7 @@ export default function App() {
               <Route path="captions" element={<Captions />} />
               <Route path="characters" element={<Characters />} />
               <Route path="verbatims" element={<Verbatims />} />
+              <Route path="hooks" element={<Hooks />} />
             </Route>
           </Routes>
         </main>

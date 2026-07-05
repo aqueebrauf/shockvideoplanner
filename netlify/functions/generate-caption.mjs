@@ -8,6 +8,7 @@ import {
 import {
   assembleCaption,
   buildHashtagPool,
+  normalizeCaptionParagraphs,
   validateHashtags,
 } from './lib/hashtagFilter.mjs';
 
@@ -165,7 +166,7 @@ export default async (req) => {
     }
 
     const parsed = parseModelJson(textBlock.text);
-    const captionBody = String(parsed.captionBody ?? '').trim();
+    const captionBody = normalizeCaptionParagraphs(parsed.captionBody);
     const styleUsed = String(parsed.styleUsed ?? captionStyle).trim();
 
     if (!captionBody) {

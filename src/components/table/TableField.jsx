@@ -17,3 +17,16 @@ export function TableTextarea({ className, ...props }) {
     />
   );
 }
+
+export function TableSelect({ className, ...props }) {
+  return (
+    <select
+      className={cn(
+        tableFieldClassName,
+        'w-full cursor-pointer text-sm outline-none',
+        className
+      )}
+      {...props}
+    />
+  );
+}

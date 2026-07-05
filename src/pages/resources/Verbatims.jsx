@@ -1,8 +1,9 @@
 import DataStatus from '../../components/DataStatus';
 import CopyTextButton from '../../components/CopyTextButton';
 import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
-import { TableTextarea } from '@/components/table/TableField';
+import { TableSelect, TableTextarea } from '@/components/table/TableField';
 import { useVerbatims } from '../../hooks/useVerbatims';
+import { VERBATIM_STATUS_OPTIONS } from '@/lib/verbatimStatus';
 
 export default function Verbatims() {
   const { verbatims, loading, error, updateVerbatim, addVerbatim, deleteVerbatim } =
@@ -13,7 +14,8 @@ export default function Verbatims() {
       <DataStatus loading={loading} error={error} />
       <p className="mb-3 text-sm text-muted-foreground">
         Real things the target audience says in comments. Reuse them for hooks,
-        captions, and scripts. Edits save automatically for the whole team.
+        captions, and scripts. Use the Hooks tab to extract catchy openings, or
+        set status manually. Edits save automatically for the whole team.
       </p>
       <div className="data-table-wrap">
         <table className="data-table">
@@ -21,13 +23,14 @@ export default function Verbatims() {
             <tr>
               <th className="w-12">#</th>
               <th>Verbatim</th>
+              <th className="w-36">Status</th>
               <th className="w-32" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {verbatims.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
                   No verbatims yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
@@ -45,6 +48,21 @@ export default function Verbatims() {
                       }
                       aria-label={`Verbatim ${index + 1}`}
                     />
+                  </td>
+                  <td>
+                    <TableSelect
+                      value={row.status}
+                      onChange={(e) =>
+                        updateVerbatim(row.id, { status: e.target.value })
+                      }
+                      aria-label={`Verbatim ${index + 1} status`}
+                    >
+                      {VERBATIM_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </TableSelect>
                   </td>
                   <td>
                     <div className="flex items-center gap-1">

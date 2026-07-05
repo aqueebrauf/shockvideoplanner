@@ -21,11 +21,12 @@ CAPTION RULES:
 6. Emojis: 0–2 max, only when the style allows.
 7. Custom instructions from the editor override these rules when they don't conflict with "no invented stats".
 8. Hashtags are NOT part of captionBody — pick them separately from the provided pool only.
+9. Paragraph spacing: put one blank line between paragraphs (use \\n\\n). Each structural line from the style is its own paragraph. Keep numbered or bulleted lists together in one paragraph with single line breaks between items.
 
 Respond with valid JSON only (no markdown fences):
 {
   "styleUsed": "exact style name from the provided list",
-  "captionBody": "caption text with line breaks, no hashtags",
+  "captionBody": "caption text with blank lines between paragraphs, no hashtags",
   "hashtags": ["#tag1", "#tag2"]
 }`;
 }

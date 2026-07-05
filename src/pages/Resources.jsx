@@ -10,6 +10,7 @@ const resourceTabs = [
   { to: '/resources/captions', label: 'Captions' },
   { to: '/resources/characters', label: 'Characters' },
   { to: '/resources/verbatims', label: 'Verbatims' },
+  { to: '/resources/hooks', label: 'Hooks' },
 ];
 
 export default function Resources() {

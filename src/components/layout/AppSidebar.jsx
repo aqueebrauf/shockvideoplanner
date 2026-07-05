@@ -10,6 +10,7 @@ import {
   Quote,
   Sparkles,
   Target,
+  Zap,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -39,6 +40,7 @@ const resourceNav = [
   { to: '/resources/captions', label: 'Captions', icon: ListChecks },
   { to: '/resources/characters', label: 'Characters', icon: Users },
   { to: '/resources/verbatims', label: 'Verbatims', icon: Quote },
+  { to: '/resources/hooks', label: 'Hooks', icon: Zap },
 ];
 
 function isActivePath(pathname, to, end = false) {

@@ -36,6 +36,13 @@ import {
   upsertScreen,
 } from '@/lib/screensStorage';
 import {
+  deleteHookById,
+  fetchHooks,
+  nextHookId,
+  normalizeHook,
+  upsertHook,
+} from '@/lib/hooksStorage';
+import {
   deleteVerbatimById,
   fetchVerbatims,
   nextVerbatimId,
@@ -117,8 +124,17 @@ export function ResourcesProvider({ children }) {
     upsertOne: upsertVerbatim,
     deleteById: deleteVerbatimById,
     normalize: normalizeVerbatim,
-    createEmpty: (id) => ({ id, text: '' }),
+    createEmpty: (id) => ({ id, text: '', status: 'not_started' }),
     getNextId: nextVerbatimId,
+  });
+
+  const hooks = useRemoteCollection({
+    fetchAll: fetchHooks,
+    upsertOne: upsertHook,
+    deleteById: deleteHookById,
+    normalize: normalizeHook,
+    createEmpty: (id) => ({ id, text: '', verbatimId: null }),
+    getNextId: nextHookId,
   });
 
   const screens = useRemoteCollection({
@@ -166,6 +182,7 @@ export function ResourcesProvider({ children }) {
       ctas.reload,
       captions.reload,
       verbatims.reload,
+      hooks.reload,
       screens.reload,
       reloadScreenSequences,
     ],
@@ -175,6 +192,7 @@ export function ResourcesProvider({ children }) {
       ctas.reload,
       captions.reload,
       verbatims.reload,
+      hooks.reload,
       screens.reload,
       reloadScreenSequences,
     ]
@@ -189,6 +207,7 @@ export function ResourcesProvider({ children }) {
       ctas,
       captions,
       verbatims,
+      hooks,
       screens,
       screenSequences: {
         items: screenSequences,
@@ -203,6 +222,7 @@ export function ResourcesProvider({ children }) {
       ctas,
       captions,
       verbatims,
+      hooks,
       screens,
       screenSequences,
       screenSequencesLoading,

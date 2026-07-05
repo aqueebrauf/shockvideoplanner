@@ -28,6 +28,10 @@ export function resolveGoalTitle(plan, goals) {
   return findGoal(goals, plan.goalId)?.title?.trim() ?? '';
 }
 
+export function resolveGoalLink(plan, goals) {
+  return findGoal(goals, plan.goalId)?.link?.trim() ?? '';
+}
+
 export function resolveScreenSequenceName(plan, screenSequences) {
   return findScreenSequence(screenSequences, plan.screenSequenceId)?.name?.trim() ?? '';
 }

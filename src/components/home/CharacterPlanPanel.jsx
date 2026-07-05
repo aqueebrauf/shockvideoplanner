@@ -11,8 +11,9 @@ import {
   getCharacterPlanStats,
   screenSequenceButtonLabel,
 } from '@/lib/planDisplay';
-import { resolveGoalTitle, resolveScreenSequenceName } from '@/lib/planResolvers';
+import { resolveGoalLink, resolveGoalTitle, resolveScreenSequenceName } from '@/lib/planResolvers';
 import { formatPlanSerial } from '@/lib/planSort';
+import { normalizeExternalUrl } from '@/lib/externalUrl';
 import { PLAN_STATUS_COMPLETED, PLAN_STATUS_NOT_STARTED } from '@/lib/planStatus';
 import { cn } from '@/lib/utils';
 
@@ -90,6 +91,7 @@ export default function CharacterPlanPanel({ character }) {
   }
 
   const goalTitle = currentPlan ? resolveGoalTitle(currentPlan, goals) : '';
+  const goalLink = currentPlan ? resolveGoalLink(currentPlan, goals) : '';
   const sequenceLabel = currentPlan
     ? screenSequenceButtonLabel(resolveScreenSequenceName(currentPlan, screenSequences))
     : 'Screens';
@@ -159,6 +161,23 @@ export default function CharacterPlanPanel({ character }) {
                   label={`Copy caption for plan ${planSerial}`}
                   className="home-plan-action-btn"
                 />
+                {goalLink ? (
+                  <Button
+                    render={
+                      <a
+                        href={normalizeExternalUrl(goalLink)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
+                    variant="outline"
+                    size="default"
+                    className="home-plan-action-btn"
+                    aria-label={`Open goal link for plan ${planSerial}`}
+                  >
+                    Goal link
+                  </Button>
+                ) : null}
                 </div>
               </div>
             </div>

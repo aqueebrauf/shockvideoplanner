@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useGoals } from '../../hooks/useGoals';
 
 export default function Goals() {
-  const { goals, loading, error, updateGoal, addGoal, deleteGoal } = useGoals();
+  const { goals, loading, error, updateGoal, flushGoal, addGoal, deleteGoal } =
+    useGoals();
 
   return (
     <>
@@ -43,6 +44,7 @@ export default function Goals() {
                       onChange={(e) =>
                         updateGoal(row.id, { title: e.target.value })
                       }
+                      onBlur={() => flushGoal(row.id)}
                       aria-label={`Title for goal ${index + 1}`}
                     />
                   </td>
@@ -54,18 +56,20 @@ export default function Goals() {
                       onChange={(e) =>
                         updateGoal(row.id, { date: e.target.value })
                       }
+                      onBlur={() => flushGoal(row.id)}
                       aria-label={`Date for goal ${index + 1}`}
                     />
                   </td>
                   <td>
                     <div className="link-cell">
                       <TableInput
-                        type="url"
+                        type="text"
                         value={row.link}
                         placeholder="https://"
                         onChange={(e) =>
                           updateGoal(row.id, { link: e.target.value })
                         }
+                        onBlur={() => flushGoal(row.id)}
                         aria-label={`Link for goal ${index + 1}`}
                       />
                       {row.link.trim() ? (

@@ -8,6 +8,7 @@ export function useGoals() {
     loading: goals.loading,
     error: goals.error,
     updateGoal: goals.updateItem,
+    flushGoal: goals.flushItem,
     addGoal: goals.addItem,
     deleteGoal: goals.deleteItem,
     reloadGoals: goals.reload,

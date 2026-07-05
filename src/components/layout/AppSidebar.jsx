@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   ListChecks,
   MessageSquareQuote,
+  Quote,
   Sparkles,
   Target,
 } from 'lucide-react';
@@ -37,6 +38,7 @@ const resourceNav = [
   { to: '/resources/ctas', label: 'CTAs', icon: MessageSquareQuote },
   { to: '/resources/captions', label: 'Captions', icon: ListChecks },
   { to: '/resources/characters', label: 'Characters', icon: Users },
+  { to: '/resources/verbatims', label: 'Verbatims', icon: Quote },
 ];
 
 function isActivePath(pathname, to, end = false) {

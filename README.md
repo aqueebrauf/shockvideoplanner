@@ -20,7 +20,7 @@ Hosted on Netlify. Push to `main` to deploy automatically.
 
 ## Supabase
 
-- Schema: `videoplanner` (tables: plans, screens, hashtags, goals, ctas, captions, screen_sequences)
+- Schema: `videoplanner` (tables: plans, screens, hashtags, goals, ctas, captions, verbatims, characters, screen_sequences)
 - Migrations: `supabase/migrations/`
 - Baseline data: `scripts/data/`
 - Screen images: `videoplanner-screens` storage bucket

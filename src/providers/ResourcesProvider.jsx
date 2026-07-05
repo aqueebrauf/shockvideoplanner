@@ -35,6 +35,13 @@ import {
   normalizeScreen,
   upsertScreen,
 } from '@/lib/screensStorage';
+import {
+  deleteVerbatimById,
+  fetchVerbatims,
+  nextVerbatimId,
+  normalizeVerbatim,
+  upsertVerbatim,
+} from '@/lib/verbatimsStorage';
 import { fetchScreenSequences } from '@/lib/screenSequencesStorage';
 
 const ResourcesContext = createContext(null);
@@ -105,6 +112,15 @@ export function ResourcesProvider({ children }) {
     getNextId: nextCaptionId,
   });
 
+  const verbatims = useRemoteCollection({
+    fetchAll: fetchVerbatims,
+    upsertOne: upsertVerbatim,
+    deleteById: deleteVerbatimById,
+    normalize: normalizeVerbatim,
+    createEmpty: (id) => ({ id, text: '' }),
+    getNextId: nextVerbatimId,
+  });
+
   const screens = useRemoteCollection({
     fetchAll: fetchScreens,
     upsertOne: upsertScreen,
@@ -149,6 +165,7 @@ export function ResourcesProvider({ children }) {
       goals.reload,
       ctas.reload,
       captions.reload,
+      verbatims.reload,
       screens.reload,
       reloadScreenSequences,
     ],
@@ -157,6 +174,7 @@ export function ResourcesProvider({ children }) {
       goals.reload,
       ctas.reload,
       captions.reload,
+      verbatims.reload,
       screens.reload,
       reloadScreenSequences,
     ]
@@ -170,6 +188,7 @@ export function ResourcesProvider({ children }) {
       goals,
       ctas,
       captions,
+      verbatims,
       screens,
       screenSequences: {
         items: screenSequences,
@@ -183,6 +202,7 @@ export function ResourcesProvider({ children }) {
       goals,
       ctas,
       captions,
+      verbatims,
       screens,
       screenSequences,
       screenSequencesLoading,

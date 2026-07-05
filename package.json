@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "dev": "npx netlify dev",
+    "dev:vite": "vite"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

@@ -476,13 +476,20 @@ function SidebarMenuButton({
   size = "default",
   tooltip,
   className,
+  onClick,
   ...props
 }) {
-  const { isMobile, state } = useSidebar()
+  const { isMobile, state, setOpenMobile } = useSidebar()
   const comp = useRender({
     defaultTagName: "button",
     props: mergeProps({
       className: cn(sidebarMenuButtonVariants({ variant, size }), className),
+      onClick: (event) => {
+        onClick?.(event)
+        if (isMobile) {
+          setOpenMobile(false)
+        }
+      },
     }, props),
     render: !tooltip ? render : <TooltipTrigger render={render} />,
     state: {
@@ -620,8 +627,11 @@ function SidebarMenuSubButton({
   size = "md",
   isActive = false,
   className,
+  onClick,
   ...props
 }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
   return useRender({
     defaultTagName: "a",
     props: mergeProps({
@@ -629,6 +639,12 @@ function SidebarMenuSubButton({
         "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground ring-sidebar-ring outline-hidden group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
         className
       ),
+      onClick: (event) => {
+        onClick?.(event)
+        if (isMobile) {
+          setOpenMobile(false)
+        }
+      },
     }, props),
     render,
     state: {

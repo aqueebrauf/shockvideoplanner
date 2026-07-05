@@ -13,7 +13,7 @@ export async function generateHooks() {
     payload = await response.json();
   } else if (response.status === 404) {
     throw new Error(
-      'Hook API not found. Use `npm run dev` (Netlify Dev) locally, or trigger a fresh deploy on Netlify if you are on production.'
+      'Hook API not found. Use `npm run dev` (Vercel Dev) locally, or redeploy on Vercel if you are on production.'
     );
   } else {
     throw new Error('Hook service returned an invalid response.');

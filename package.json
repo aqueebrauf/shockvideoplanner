@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "npx netlify dev",
+    "dev": "npx vercel dev",
     "dev:vite": "vite"
   },
   "dependencies": {

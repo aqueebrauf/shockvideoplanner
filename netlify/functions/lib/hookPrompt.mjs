@@ -32,14 +32,7 @@ ${verbatimText.trim()}
 Return JSON with a "hooks" array of catchy opening lines derived from this verbatim.`;
 }
 
-export function parseModelJson(text) {
-  const trimmed = text.trim();
-  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('Model did not return JSON.');
-  }
-  return JSON.parse(jsonMatch[0]);
-}
+export { parseModelJson } from './parseModelJson.mjs';
 
 export function normalizeHookTexts(parsed) {
   const raw = Array.isArray(parsed?.hooks) ? parsed.hooks : [];

@@ -22,6 +22,7 @@ CAPTION RULES:
 7. Custom instructions from the editor override these rules when they don't conflict with "no invented stats".
 8. Hashtags are NOT part of captionBody — pick them separately from the provided pool only.
 9. Paragraph spacing: put one blank line between paragraphs (use \\n\\n). Each structural line from the style is its own paragraph. Keep numbered or bulleted lists together in one paragraph with single line breaks between items.
+10. Character voice: the character owns this account and posts the reel themselves. Not every caption needs first person — factual, listicle, educational, and other objective styles can stay impersonal with no "I/me/my". When the caption DOES involve the poster personally (their story, POV, experience, transformation), use first person — never refer to the character by name or in third person (no "she", "he", "they", "Meet [name]", "[name] shows you", etc.). You are the character, not a narrator describing them.
 
 Respond with valid JSON only (no markdown fences):
 {
@@ -73,7 +74,7 @@ ${s.example}`
     : '';
 
   const characterBlock = characterName?.trim()
-    ? `\nCHARACTER (voice/persona for this reel):\n${characterName.trim()}`
+    ? `\nCHARACTER (this person owns the account and posts the reel):\n${characterName.trim()}\nMatch the caption style — objective/factual styles need no personal voice. When the caption involves this character personally, use first person (I/me/my), never third person or their name as if someone else is writing about them.`
     : '';
 
   return `${styleInstruction}

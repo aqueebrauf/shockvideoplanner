@@ -7,6 +7,8 @@ import {
 } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
 import Home from './pages/Home';
+import CharacterWalkthroughHome from './pages/home/CharacterWalkthroughHome';
+import ThisPersonHome from './pages/home/ThisPersonHome';
 import Plan from './pages/Plan';
 import Generator from './pages/Generator';
 import CharacterWalkthroughGenerator from './pages/generators/CharacterWalkthroughGenerator';
@@ -24,6 +26,8 @@ import ThisPerson from './pages/resources/ThisPerson';
 
 const pageTitles = {
   '/': 'Home',
+  '/home/character-walkthrough': 'Character Walkthrough',
+  '/home/this-person': 'This person',
   '/plan': 'Plan',
   '/generator': 'Generator',
   '/generator/character-walkthrough': 'Character Walkthrough',
@@ -70,6 +74,8 @@ export default function App() {
         >
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/home/character-walkthrough" element={<CharacterWalkthroughHome />} />
+            <Route path="/home/this-person" element={<ThisPersonHome />} />
             <Route path="/plan" element={<Plan />} />
             <Route path="/generator" element={<Generator />} />
             <Route

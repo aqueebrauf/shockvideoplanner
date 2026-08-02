@@ -10,6 +10,7 @@ import {
   Quote,
   Sparkles,
   Target,
+  UserCircle,
   Zap,
 } from 'lucide-react';
 import {
@@ -41,6 +42,7 @@ const resourceNav = [
   { to: '/resources/characters', label: 'Characters', icon: Users },
   { to: '/resources/verbatims', label: 'Verbatims', icon: Quote },
   { to: '/resources/hooks', label: 'Hooks', icon: Zap },
+  { to: '/resources/this-person', label: 'This person', icon: UserCircle },
 ];
 
 function isActivePath(pathname, to, end = false) {

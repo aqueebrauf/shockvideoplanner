@@ -43,6 +43,13 @@ import {
   upsertHook,
 } from '@/lib/hooksStorage';
 import {
+  deleteThisPersonById,
+  fetchThisPeople,
+  nextThisPersonId,
+  normalizeThisPerson,
+  upsertThisPerson,
+} from '@/lib/thisPeopleStorage';
+import {
   deleteVerbatimById,
   fetchVerbatims,
   nextVerbatimId,
@@ -137,6 +144,15 @@ export function ResourcesProvider({ children }) {
     getNextId: nextHookId,
   });
 
+  const thisPeople = useRemoteCollection({
+    fetchAll: fetchThisPeople,
+    upsertOne: upsertThisPerson,
+    deleteById: deleteThisPersonById,
+    normalize: normalizeThisPerson,
+    createEmpty: (id) => ({ id, goalId: null, hookText: '', caption: '', hashtag: '' }),
+    getNextId: nextThisPersonId,
+  });
+
   const screens = useRemoteCollection({
     fetchAll: fetchScreens,
     upsertOne: upsertScreen,
@@ -183,6 +199,7 @@ export function ResourcesProvider({ children }) {
       captions.reload,
       verbatims.reload,
       hooks.reload,
+      thisPeople.reload,
       screens.reload,
       reloadScreenSequences,
     ],
@@ -193,6 +210,7 @@ export function ResourcesProvider({ children }) {
       captions.reload,
       verbatims.reload,
       hooks.reload,
+      thisPeople.reload,
       screens.reload,
       reloadScreenSequences,
     ]
@@ -208,6 +226,7 @@ export function ResourcesProvider({ children }) {
       captions,
       verbatims,
       hooks,
+      thisPeople,
       screens,
       screenSequences: {
         items: screenSequences,
@@ -223,6 +242,7 @@ export function ResourcesProvider({ children }) {
       captions,
       verbatims,
       hooks,
+      thisPeople,
       screens,
       screenSequences,
       screenSequencesLoading,

@@ -9,6 +9,8 @@ import AppSidebar from '@/components/layout/AppSidebar';
 import Home from './pages/Home';
 import Plan from './pages/Plan';
 import Generator from './pages/Generator';
+import CharacterWalkthroughGenerator from './pages/generators/CharacterWalkthroughGenerator';
+import ThisPersonGenerator from './pages/generators/ThisPersonGenerator';
 import Resources from './pages/Resources';
 import Screens from './pages/resources/Screens';
 import Hashtags from './pages/resources/Hashtags';
@@ -18,11 +20,14 @@ import Captions from './pages/resources/Captions';
 import Characters from './pages/resources/Characters';
 import Verbatims from './pages/resources/Verbatims';
 import Hooks from './pages/resources/Hooks';
+import ThisPerson from './pages/resources/ThisPerson';
 
 const pageTitles = {
   '/': 'Home',
   '/plan': 'Plan',
   '/generator': 'Generator',
+  '/generator/character-walkthrough': 'Character Walkthrough',
+  '/generator/this-person': 'This person',
   '/resources': 'Resources',
   '/resources/screens': 'Screens',
   '/resources/hashtags': 'Hashtags',
@@ -32,6 +37,7 @@ const pageTitles = {
   '/resources/characters': 'Characters',
   '/resources/verbatims': 'Verbatims',
   '/resources/hooks': 'Hooks',
+  '/resources/this-person': 'This person',
 };
 
 function getPageTitle(pathname) {
@@ -66,6 +72,11 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/plan" element={<Plan />} />
             <Route path="/generator" element={<Generator />} />
+            <Route
+              path="/generator/character-walkthrough"
+              element={<CharacterWalkthroughGenerator />}
+            />
+            <Route path="/generator/this-person" element={<ThisPersonGenerator />} />
             <Route path="/resources" element={<Resources />}>
               <Route index element={<Screens />} />
               <Route path="screens" element={<Screens />} />
@@ -76,6 +87,7 @@ export default function App() {
               <Route path="characters" element={<Characters />} />
               <Route path="verbatims" element={<Verbatims />} />
               <Route path="hooks" element={<Hooks />} />
+              <Route path="this-person" element={<ThisPerson />} />
             </Route>
           </Routes>
         </main>

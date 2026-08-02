@@ -10,6 +10,9 @@
     },
     "api/generate-hooks.js": {
       "maxDuration": 60
+    },
+    "api/generate-this-person.js": {
+      "maxDuration": 60
     }
   }
 }

@@ -20,3 +20,9 @@
   from = "/api/generate-hooks"
   to = "/.netlify/functions/generate-hooks"
   status = 200
+
+[[redirects]]
+  from = "/api/generate-this-person"
+  to = "/.netlify/functions/generate-this-person"
+  status = 200
+

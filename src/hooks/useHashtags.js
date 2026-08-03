@@ -19,6 +19,7 @@ export function useHashtags() {
       posts: null,
       category: 'broad',
       themes: [],
+      keywords: [],
     }),
     getNextId: nextHashtagId,
   });

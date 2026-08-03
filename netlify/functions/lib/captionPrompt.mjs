@@ -61,7 +61,12 @@ ${s.example}`
     .join('\n');
 
   const hashtagBlock = hashtagPool
-    .map((h) => `${h.hashtag} [${h.category}${h.themes?.length ? `, ${h.themes.join(', ')}` : ''}]`)
+    .map((h) => {
+      const themes = h.themes?.length ? h.themes.join(', ') : '';
+      const keywords = (h.keywords ?? []).slice(0, 6).join(', ');
+      const meta = [h.category, themes, keywords].filter(Boolean).join('; ');
+      return `${h.hashtag} [${meta}]`;
+    })
     .join('\n');
 
   const styleInstruction =

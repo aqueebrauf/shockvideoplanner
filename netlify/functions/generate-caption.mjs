@@ -8,7 +8,10 @@ import {
 import {
   assembleCaption,
   buildHashtagPool,
+  fetchAllHashtagRows,
   normalizeCaptionParagraphs,
+  normalizeHashtagRow,
+  pickHashtagsForContent,
   validateHashtags,
 } from './lib/hashtagFilter.mjs';
 
@@ -53,27 +56,20 @@ function normalizeCaptionStyle(row) {
 }
 
 function normalizeHashtag(row) {
-  return {
-    id: row.id,
-    hashtag: row.hashtag ?? '',
-    posts: row.posts ?? null,
-    category: row.category ?? 'broad',
-    themes: Array.isArray(row.themes) ? row.themes : [],
-  };
+  return normalizeHashtagRow(row);
 }
 
 async function loadResources(supabase) {
-  const [captionsRes, hashtagsRes] = await Promise.all([
+  const [captionsRes, hashtagRows] = await Promise.all([
     supabase.from('captions').select('*').order('id'),
-    supabase.from('hashtags').select('*').order('id'),
+    fetchAllHashtagRows(supabase),
   ]);
 
   if (captionsRes.error) throw captionsRes.error;
-  if (hashtagsRes.error) throw hashtagsRes.error;
 
   return {
     styles: (captionsRes.data ?? []).map(normalizeCaptionStyle),
-    hashtags: (hashtagsRes.data ?? []).map(normalizeHashtag),
+    hashtags: hashtagRows.map(normalizeHashtag),
   };
 }
 
@@ -176,10 +172,7 @@ export default async (req) => {
     let pickedHashtags = validateHashtags(parsed.hashtags, hashtagPool);
 
     if (pickedHashtags.length < 3) {
-      const fallback = hashtagPool
-        .filter((h) => h.category === 'medium' || h.category === 'niche')
-        .slice(0, 4)
-        .map((h) => h.hashtag);
+      const fallback = pickHashtagsForContent(hashtags, goalName, hook, 4);
       pickedHashtags = validateHashtags(
         [...pickedHashtags, ...fallback],
         hashtagPool

@@ -1,8 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import {
-  buildHashtagPool,
-  validateHashtags,
+  fetchAllHashtagRows,
+  normalizeHashtagRow,
+  pickHashtagsForContent,
 } from './lib/hashtagFilter.mjs';
 import {
   buildThisPersonSystemPrompt,
@@ -40,46 +41,19 @@ function jsonResponse(status, body) {
 }
 
 function normalizeHashtag(row) {
-  return {
-    id: row.id,
-    hashtag: row.hashtag ?? '',
-    posts: row.posts ?? null,
-    category: row.category ?? 'broad',
-    themes: Array.isArray(row.themes) ? row.themes : [],
-  };
+  return normalizeHashtagRow(row);
 }
 
 async function loadHashtags(supabase) {
-  const { data, error } = await supabase.from('hashtags').select('*').order('id');
-  if (error) throw error;
-  return (data ?? []).map(normalizeHashtag);
+  const data = await fetchAllHashtagRows(supabase);
+  return data.map(normalizeHashtag);
 }
 
-function applyHashtagPool(entries, hashtagPool) {
-  const poolTags = hashtagPool.map((h) => h.hashtag);
-
-  return entries.map((entry) => {
-    const rawTags = entry.hashtag
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
-
-    let validated = validateHashtags(rawTags, hashtagPool);
-
-    if (validated.length === 0 && poolTags.length > 0) {
-      validated = validateHashtags(
-        buildHashtagPool(hashtagPool, '', entry.hookText)
-          .slice(0, 3)
-          .map((h) => h.hashtag),
-        hashtagPool
-      );
-    }
-
-    return {
-      ...entry,
-      hashtag: validated.slice(0, 3).join(' '),
-    };
-  });
+function applyHashtagPool(entries, goalName, allHashtags) {
+  return entries.map((entry) => ({
+    ...entry,
+    hashtag: pickHashtagsForContent(allHashtags, goalName, entry.hookText, 3).join(' '),
+  }));
 }
 
 export default async (req) => {
@@ -161,7 +135,7 @@ export default async (req) => {
       return jsonResponse(502, { error: 'Model returned no entries.' });
     }
 
-    entries = applyHashtagPool(entries, hashtagPool);
+    entries = applyHashtagPool(entries, goalName, hashtags);
 
     return jsonResponse(200, { entries });
   } catch (err) {

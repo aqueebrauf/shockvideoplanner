@@ -4,8 +4,11 @@ import { TableInput } from '@/components/table/TableField';
 import { cn } from '@/lib/utils';
 import {
   CATEGORIES,
+  formatKeywords,
   formatThemes,
+  parseKeywordsInput,
   parseThemesInput,
+  refreshHashtagKeywords,
 } from '../../lib/hashtagsStorage';
 import { useHashtags } from '../../hooks/useHashtags';
 
@@ -16,8 +19,9 @@ export default function Hashtags() {
     <>
       <DataStatus loading={loading} error={error} />
       <p className="mb-3 text-sm text-muted-foreground">
-        Themes help the caption AI pick relevant tags for each goal. Comma-separated
-        (e.g. study, goals, habits). Edits save automatically for the whole team.
+        Themes and keywords help the caption AI pick relevant tags for each goal.
+        Keywords auto-expand from the hashtag text and themes; add extras if needed.
+        Edits save automatically for the whole team.
       </p>
       <div className="data-table-wrap">
         <table className="data-table">
@@ -27,13 +31,14 @@ export default function Hashtags() {
               <th className="w-32">Instagram Posts</th>
               <th className="w-32">Category</th>
               <th className="min-w-40">Themes</th>
+              <th className="min-w-48">Keywords</th>
               <th className="w-24" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {hashtags.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                   No hashtags yet. Use &ldquo;Add row&rdquo; below to create one.
                 </td>
               </tr>
@@ -46,7 +51,13 @@ export default function Hashtags() {
                       value={row.hashtag}
                       placeholder="#example"
                       onChange={(e) =>
-                        updateHashtag(row.id, { hashtag: e.target.value })
+                        updateHashtag(row.id, {
+                          hashtag: e.target.value,
+                          keywords: refreshHashtagKeywords({
+                            ...row,
+                            hashtag: e.target.value,
+                          }),
+                        })
                       }
                       aria-label={`Hashtag ${index + 1}`}
                     />
@@ -94,9 +105,26 @@ export default function Hashtags() {
                       onChange={(e) =>
                         updateHashtag(row.id, {
                           themes: parseThemesInput(e.target.value),
+                          keywords: refreshHashtagKeywords({
+                            ...row,
+                            themes: parseThemesInput(e.target.value),
+                          }),
                         })
                       }
                       aria-label={`Themes for ${row.hashtag || index + 1}`}
+                    />
+                  </td>
+                  <td>
+                    <TableInput
+                      type="text"
+                      value={formatKeywords(row.keywords)}
+                      placeholder="auto from tag + themes"
+                      onChange={(e) =>
+                        updateHashtag(row.id, {
+                          keywords: parseKeywordsInput(e.target.value),
+                        })
+                      }
+                      aria-label={`Keywords for ${row.hashtag || index + 1}`}
                     />
                   </td>
                   <td>

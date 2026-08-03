@@ -1,5 +1,7 @@
+import { compactHashtagKeywords } from '../../shared/hashtagMatching.js';
 import { supabase } from './supabase';
 import { nextIdFromRows } from './db/helpers';
+import { fetchAllHashtagRows } from '../../shared/fetchHashtagRows.js';
 
 export const CATEGORIES = ['broad', 'medium', 'niche'];
 
@@ -9,30 +11,43 @@ export function normalizeHashtag(row) {
     postsRaw == null || postsRaw === '' || Number.isNaN(Number(postsRaw))
       ? null
       : Math.round(Number(postsRaw));
+  const themes = Array.isArray(row.themes) ? row.themes : [];
+  const storedKeywords = Array.isArray(row.keywords) ? row.keywords : [];
+  const keywords =
+    storedKeywords.length > 0
+      ? storedKeywords
+      : compactHashtagKeywords(row.hashtag ?? '', themes);
 
   return {
     id: row.id,
     hashtag: row.hashtag ?? '',
     posts,
     category: row.category ?? 'broad',
-    themes: Array.isArray(row.themes) ? row.themes : [],
+    themes,
+    keywords,
   };
 }
 
 function toRow(hashtag) {
+  const themes = hashtag.themes ?? [];
+  const keywords =
+    hashtag.keywords?.length > 0
+      ? hashtag.keywords
+      : compactHashtagKeywords(hashtag.hashtag ?? '', themes);
+
   return {
     id: hashtag.id,
     hashtag: hashtag.hashtag,
     posts: hashtag.posts,
     category: hashtag.category,
-    themes: hashtag.themes ?? [],
+    themes,
+    keywords,
   };
 }
 
 export async function fetchHashtags() {
-  const { data, error } = await supabase.from('hashtags').select('*').order('id');
-  if (error) throw error;
-  return (data ?? []).map(normalizeHashtag);
+  const data = await fetchAllHashtagRows(supabase);
+  return data.map(normalizeHashtag);
 }
 
 export async function upsertHashtag(hashtag) {
@@ -63,4 +78,24 @@ export function parseThemesInput(value) {
     .split(',')
     .map((part) => part.trim().toLowerCase())
     .filter(Boolean);
+}
+
+export function formatKeywords(keywords) {
+  return (keywords ?? []).join(', ');
+}
+
+export function parseKeywordsInput(value) {
+  return value
+    .split(',')
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** Recompute keywords from hashtag text + themes (keeps manual extras if provided). */
+export function refreshHashtagKeywords(hashtag, { keepManual = false } = {}) {
+  const auto = compactHashtagKeywords(hashtag.hashtag ?? '', hashtag.themes ?? []);
+  if (!keepManual || !hashtag.keywords?.length) {
+    return auto;
+  }
+  return [...new Set([...hashtag.keywords, ...auto])];
 }

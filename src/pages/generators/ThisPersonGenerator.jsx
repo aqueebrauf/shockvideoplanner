@@ -18,6 +18,7 @@ import { useThisPeople } from '@/hooks/useThisPeople';
 import { generateThisPerson } from '@/lib/generateThisPerson';
 import { formatGoalDateLabel, sortGoalsByRecent } from '@/lib/goalDateLabel';
 import { nextThisPersonId, upsertThisPeople } from '@/lib/thisPeopleStorage';
+import { THIS_PERSON_HOOK_MAX_CHARS } from '@/lib/thisPersonDisplay';
 
 export default function ThisPersonGenerator() {
   const navigate = useNavigate();
@@ -52,13 +53,19 @@ export default function ThisPersonGenerator() {
       return;
     }
 
+    const trimmedHook = hookText.trim();
+    if (trimmedHook.length > THIS_PERSON_HOOK_MAX_CHARS) {
+      setError(`Hook text must be ${THIS_PERSON_HOOK_MAX_CHARS} characters or fewer.`);
+      return;
+    }
+
     setError('');
     setGenerating(true);
 
     try {
       const result = await generateThisPerson({
         goalName: goalTitle,
-        hookText: hookText.trim(),
+        hookText: trimmedHook,
         customInstruction: customInstruction.trim(),
       });
 
@@ -132,14 +139,19 @@ export default function ThisPersonGenerator() {
               <Textarea
                 id="hook-text-optional"
                 rows={3}
+                maxLength={THIS_PERSON_HOOK_MAX_CHARS}
                 placeholder='e.g. "This topper showed me how he tracks his study plan"'
                 value={hookText}
                 onChange={(event) => setHookText(event.target.value)}
                 disabled={generating}
               />
               <p className="text-xs text-muted-foreground">
+                Max {THIS_PERSON_HOOK_MAX_CHARS} characters.
+                {hookText.trim()
+                  ? ` ${hookText.trim().length}/${THIS_PERSON_HOOK_MAX_CHARS} used.`
+                  : null}{' '}
                 If provided, this exact hook is used and only the caption and hashtags are
-                generated. Leave blank to generate multiple hook variations.
+                generated. Leave blank to generate up to 3 hook variations.
               </p>
             </div>
 

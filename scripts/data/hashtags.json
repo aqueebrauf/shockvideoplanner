@@ -4569,10 +4569,11 @@
   {
     "id": 504,
     "hashtag": "#engineering",
-    "posts": 19610000,
+    "posts": 7330000,
     "category": "broad",
     "themes": [
-      "general"
+      "general",
+      "iitjee"
     ]
   },
   {
@@ -7472,10 +7473,11 @@
   {
     "id": 824,
     "hashtag": "#studymotivation",
-    "posts": 7700000,
+    "posts": 7047833,
     "category": "broad",
     "themes": [
       "motivation",
+      "neet",
       "study"
     ]
   },
@@ -15323,9 +15325,10 @@
   {
     "id": 1690,
     "hashtag": "#lawstudent",
-    "posts": 1750000,
+    "posts": 666566,
     "category": "medium",
     "themes": [
+      "clat",
       "study"
     ]
   },
@@ -16896,10 +16899,11 @@
   {
     "id": 1863,
     "hashtag": "#aiims",
-    "posts": 1300000,
+    "posts": 121412,
     "category": "medium",
     "themes": [
-      "general"
+      "general",
+      "neet"
     ]
   },
   {
@@ -18013,9 +18017,10 @@
   {
     "id": 1986,
     "hashtag": "#neetpreparation",
-    "posts": 1090000,
+    "posts": 90744,
     "category": "medium",
     "themes": [
+      "neet",
       "study"
     ]
   },
@@ -18964,9 +18969,10 @@
   {
     "id": 2091,
     "hashtag": "#neetexam",
-    "posts": 859940,
+    "posts": 73548,
     "category": "medium",
     "themes": [
+      "neet",
       "study"
     ]
   },
@@ -27386,9 +27392,10 @@
   {
     "id": 3018,
     "hashtag": "#lawschool",
-    "posts": null,
-    "category": "niche",
+    "posts": 795103,
+    "category": "medium",
     "themes": [
+      "clat",
       "study"
     ]
   },
@@ -27668,6 +27675,787 @@
     "category": "niche",
     "themes": [
       "general"
+    ]
+  },
+  {
+    "id": 3049,
+    "hashtag": "#neet",
+    "posts": 744500,
+    "category": "medium",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3050,
+    "hashtag": "#neet2026",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3051,
+    "hashtag": "#neetaspirants",
+    "posts": 42000,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3052,
+    "hashtag": "#neetmotivation",
+    "posts": 52353,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3053,
+    "hashtag": "#neet2027",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3054,
+    "hashtag": "#neetaspirant",
+    "posts": 5683,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3055,
+    "hashtag": "#futuredoctor",
+    "posts": 995471,
+    "category": "medium",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3056,
+    "hashtag": "#neetug",
+    "posts": 92622,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3057,
+    "hashtag": "#neetstrategy",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3058,
+    "hashtag": "#reneet2026",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3059,
+    "hashtag": "#ncertbiology",
+    "posts": 16895,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3060,
+    "hashtag": "#mbbs",
+    "posts": 354984,
+    "category": "medium",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3061,
+    "hashtag": "#neetchemistry",
+    "posts": 13830,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3062,
+    "hashtag": "#neetbiology",
+    "posts": 25876,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3063,
+    "hashtag": "#neetphysics",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3064,
+    "hashtag": "#neetcoaching",
+    "posts": 52694,
+    "category": "niche",
+    "themes": [
+      "neet",
+      "study"
+    ]
+  },
+  {
+    "id": 3065,
+    "hashtag": "#gk",
+    "posts": 46064579,
+    "category": "broad",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3066,
+    "hashtag": "#ips",
+    "posts": 35642830,
+    "category": "broad",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3067,
+    "hashtag": "#ias",
+    "posts": 2217829,
+    "category": "broad",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3068,
+    "hashtag": "#upsc",
+    "posts": 1088422,
+    "category": "broad",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3069,
+    "hashtag": "#currentaffairs",
+    "posts": 814950,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3070,
+    "hashtag": "#iasofficer",
+    "posts": 764708,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3071,
+    "hashtag": "#generalknowledge",
+    "posts": 627732,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3072,
+    "hashtag": "#civilservices",
+    "posts": 375400,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3073,
+    "hashtag": "#civilservice",
+    "posts": 267129,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3074,
+    "hashtag": "#upscmotivation",
+    "posts": 249633,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3075,
+    "hashtag": "#lbsnaa",
+    "posts": 183166,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3076,
+    "hashtag": "#upscexam",
+    "posts": 177946,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3077,
+    "hashtag": "#upscaspirants",
+    "posts": 164921,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3078,
+    "hashtag": "#iasexam",
+    "posts": 164200,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3079,
+    "hashtag": "#dailycurrentaffairs",
+    "posts": 115448,
+    "category": "medium",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3080,
+    "hashtag": "#upscpreparation",
+    "posts": 64945,
+    "category": "niche",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3081,
+    "hashtag": "#upscprelims",
+    "posts": 60801,
+    "category": "niche",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3082,
+    "hashtag": "#upscias",
+    "posts": 60762,
+    "category": "niche",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3083,
+    "hashtag": "#upscguide",
+    "posts": 43481,
+    "category": "niche",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3084,
+    "hashtag": "#upscaspirant",
+    "posts": 39183,
+    "category": "niche",
+    "themes": [
+      "upsc"
+    ]
+  },
+  {
+    "id": 3085,
+    "hashtag": "#jeemains",
+    "posts": 2800000,
+    "category": "broad",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3086,
+    "hashtag": "#iitjee",
+    "posts": 2900000,
+    "category": "broad",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3087,
+    "hashtag": "#jee",
+    "posts": 448500,
+    "category": "medium",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3088,
+    "hashtag": "#jeemain",
+    "posts": 1000000,
+    "category": "broad",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3089,
+    "hashtag": "#iit",
+    "posts": 334400,
+    "category": "medium",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3090,
+    "hashtag": "#jeeadvanced",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3091,
+    "hashtag": "#iitdelhi",
+    "posts": 59900,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3092,
+    "hashtag": "#kota",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3093,
+    "hashtag": "#iitbombay",
+    "posts": 42100,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3094,
+    "hashtag": "#allen",
+    "posts": 838700,
+    "category": "medium",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3095,
+    "hashtag": "#jeemain2026",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3096,
+    "hashtag": "#jeemaths",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3097,
+    "hashtag": "#jeemotivation",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3098,
+    "hashtag": "#iitians",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3099,
+    "hashtag": "#iitjeepreparation",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3100,
+    "hashtag": "#jee2026",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3101,
+    "hashtag": "#kotacoaching",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3102,
+    "hashtag": "#jeestrategy",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3103,
+    "hashtag": "#jee2027",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "iitjee"
+    ]
+  },
+  {
+    "id": 3104,
+    "hashtag": "#cuet",
+    "posts": 132900,
+    "category": "medium",
+    "themes": [
+      "cuet"
+    ]
+  },
+  {
+    "id": 3105,
+    "hashtag": "#cuetug",
+    "posts": 126000,
+    "category": "medium",
+    "themes": [
+      "cuet"
+    ]
+  },
+  {
+    "id": 3106,
+    "hashtag": "#cuet2026",
+    "posts": 12000,
+    "category": "niche",
+    "themes": [
+      "cuet"
+    ]
+  },
+  {
+    "id": 3107,
+    "hashtag": "#delhiuniversity",
+    "posts": 183200,
+    "category": "medium",
+    "themes": [
+      "cuet"
+    ]
+  },
+  {
+    "id": 3108,
+    "hashtag": "#cuetug2026",
+    "posts": 12000,
+    "category": "niche",
+    "themes": [
+      "cuet"
+    ]
+  },
+  {
+    "id": 3109,
+    "hashtag": "#cuetpreparation",
+    "posts": 39000,
+    "category": "niche",
+    "themes": [
+      "cuet"
+    ]
+  },
+  {
+    "id": 3110,
+    "hashtag": "#cuetaspirants",
+    "posts": 28000,
+    "category": "niche",
+    "themes": [
+      "cuet"
+    ]
+  },
+  {
+    "id": 3111,
+    "hashtag": "#nda",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "nda"
+    ]
+  },
+  {
+    "id": 3112,
+    "hashtag": "#ndapreparation",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "nda"
+    ]
+  },
+  {
+    "id": 3113,
+    "hashtag": "#nda2026",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "nda"
+    ]
+  },
+  {
+    "id": 3114,
+    "hashtag": "#ndaexam",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "nda"
+    ]
+  },
+  {
+    "id": 3115,
+    "hashtag": "#defenceaspirants",
+    "posts": 296000,
+    "category": "medium",
+    "themes": [
+      "nda"
+    ]
+  },
+  {
+    "id": 3116,
+    "hashtag": "#ndamaths",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "nda"
+    ]
+  },
+  {
+    "id": 3117,
+    "hashtag": "#nda2027",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "nda"
+    ]
+  },
+  {
+    "id": 3118,
+    "hashtag": "#defenceexam",
+    "posts": null,
+    "category": "niche",
+    "themes": [
+      "nda"
+    ]
+  },
+  {
+    "id": 3119,
+    "hashtag": "#lawyer",
+    "posts": 2766115,
+    "category": "broad",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3120,
+    "hashtag": "#lawyers",
+    "posts": 802320,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3121,
+    "hashtag": "#attorney",
+    "posts": 769636,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3122,
+    "hashtag": "#lawyerlife",
+    "posts": 644769,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3123,
+    "hashtag": "#lawyersofinstagram",
+    "posts": 186974,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3124,
+    "hashtag": "#lawstudents",
+    "posts": 168184,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3125,
+    "hashtag": "#lawlife",
+    "posts": 149349,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3126,
+    "hashtag": "#futurelawyer",
+    "posts": 137376,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3127,
+    "hashtag": "#clat",
+    "posts": 126171,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3128,
+    "hashtag": "#indianlaw",
+    "posts": 100006,
+    "category": "medium",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3129,
+    "hashtag": "#lawschoolproblems",
+    "posts": 95352,
+    "category": "niche",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3130,
+    "hashtag": "#lawschoollife",
+    "posts": 67955,
+    "category": "niche",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3131,
+    "hashtag": "#clatlife",
+    "posts": 49071,
+    "category": "niche",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3132,
+    "hashtag": "#nlu",
+    "posts": 44598,
+    "category": "niche",
+    "themes": [
+      "clat"
+    ]
+  },
+  {
+    "id": 3133,
+    "hashtag": "#mocktest",
+    "posts": 29631,
+    "category": "niche",
+    "themes": [
+      "clat"
     ]
   }
 ]

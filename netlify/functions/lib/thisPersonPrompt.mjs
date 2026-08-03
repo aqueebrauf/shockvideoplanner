@@ -1,3 +1,5 @@
+const THIS_PERSON_HOOK_MAX_CHARS = 60;
+
 const SMASH_CONTEXT = `Smash is a goal tracker app that helps people smash their biggest goals through daily check-ins, milestones, weekly reviews, and journaling. Core message: consistency beats motivation. Tone: direct, relatable, no corporate fluff.`;
 
 const HOOK_EXAMPLES = [
@@ -27,8 +29,9 @@ HOOK RULES:
 ${HOOK_EXAMPLES.map((h) => `   - "${h}"`).join('\n')}
 2. Adapt the persona (topper, athlete, founder, etc.) and action to match the goal.
 3. Use natural English. Readable in 1–3 seconds (~8–18 words).
-4. No hashtags or emojis in hooks.
-5. No invented stats or fake testimonials.
+4. STRICT: Hook text must be ${THIS_PERSON_HOOK_MAX_CHARS} characters or fewer (count every letter, space, and punctuation).
+5. No hashtags or emojis in hooks.
+6. No invented stats or fake testimonials.
 
 CAPTION RULES:
 1. Exactly ONE line — no line breaks, no bullet points.
@@ -57,7 +60,7 @@ export function buildThisPersonUserPrompt({
   hookText = '',
   customInstruction = '',
   hashtagPool = [],
-  count = 8,
+  count = 3,
 }) {
   const poolLines = hashtagPool
     .slice(0, 40)
@@ -88,13 +91,27 @@ Return JSON with an "entries" array. Each entry needs hookText, caption (one lin
 
 export { parseModelJson } from './parseModelJson.mjs';
 
+function clampThisPersonHook(text, max = THIS_PERSON_HOOK_MAX_CHARS) {
+  const trimmed = String(text ?? '').trim();
+  if (trimmed.length <= max) return trimmed;
+
+  const cut = trimmed.slice(0, max);
+  const lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace > max * 0.5) {
+    return cut.slice(0, lastSpace).trim();
+  }
+  return cut.trim();
+}
+
 export function normalizeThisPersonEntries(parsed, { fixedHookText = '' } = {}) {
   const raw = Array.isArray(parsed?.entries) ? parsed.entries : [];
   const seen = new Set();
   const entries = [];
 
   for (const item of raw) {
-    const hookText = fixedHookText.trim() || String(item?.hookText ?? '').trim();
+    const hookText = clampThisPersonHook(
+      fixedHookText.trim() || String(item?.hookText ?? '').trim()
+    );
     const caption = String(item?.caption ?? '')
       .trim()
       .replace(/\s+/g, ' ')

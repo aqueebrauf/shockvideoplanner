@@ -1,3 +1,17 @@
+export const THIS_PERSON_HOOK_MAX_CHARS = 60;
+
+export function clampThisPersonHook(text, max = THIS_PERSON_HOOK_MAX_CHARS) {
+  const trimmed = String(text ?? '').trim();
+  if (trimmed.length <= max) return trimmed;
+
+  const cut = trimmed.slice(0, max);
+  const lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace > max * 0.5) {
+    return cut.slice(0, lastSpace).trim();
+  }
+  return cut.trim();
+}
+
 export function mergeThisPersonCaption(caption, hashtag) {
   return [caption?.trim(), hashtag?.trim()].filter(Boolean).join(' ');
 }

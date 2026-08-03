@@ -13,7 +13,7 @@ import {
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6';
 const MODEL = process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL;
-const DEFAULT_COUNT = 8;
+const DEFAULT_COUNT = 3;
 
 function anthropicErrorMessage(err) {
   if (err?.error?.message) return err.error.message;
@@ -117,6 +117,9 @@ export default async (req) => {
 
   if (!goalName) {
     return jsonResponse(400, { error: 'goalName is required.' });
+  }
+  if (hookText.length > 60) {
+    return jsonResponse(400, { error: 'Hook text must be 60 characters or fewer.' });
   }
 
   try {

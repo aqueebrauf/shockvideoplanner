@@ -35,8 +35,25 @@ export function getGoalsWithThisPersonEntries(thisPeople, goals) {
     );
 }
 
+import { PLAN_STATUS_COMPLETED } from './planStatus';
+
 export function filterThisPeopleByGoalId(thisPeople, goalId) {
   return thisPeople
     .filter((entry) => entry.goalId === goalId)
     .sort((a, b) => a.id - b.id);
+}
+
+export function splitThisPeopleByCompletion(entries) {
+  const active = [];
+  const completed = [];
+
+  for (const entry of entries) {
+    if (entry.status === PLAN_STATUS_COMPLETED) {
+      completed.push(entry);
+    } else {
+      active.push(entry);
+    }
+  }
+
+  return { active, completed };
 }

@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { nextIdFromRows } from './db/helpers';
+import { normalizePlanStatus } from './planStatus';
 
 export function normalizeThisPerson(row) {
   return {
@@ -8,6 +9,7 @@ export function normalizeThisPerson(row) {
     hookText: row.hook_text ?? row.hookText ?? '',
     caption: row.caption ?? '',
     hashtag: row.hashtag ?? '',
+    status: normalizePlanStatus(row.status),
   };
 }
 
@@ -18,6 +20,7 @@ function toRow(thisPerson) {
     hook_text: thisPerson.hookText ?? '',
     caption: thisPerson.caption ?? '',
     hashtag: thisPerson.hashtag ?? '',
+    status: normalizePlanStatus(thisPerson.status),
   };
 }
 

@@ -149,7 +149,14 @@ export function ResourcesProvider({ children }) {
     upsertOne: upsertThisPerson,
     deleteById: deleteThisPersonById,
     normalize: normalizeThisPerson,
-    createEmpty: (id) => ({ id, goalId: null, hookText: '', caption: '', hashtag: '' }),
+    createEmpty: (id) => ({
+      id,
+      goalId: null,
+      hookText: '',
+      caption: '',
+      hashtag: '',
+      status: 'not started',
+    }),
     getNextId: nextThisPersonId,
   });
 

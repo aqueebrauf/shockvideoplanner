@@ -3,6 +3,7 @@ import {
   createPresignedUploadUrl,
   deleteFromR2,
   extensionFromMime,
+  objectExistsInR2,
   uploadBufferToR2,
 } from '../lib/r2Client.mjs';
 import {
@@ -63,6 +64,15 @@ async function handleDeleteObject(payload) {
   }
   await deleteFromR2(storageKey);
   return jsonResponse(200, { ok: true });
+}
+
+async function handleVerifyUpload(payload) {
+  const { storageKey } = payload;
+  if (!storageKey) {
+    return jsonResponse(400, { error: 'storageKey is required.' });
+  }
+  const exists = await objectExistsInR2(storageKey);
+  return jsonResponse(200, { ok: exists });
 }
 
 async function handleGenerateHookImage(payload) {
@@ -175,6 +185,8 @@ export default async (req) => {
         return await handlePresignUpload(body);
       case 'delete-object':
         return await handleDeleteObject(body);
+      case 'verify-upload':
+        return await handleVerifyUpload(body);
       case 'generate-hook-image':
         return await handleGenerateHookImage(body);
       case 'generate-hook-video':

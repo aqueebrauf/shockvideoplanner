@@ -87,16 +87,48 @@ export async function pollGeneration({
   });
 }
 
-function putFileWithProgress(url, file, onProgress) {
+async function verifyUploadOnServer(storageKey) {
+  const body = await postPersonVideoAction({
+    action: 'verify-upload',
+    storageKey,
+  });
+  return Boolean(body.ok);
+}
+
+function putFileWithProgress(url, file, onProgress, storageKey) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', url);
     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
 
+    let lastProgress = 0;
+
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable && onProgress) {
-        onProgress(Math.round((event.loaded / event.total) * 100));
+        lastProgress = Math.round((event.loaded / event.total) * 100);
+        onProgress(lastProgress);
       }
+    };
+
+    const finishWithVerify = async () => {
+      if (!storageKey) {
+        reject(new Error('Upload to R2 failed (network error).'));
+        return;
+      }
+      try {
+        const ok = await verifyUploadOnServer(storageKey);
+        if (ok) {
+          resolve();
+          return;
+        }
+      } catch {
+        // fall through
+      }
+      reject(
+        new Error(
+          'Upload to R2 failed. Add your Vercel URL to the R2 bucket CORS policy (see scripts/r2-cors.json).'
+        )
+      );
     };
 
     xhr.onload = () => {
@@ -104,10 +136,21 @@ function putFileWithProgress(url, file, onProgress) {
         resolve();
         return;
       }
+      if (xhr.status === 0 && lastProgress >= 99) {
+        finishWithVerify();
+        return;
+      }
       reject(new Error(`Upload to R2 failed (${xhr.status}).`));
     };
 
-    xhr.onerror = () => reject(new Error('Upload to R2 failed (network error).'));
+    xhr.onerror = () => {
+      if (lastProgress >= 99) {
+        finishWithVerify();
+        return;
+      }
+      reject(new Error('Upload to R2 failed (network error).'));
+    };
+
     xhr.onabort = () => reject(new Error('Upload cancelled.'));
 
     xhr.send(file);
@@ -133,7 +176,7 @@ export async function uploadFileToR2({
     fileName: file.name,
   });
 
-  await putFileWithProgress(uploadUrl, file, onProgress);
+  await putFileWithProgress(uploadUrl, file, onProgress, storageKey);
 
   onProgress?.(100);
 

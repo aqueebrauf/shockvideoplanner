@@ -1,5 +1,6 @@
 import {
   DeleteObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -42,6 +43,9 @@ export function getR2Client() {
       accessKeyId,
       secretAccessKey,
     },
+    // SDK v3.729+ adds CRC32 checksums to presigned PUTs; browsers don't send them → upload fails.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
 }
 
@@ -86,6 +90,25 @@ export async function uploadBufferToR2({ storageKey, buffer, contentType }) {
     storageKey,
     publicUrl: buildPublicUrl(storageKey),
   };
+}
+
+export async function objectExistsInR2(storageKey) {
+  if (!storageKey?.trim()) return false;
+  const client = getR2Client();
+  const { bucket } = getR2Config();
+  try {
+    await client.send(
+      new HeadObjectCommand({
+        Bucket: bucket,
+        Key: storageKey,
+      })
+    );
+    return true;
+  } catch (err) {
+    const status = Number(err?.$metadata?.httpStatusCode);
+    if (status === 404) return false;
+    throw err;
+  }
 }
 
 export async function deleteFromR2(storageKey) {

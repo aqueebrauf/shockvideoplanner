@@ -16,6 +16,8 @@ Hosted on [Vercel](https://vercel.com). Connect the GitHub repo in Vercel; pushe
 
 Local dev: copy env vars into `.env.local`, then run `npm run dev` (`vercel dev` serves the app and `/api` routes).
 
+**R2 CORS (required for browser uploads):** Cloudflare dashboard → R2 → `smash-video-planner` → Settings → CORS → paste `scripts/r2-cors.json`. Add your Vercel preview URL to `AllowedOrigins` if you use preview deploy links.
+
 ## Caption generation
 
 - **Model:** Claude Sonnet 4.6 (`claude-sonnet-4-6`) via Vercel serverless function (`/api/generate-caption`)

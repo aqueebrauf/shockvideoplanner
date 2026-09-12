@@ -27,6 +27,7 @@ import {
   filterShowedMePlansByGoalId,
   getGoalsWithShowedMePlans,
   mergeShowedMeCaption,
+  planAppearsOnHome,
   splitShowedMePlansByCompletion,
 } from '@/lib/showedMePlanDisplay';
 import { cn } from '@/lib/utils';
@@ -142,14 +143,14 @@ export default function ShowedMePlanHome() {
   } = useAllShowedMePlanAssets();
   const [selectedGoalId, setSelectedGoalId] = useState('');
 
-  const readyPlans = useMemo(
-    () => plans.filter((plan) => plan.workflowStatus === 'ready'),
-    [plans]
+  const homePlans = useMemo(
+    () => plans.filter((plan) => planAppearsOnHome(plan, assets)),
+    [plans, assets]
   );
 
   const goalsWithPlans = useMemo(
-    () => getGoalsWithShowedMePlans(readyPlans, goals),
-    [readyPlans, goals]
+    () => getGoalsWithShowedMePlans(homePlans, goals),
+    [homePlans, goals]
   );
 
   useEffect(() => {
@@ -169,9 +170,9 @@ export default function ShowedMePlanHome() {
   const entries = useMemo(
     () =>
       selectedGoalId
-        ? filterShowedMePlansByGoalId(readyPlans, Number(selectedGoalId))
+        ? filterShowedMePlansByGoalId(homePlans, Number(selectedGoalId))
         : [],
-    [readyPlans, selectedGoalId]
+    [homePlans, selectedGoalId]
   );
   const { active: activeEntries, completed: completedEntries } = useMemo(
     () => splitShowedMePlansByCompletion(entries),
@@ -196,20 +197,20 @@ export default function ShowedMePlanHome() {
     <div className="home-page">
       <DataStatus loading={loading || assetsLoading} error={error || assetsError} />
 
-      {!loading && readyPlans.length === 0 ? (
+      {!loading && homePlans.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">
-          No ready Showed Me plans yet.{' '}
+          No Showed Me plans yet.{' '}
           <Link
             to="/generator"
             className="text-primary underline-offset-4 hover:underline"
           >
             Create a plan
           </Link>{' '}
-          and mark it ready for editors.
+          in the generator.
         </p>
       ) : null}
 
-      {!loading && readyPlans.length > 0 ? (
+      {!loading && homePlans.length > 0 ? (
         <>
           <div className="shrink-0 space-y-2">
             <Label htmlFor="showed-me-goal">Goal</Label>
@@ -230,7 +231,7 @@ export default function ShowedMePlanHome() {
 
           <div className="home-this-person-list">
             {entries.length === 0 ? (
-              <p className="home-plan-empty">No ready plans for this goal.</p>
+              <p className="home-plan-empty">No plans for this goal.</p>
             ) : (
               <>
                 {activeEntries.length === 0 ? (

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Loader2, RefreshCw, RotateCcw, RotateCw, Sparkles, Trash2, Upload } from 'lucide-react';
+import { Loader2, Sparkles, Trash2, Upload } from 'lucide-react';
 import AssetThumbnail from '@/components/showedMe/AssetThumbnail';
 import ShowedMeSlotAsset from '@/components/showedMe/ShowedMeSlotAsset';
 import UploadProgress from '@/components/showedMe/UploadProgress';
@@ -22,11 +22,6 @@ import { useGoals } from '@/hooks/useGoals';
 import { useShowedMePlanAssets } from '@/hooks/useShowedMePlanAssets';
 import { useShowedMePlans } from '@/hooks/useShowedMePlans';
 import { libraryEntryHasFiles } from '@/lib/goalDemoBackgroundStorage';
-import {
-  extractFirstVideoFrame,
-  extractFirstVideoFrameFromUrl,
-  rotateImageBlob,
-} from '@/lib/extractVideoFrame';
 import {
   assetHasFile,
   getActiveAssetForType,
@@ -132,6 +127,14 @@ export default function ShowedMePlanDetail() {
     () => getActiveAssetForType(assets, ASSET_TYPE_DEMO_FIRST_FRAME),
     [assets]
   );
+
+  const selectedLibraryEntry = useMemo(
+    () => libraryBackgrounds.find((entry) => entry.id === plan?.demoLibraryId) ?? null,
+    [libraryBackgrounds, plan?.demoLibraryId]
+  );
+
+  const demoEndFrameUrl =
+    firstFrameAsset?.publicUrl?.trim() || selectedLibraryEntry?.framePublicUrl?.trim() || '';
 
   const selectedHookImage = useMemo(
     () =>
@@ -473,78 +476,6 @@ export default function ShowedMePlanDetail() {
     [assets, ensureGoalId, persistUploadedAsset, plan]
   );
 
-  const handleDemoClipUpload = useCallback(
-    async (file) => {
-      if (!file || !plan) return;
-
-      setBusy('upload-demo-pipeline');
-      setActionError('');
-      setUploadState({
-        phase: 'presigning',
-        progress: 0,
-        label: `Uploading ${file.name}…`,
-        assetType: ASSET_TYPE_DEMO_CLIP,
-      });
-
-      try {
-        ensureGoalId();
-
-        const asset = await handleUpload(file, ASSET_TYPE_DEMO_CLIP, {
-          patchKey: 'selectedDemoAssetId',
-          uploadLabel: `Uploading ${file.name}…`,
-          skipBusy: true,
-          skipDoneMessage: true,
-        });
-
-        if (!asset) return;
-
-        setUploadState({
-          phase: 'extracting',
-          progress: 100,
-          label: 'Extracting first frame…',
-          assetType: ASSET_TYPE_DEMO_CLIP,
-        });
-
-        try {
-          const frameBlob = await extractFirstVideoFrame(file);
-          const frameFile = new File([frameBlob], 'demo-first-frame.jpg', {
-            type: 'image/jpeg',
-          });
-          await handleUpload(frameFile, ASSET_TYPE_DEMO_FIRST_FRAME, {
-            parentAssetId: asset.id,
-            autoSelect: true,
-            skipBusy: true,
-          });
-        } catch (err) {
-          setActionError(
-            err.message ??
-              'Demo uploaded, but first frame extraction failed. Use Re-extract or upload a frame manually.'
-          );
-        }
-
-        setUploadState({
-          phase: 'done',
-          progress: 100,
-          label: 'Demo clip uploaded — play the video below to preview.',
-          assetType: ASSET_TYPE_DEMO_CLIP,
-        });
-        window.setTimeout(() => {
-          setUploadState((current) =>
-            current?.phase === 'done' && current?.assetType === ASSET_TYPE_DEMO_CLIP
-              ? null
-              : current
-          );
-        }, 5000);
-      } catch (err) {
-        setActionError(err.message ?? 'Demo upload failed.');
-        setUploadState(null);
-      } finally {
-        setBusy('');
-      }
-    },
-    [ensureGoalId, handleUpload, plan]
-  );
-
   const handleSelectLibraryBackground = useCallback(
     async (entry) => {
       if (!plan || !libraryEntryHasFiles(entry)) return;
@@ -578,59 +509,6 @@ export default function ShowedMePlanDetail() {
       }
     },
     [persistUploadedAsset, plan, updatePlan]
-  );
-
-  const handleReextractFirstFrame = useCallback(async () => {
-    if (!selectedDemo?.publicUrl) {
-      setActionError('Upload a demo clip first.');
-      return;
-    }
-    setBusy('reextract-frame');
-    setActionError('');
-    try {
-      const frameBlob = await extractFirstVideoFrameFromUrl(selectedDemo.publicUrl);
-      const frameFile = new File([frameBlob], 'demo-first-frame.jpg', { type: 'image/jpeg' });
-      await handleUpload(frameFile, ASSET_TYPE_DEMO_FIRST_FRAME, {
-        parentAssetId: selectedDemo.id,
-        autoSelect: true,
-      });
-    } catch (err) {
-      setActionError(err.message ?? 'Could not re-extract first frame from demo.');
-    } finally {
-      setBusy('');
-    }
-  }, [handleUpload, selectedDemo]);
-
-  const handleRotateFirstFrame = useCallback(
-    async (degrees) => {
-      const frame = getActiveAssetForType(assets, ASSET_TYPE_DEMO_FIRST_FRAME);
-      if (!frame?.publicUrl) {
-        setActionError('Select a demo first frame to rotate.');
-        return;
-      }
-      setBusy('rotate-frame');
-      setActionError('');
-      try {
-        const response = await fetch(frame.publicUrl);
-        if (!response.ok) {
-          throw new Error('Could not load the selected first frame.');
-        }
-        const blob = await response.blob();
-        const rotatedBlob = await rotateImageBlob(blob, degrees);
-        const frameFile = new File([rotatedBlob], 'demo-first-frame-rotated.jpg', {
-          type: 'image/jpeg',
-        });
-        await handleUpload(frameFile, ASSET_TYPE_DEMO_FIRST_FRAME, {
-          parentAssetId: frame.parentAssetId ?? selectedDemo?.id ?? null,
-          autoSelect: true,
-        });
-      } catch (err) {
-        setActionError(err.message ?? 'Could not rotate first frame.');
-      } finally {
-        setBusy('');
-      }
-    },
-    [assets, handleUpload, selectedDemo?.id]
   );
 
   const handleGenerateHookImage = useCallback(async () => {
@@ -689,9 +567,8 @@ export default function ShowedMePlanDetail() {
 
   const handleGenerateHookVideo = useCallback(async () => {
     const hookImage = selectedHookImage;
-    const endFrame = firstFrameAsset;
-    if (!hookImage?.publicUrl || !endFrame?.publicUrl) {
-      setActionError('Select a hook image and extract the demo first frame first.');
+    if (!hookImage?.publicUrl || !demoEndFrameUrl) {
+      setActionError('Select a hook image and a demo background first.');
       return;
     }
     setBusy('generate-hook-video');
@@ -703,7 +580,7 @@ export default function ShowedMePlanDetail() {
       const { requestId } = await generateHookVideo({
         prompt: hookVideoPrompt.trim() || 'Smooth cinematic transition',
         imageUrl: hookImage.publicUrl,
-        endImageUrl: endFrame.publicUrl,
+        endImageUrl: demoEndFrameUrl,
         enhancePrompt: false,
       });
       setGenerationStatus('Generating hook video…');
@@ -734,7 +611,7 @@ export default function ShowedMePlanDetail() {
     }
   }, [
     ensureGoalId,
-    firstFrameAsset,
+    demoEndFrameUrl,
     hookVideoPrompt,
     persistUploadedAsset,
     plan?.id,
@@ -846,7 +723,7 @@ export default function ShowedMePlanDetail() {
 
       <Section
         title="1. Demo clip"
-        description="Pick a background from the demo library for this goal, or upload a one-off clip."
+        description="Pick a background from the demo library. The first frame is taken from that clip automatically."
       >
         {!plan.goalId ? (
           <p className="text-sm text-muted-foreground">Select a goal above to choose a demo background.</p>
@@ -912,138 +789,32 @@ export default function ShowedMePlanDetail() {
           </>
         )}
 
-        <UploadProgress
-          label={uploadState?.assetType === ASSET_TYPE_DEMO_CLIP ? uploadState.label : null}
-          progress={uploadState?.progress}
-          phase={uploadState?.phase}
-        />
-        <div className="flex flex-wrap gap-3 border-t pt-4">
-          <Label
-            className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted ${
-              busy === 'upload-demo-pipeline' ? 'pointer-events-none opacity-50' : ''
-            }`}
-          >
-            {busy === 'upload-demo-pipeline' ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Upload className="size-4" />
-            )}
-            {busy === 'upload-demo-pipeline'
-              ? 'Uploading…'
-              : selectedDemo
-                ? 'Replace with one-off upload'
-                : 'Upload one-off demo'}
-            <input
-              type="file"
-              accept="video/*"
-              className="sr-only"
-              disabled={busy === 'upload-demo-pipeline' || !plan.goalId}
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  await handleDemoClipUpload(file);
-                  updatePlan(plan.id, { demoLibraryId: null }, { immediate: true });
-                }
-                e.target.value = '';
-              }}
-            />
-          </Label>
-        </div>
         {selectedDemo ? (
-          <ShowedMeSlotAsset
-            asset={selectedDemo}
-            hint="Use controls to play · library picks reuse shared files across plans"
-            deleting={deletingAssetId === selectedDemo.id}
-            onDelete={handleDeleteAsset}
-          />
+          <div className="flex flex-wrap items-start gap-4">
+            <ShowedMeSlotAsset
+              asset={selectedDemo}
+              hint="Library clip · first frame is used automatically for hook video"
+              deleting={deletingAssetId === selectedDemo.id}
+              onDelete={handleDeleteAsset}
+            />
+            {demoEndFrameUrl ? (
+              <div className="max-w-[140px] space-y-2">
+                <p className="text-xs text-muted-foreground">End frame from demo</p>
+                <img
+                  src={demoEndFrameUrl}
+                  alt=""
+                  className="aspect-[9/16] w-full rounded-lg border object-cover"
+                />
+              </div>
+            ) : null}
+          </div>
         ) : plan.goalId ? (
-          <p className="text-sm text-muted-foreground">
-            Pick a background above or upload a one-off demo clip.
-          </p>
+          <p className="text-sm text-muted-foreground">Pick a background above to attach its demo clip.</p>
         ) : null}
       </Section>
 
       <Section
-        title="2. Demo first frame"
-        description="End frame for hook video — extracted free in your browser when you upload a demo. Upload manually if needed."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
-            <Upload className="size-4" />
-            {firstFrameAsset ? 'Replace frame' : 'Upload frame'}
-            <input
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              disabled={Boolean(busy)}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  handleUpload(file, ASSET_TYPE_DEMO_FIRST_FRAME, { autoSelect: true });
-                }
-                e.target.value = '';
-              }}
-            />
-          </Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={Boolean(busy) || !selectedDemo?.publicUrl}
-            onClick={handleReextractFirstFrame}
-          >
-            {busy === 'reextract-frame' ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCw className="size-4" />
-            )}
-            Re-extract from demo
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={Boolean(busy) || !firstFrameAsset?.publicUrl}
-            onClick={() => handleRotateFirstFrame(-90)}
-          >
-            {busy === 'rotate-frame' ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RotateCcw className="size-4" />
-            )}
-            Rotate left
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={Boolean(busy) || !firstFrameAsset?.publicUrl}
-            onClick={() => handleRotateFirstFrame(90)}
-          >
-            {busy === 'rotate-frame' ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RotateCw className="size-4" />
-            )}
-            Rotate right
-          </Button>
-        </div>
-        {firstFrameAsset ? (
-          <ShowedMeSlotAsset
-            asset={firstFrameAsset}
-            hint="End frame for hook video · upload or re-extract replaces this"
-            deleting={deletingAssetId === firstFrameAsset.id}
-            onDelete={handleDeleteAsset}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No first frame yet. Upload a demo clip or add a frame manually.
-          </p>
-        )}
-      </Section>
-
-      <Section
-        title="3. Hook image"
+        title="2. Hook image"
         description="Generate start frame via Higgsfield. Upload reference images optionally."
       >
         <div className="flex flex-wrap gap-3">
@@ -1162,8 +933,8 @@ export default function ShowedMePlanDetail() {
       </Section>
 
       <Section
-        title="4. Hook video"
-        description="Upload manually or generate with Higgsfield (hook image → demo first frame)."
+        title="3. Hook video"
+        description="Upload manually or generate with Higgsfield (hook image → first frame of the selected demo)."
       >
         <UploadProgress
           label={uploadState?.assetType === ASSET_TYPE_HOOK_VIDEO ? uploadState.label : null}
@@ -1229,7 +1000,7 @@ export default function ShowedMePlanDetail() {
         )}
       </Section>
 
-      <Section title="5. Copy" description="Hook text and caption for editors.">
+      <Section title="4. Copy" description="Hook text and caption for editors.">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="hook-text">Hook text</Label>

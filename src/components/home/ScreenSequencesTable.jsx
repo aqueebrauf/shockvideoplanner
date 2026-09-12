@@ -1,23 +1,15 @@
-import { useMemo } from 'react';
 import { useScreenSequences } from '@/hooks/useScreenSequences';
-import { useScreens } from '@/hooks/useScreens';
 
-function buildSequenceSteps(sequence, screenById) {
+function buildSequenceSteps(sequence) {
   return [
     'Hook screen',
-    ...sequence.screenIds.map((id) => screenById[id]?.name?.trim() || `Screen ${id}`),
+    ...sequence.screenIds.map((id) => `Screen ${id}`),
     'CTA',
   ];
 }
 
 export default function ScreenSequencesTable() {
-  const { screens } = useScreens();
   const { screenSequences } = useScreenSequences();
-
-  const screenById = useMemo(
-    () => Object.fromEntries(screens.map((screen) => [screen.id, screen])),
-    [screens]
-  );
 
   return (
     <div className="data-table-wrap mt-8">
@@ -31,7 +23,7 @@ export default function ScreenSequencesTable() {
         </thead>
         <tbody>
           {screenSequences.map((sequence, index) => {
-            const steps = buildSequenceSteps(sequence, screenById);
+            const steps = buildSequenceSteps(sequence);
 
             return (
               <tr key={sequence.id}>

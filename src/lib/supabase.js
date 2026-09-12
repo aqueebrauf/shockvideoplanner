@@ -12,5 +12,3 @@ if (!url || !key) {
 export const supabase = createClient(url, key, {
   db: { schema: 'videoplanner' },
 });
-
-export const SCREEN_IMAGES_BUCKET = 'videoplanner-screens';

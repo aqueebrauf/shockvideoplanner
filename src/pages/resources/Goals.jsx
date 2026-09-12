@@ -1,7 +1,7 @@
 import DataStatus from '../../components/DataStatus';
+import CopyTextButton from '../../components/CopyTextButton';
 import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
 import { TableInput } from '@/components/table/TableField';
-import { Button } from '@/components/ui/button';
 import { useGoals } from '../../hooks/useGoals';
 
 export default function Goals() {
@@ -21,7 +21,7 @@ export default function Goals() {
               <th className="w-12">#</th>
               <th>Title</th>
               <th className="w-28">Date</th>
-              <th className="min-w-56">Link</th>
+              <th className="w-40">Hashtag</th>
               <th className="w-24" aria-label="Actions" />
             </tr>
           </thead>
@@ -61,41 +61,28 @@ export default function Goals() {
                     />
                   </td>
                   <td>
-                    <div className="link-cell">
-                      <TableInput
-                        type="text"
-                        value={row.link}
-                        placeholder="https://"
-                        onChange={(e) =>
-                          updateGoal(row.id, { link: e.target.value })
-                        }
-                        onBlur={() => flushGoal(row.id)}
-                        aria-label={`Link for goal ${index + 1}`}
-                      />
-                      {row.link.trim() ? (
-                        <Button
-                          render={
-                            <a
-                              href={row.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            />
-                          }
-                          variant="link"
-                          size="sm"
-                          className="shrink-0 px-0"
-                          aria-label={`Open link for goal ${index + 1}`}
-                        >
-                          Open
-                        </Button>
-                      ) : null}
-                    </div>
+                    <TableInput
+                      type="text"
+                      value={row.hashtag}
+                      placeholder="#hashtag"
+                      onChange={(e) =>
+                        updateGoal(row.id, { hashtag: e.target.value })
+                      }
+                      onBlur={() => flushGoal(row.id)}
+                      aria-label={`Hashtag for goal ${index + 1}`}
+                    />
                   </td>
                   <td>
-                    <DeleteRowButton
-                      onClick={() => deleteGoal(row.id)}
-                      label={`Delete goal ${index + 1}`}
-                    />
+                    <div className="flex items-center gap-1">
+                      <CopyTextButton
+                        value={row.hashtag}
+                        label={`Copy hashtag ${index + 1}`}
+                      />
+                      <DeleteRowButton
+                        onClick={() => deleteGoal(row.id)}
+                        label={`Delete goal ${index + 1}`}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))

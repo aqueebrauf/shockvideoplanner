@@ -1,14 +1,11 @@
 import { adaptWebHandler } from '../server/_adapter.js';
-import generateCaption from '../server/handlers/generate-caption.mjs';
 import generateHooks from '../server/handlers/generate-hooks.mjs';
-import generateThisPerson from '../server/handlers/generate-this-person.mjs';
-import personVideo from '../server/handlers/person-video.mjs';
+import showedMe from '../server/handlers/showed-me.mjs';
 
 const handlers = {
-  'generate-caption': generateCaption,
   'generate-hooks': generateHooks,
-  'generate-this-person': generateThisPerson,
-  'person-video': personVideo,
+  'showed-me': showedMe,
+  'person-video': showedMe,
 };
 
 async function router(request) {

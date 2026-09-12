@@ -16,6 +16,6 @@ CREATE POLICY "anon_all_characters" ON videoplanner.characters
 
 INSERT INTO videoplanner.characters (id, name)
 VALUES
-  (1, 'Tom'),
-  (2, 'Soon')
+  (1, 'Anni'),
+  (2, 'Aftab')
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;

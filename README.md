@@ -11,25 +11,18 @@ Hosted on [Vercel](https://vercel.com). Connect the GitHub repo in Vercel; pushe
 - `VITE_SUPABASE_ANON_KEY`
 - `ANTHROPIC_API_KEY`
 - `ANTHROPIC_MODEL` (optional, defaults to `claude-sonnet-4-6`)
-- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` (person video plan media)
+- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` (Showed Me plan media)
 - `HIGGSFIELD_API_KEY_ID`, `HIGGSFIELD_API_KEY_SECRET` (optional, in-app generation)
 
 Local dev: copy env vars into `.env.local`, then run `npm run dev` (`vercel dev` serves the app and `/api` routes).
 
 **R2 CORS (required for browser uploads):** Cloudflare dashboard → R2 → `smash-video-planner` → Settings → CORS → paste `scripts/r2-cors.json`. Add your Vercel preview URL to `AllowedOrigins` if you use preview deploy links.
 
-## Caption generation
-
-- **Model:** Claude Sonnet 4.6 (`claude-sonnet-4-6`) via Vercel serverless function (`/api/generate-caption`)
-- **Style:** Intelligent (default) picks from caption styles in Resources, or pick a style manually
-- **Hashtags:** 3–4 tags from the hashtags table (medium/niche preferred), appended after the caption
-
 ## Supabase
 
-- Schema: `videoplanner` (tables: plans, screens, hashtags, goals, ctas, captions, verbatims, characters, screen_sequences, person_video_plans, person_plan_assets)
+- Schema: `videoplanner` (tables: hashtags, goals, captions, verbatims, characters, screen_sequences, this_people, showed_me_hooks, showed_me_plans, showed_me_plan_assets, goal_demo_backgrounds)
 - Migrations: `supabase/migrations/`
 - Baseline data: `scripts/data/`
-- Screen images: `videoplanner-screens` storage bucket
 
 ## Project structure
 

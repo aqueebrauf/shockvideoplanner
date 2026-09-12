@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
 import {
   SidebarInset,
@@ -6,59 +6,44 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
-import Home from './pages/Home';
-import CharacterWalkthroughHome from './pages/home/CharacterWalkthroughHome';
-import ThisPersonHome from './pages/home/ThisPersonHome';
-import PersonVideoPlanHome from './pages/home/PersonVideoPlanHome';
-import Plan from './pages/Plan';
-import PersonVideoPlans from './pages/PersonVideoPlans';
-import PersonVideoPlanDetail from './pages/PersonVideoPlanDetail';
-import Generator from './pages/Generator';
-import CharacterWalkthroughGenerator from './pages/generators/CharacterWalkthroughGenerator';
-import ThisPersonGenerator from './pages/generators/ThisPersonGenerator';
+import ShowedMePlanHome from './pages/home/ShowedMePlanHome';
+import ShowedMePlans from './pages/ShowedMePlans';
+import ShowedMePlanDetail from './pages/ShowedMePlanDetail';
+import GoalDemoLibrary from './pages/GoalDemoLibrary';
 import Resources from './pages/Resources';
-import Screens from './pages/resources/Screens';
 import Hashtags from './pages/resources/Hashtags';
 import Goals from './pages/resources/Goals';
-import Ctas from './pages/resources/Ctas';
 import Captions from './pages/resources/Captions';
 import Characters from './pages/resources/Characters';
 import Verbatims from './pages/resources/Verbatims';
 import Hooks from './pages/resources/Hooks';
+import ShowedMeHooks from './pages/resources/ShowedMeHooks';
 import ThisPerson from './pages/resources/ThisPerson';
 
 const pageTitles = {
-  '/': 'Home',
-  '/home/character-walkthrough': 'Character Walkthrough',
-  '/home/this-person': 'This person',
-  '/home/person-video-plan': 'Person video plan',
-  '/person-video-plans': 'Person video plans',
-  '/plan': 'Plan',
-  '/generator': 'Generator',
-  '/generator/character-walkthrough': 'Character Walkthrough',
-  '/generator/this-person': 'This person',
+  '/': 'Showed Me',
+  '/generator': 'Showed Me',
+  '/generator/demo-library': 'Demo library',
   '/resources': 'Resources',
-  '/resources/screens': 'Screens',
   '/resources/hashtags': 'Hashtags',
   '/resources/goals': 'Goals',
-  '/resources/ctas': 'CTAs',
   '/resources/captions': 'Captions',
   '/resources/characters': 'Characters',
   '/resources/verbatims': 'Verbatims',
   '/resources/hooks': 'Hooks',
+  '/resources/showed-me-hooks': 'Showed me hooks',
   '/resources/this-person': 'This person',
 };
 
 function getPageTitle(pathname) {
   if (pageTitles[pathname]) return pageTitles[pathname];
   if (pathname.startsWith('/resources')) return 'Resources';
-  if (pathname.startsWith('/person-video-plans')) return 'Person video plans';
+  if (pathname.startsWith('/generator')) return 'Showed Me';
   return 'Smash Video Planner';
 }
 
 export default function App() {
   const { pathname } = useLocation();
-  const isPlanPage = pathname === '/plan';
   const pageTitle = getPageTitle(pathname);
 
   return (
@@ -73,35 +58,33 @@ export default function App() {
           </div>
         </header>
 
-        <main
-          className={`flex min-h-0 flex-1 flex-col gap-4 p-4 md:p-6${
-            isPlanPage ? ' max-w-none' : ' mx-auto w-full max-w-6xl'
-          }`}
-        >
+        <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 p-4 md:p-6">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/home/character-walkthrough" element={<CharacterWalkthroughHome />} />
-            <Route path="/home/this-person" element={<ThisPersonHome />} />
-            <Route path="/home/person-video-plan" element={<PersonVideoPlanHome />} />
-            <Route path="/person-video-plans" element={<PersonVideoPlans />} />
-            <Route path="/person-video-plans/:planId" element={<PersonVideoPlanDetail />} />
-            <Route path="/plan" element={<Plan />} />
-            <Route path="/generator" element={<Generator />} />
+            <Route path="/" element={<ShowedMePlanHome />} />
+            <Route path="/generator" element={<ShowedMePlans />} />
+            <Route path="/generator/demo-library" element={<GoalDemoLibrary />} />
+            <Route path="/generator/character-walkthrough" element={<Navigate to="/generator" replace />} />
+            <Route path="/generator/this-person" element={<Navigate to="/generator" replace />} />
+            <Route path="/generator/:planId" element={<ShowedMePlanDetail />} />
+            <Route path="/home/*" element={<Navigate to="/" replace />} />
+            <Route path="/person-video-plans" element={<Navigate to="/generator" replace />} />
             <Route
-              path="/generator/character-walkthrough"
-              element={<CharacterWalkthroughGenerator />}
+              path="/person-video-plans/:planId"
+              element={<Navigate to={`/generator/${pathname.split('/').pop()}`} replace />}
             />
-            <Route path="/generator/this-person" element={<ThisPersonGenerator />} />
+            <Route path="/demo-library" element={<Navigate to="/generator/demo-library" replace />} />
+            <Route path="/plan" element={<Navigate to="/generator" replace />} />
             <Route path="/resources" element={<Resources />}>
-              <Route index element={<Screens />} />
-              <Route path="screens" element={<Screens />} />
+              <Route index element={<Hashtags />} />
+              <Route path="screens" element={<Navigate to="/resources/hashtags" replace />} />
               <Route path="hashtags" element={<Hashtags />} />
               <Route path="goals" element={<Goals />} />
-              <Route path="ctas" element={<Ctas />} />
+              <Route path="ctas" element={<Navigate to="/resources/hashtags" replace />} />
               <Route path="captions" element={<Captions />} />
               <Route path="characters" element={<Characters />} />
               <Route path="verbatims" element={<Verbatims />} />
               <Route path="hooks" element={<Hooks />} />
+              <Route path="showed-me-hooks" element={<ShowedMeHooks />} />
               <Route path="this-person" element={<ThisPerson />} />
             </Route>
           </Routes>

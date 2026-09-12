@@ -1,12 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  Clapperboard,
   Hash,
   Home,
   Users,
-  LayoutGrid,
   ListChecks,
-  MessageSquareQuote,
   Quote,
   Sparkles,
   Target,
@@ -30,20 +27,17 @@ import logo from '@/assets/logo.png';
 
 const mainNav = [
   { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/plan', label: 'Plan', icon: LayoutGrid },
-  { to: '/person-video-plans', label: 'Person video', icon: Video },
   { to: '/generator', label: 'Generator', icon: Sparkles },
 ];
 
 const resourceNav = [
-  { to: '/resources/screens', label: 'Screens', icon: Clapperboard },
   { to: '/resources/hashtags', label: 'Hashtags', icon: Hash },
   { to: '/resources/goals', label: 'Goals', icon: Target },
-  { to: '/resources/ctas', label: 'CTAs', icon: MessageSquareQuote },
   { to: '/resources/captions', label: 'Captions', icon: ListChecks },
   { to: '/resources/characters', label: 'Characters', icon: Users },
   { to: '/resources/verbatims', label: 'Verbatims', icon: Quote },
   { to: '/resources/hooks', label: 'Hooks', icon: Zap },
+  { to: '/resources/showed-me-hooks', label: 'Showed me hooks', icon: Video },
   { to: '/resources/this-person', label: 'This person', icon: UserCircle },
 ];
 

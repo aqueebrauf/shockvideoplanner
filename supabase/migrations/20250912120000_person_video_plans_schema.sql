@@ -1,4 +1,4 @@
--- Person video plans: full production pipeline per reel
+-- Showed Me plans: full production pipeline per reel
 CREATE TABLE IF NOT EXISTS videoplanner.person_video_plans (
   id integer PRIMARY KEY,
   goal_id integer REFERENCES videoplanner.goals(id) ON DELETE SET NULL,

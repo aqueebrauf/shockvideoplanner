@@ -7,6 +7,7 @@ export function normalizeGoal(row) {
     title: row.title ?? '',
     link: row.link ?? '',
     date: row.date ?? row.date_label ?? '',
+    hashtag: row.hashtag ?? '',
   };
 }
 
@@ -16,6 +17,7 @@ function toRow(goal) {
     title: goal.title,
     link: goal.link,
     date_label: goal.date,
+    hashtag: goal.hashtag ?? '',
   };
 }
 

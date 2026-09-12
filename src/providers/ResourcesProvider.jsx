@@ -15,13 +15,6 @@ import {
   upsertCaption,
 } from '@/lib/captionsStorage';
 import {
-  deleteCtaById,
-  fetchCtas,
-  nextCtaId,
-  normalizeCta,
-  upsertCta,
-} from '@/lib/ctasStorage';
-import {
   deleteGoalById,
   fetchGoals,
   nextGoalId,
@@ -29,19 +22,19 @@ import {
   upsertGoal,
 } from '@/lib/goalsStorage';
 import {
-  deleteScreenById,
-  fetchScreens,
-  nextScreenId,
-  normalizeScreen,
-  upsertScreen,
-} from '@/lib/screensStorage';
-import {
   deleteHookById,
   fetchHooks,
   nextHookId,
   normalizeHook,
   upsertHook,
 } from '@/lib/hooksStorage';
+import {
+  deleteShowedMeHookById,
+  fetchShowedMeHooks,
+  nextShowedMeHookId,
+  normalizeShowedMeHook,
+  upsertShowedMeHook,
+} from '@/lib/showedMeHooksStorage';
 import {
   deleteThisPersonById,
   fetchThisPeople,
@@ -96,17 +89,8 @@ export function ResourcesProvider({ children }) {
     upsertOne: upsertGoal,
     deleteById: deleteGoalById,
     normalize: normalizeGoal,
-    createEmpty: (id) => ({ id, title: '', link: '', date: '' }),
+    createEmpty: (id) => ({ id, title: '', link: '', date: '', hashtag: '' }),
     getNextId: nextGoalId,
-  });
-
-  const ctas = useRemoteCollection({
-    fetchAll: fetchCtas,
-    upsertOne: upsertCta,
-    deleteById: deleteCtaById,
-    normalize: normalizeCta,
-    createEmpty: (id) => ({ id, text: '' }),
-    getNextId: nextCtaId,
   });
 
   const captions = useRemoteCollection({
@@ -144,6 +128,15 @@ export function ResourcesProvider({ children }) {
     getNextId: nextHookId,
   });
 
+  const showedMeHooks = useRemoteCollection({
+    fetchAll: fetchShowedMeHooks,
+    upsertOne: upsertShowedMeHook,
+    deleteById: deleteShowedMeHookById,
+    normalize: normalizeShowedMeHook,
+    createEmpty: (id) => ({ id, goalId: null, text: '' }),
+    getNextId: nextShowedMeHookId,
+  });
+
   const thisPeople = useRemoteCollection({
     fetchAll: fetchThisPeople,
     upsertOne: upsertThisPerson,
@@ -158,15 +151,6 @@ export function ResourcesProvider({ children }) {
       status: 'not started',
     }),
     getNextId: nextThisPersonId,
-  });
-
-  const screens = useRemoteCollection({
-    fetchAll: fetchScreens,
-    upsertOne: upsertScreen,
-    deleteById: deleteScreenById,
-    normalize: normalizeScreen,
-    createEmpty: (id) => ({ id, name: '', image: null, suggestedCopy: '' }),
-    getNextId: nextScreenId,
   });
 
   const [screenSequences, setScreenSequences] = useState([]);
@@ -202,23 +186,21 @@ export function ResourcesProvider({ children }) {
     () => [
       characters.reload,
       goals.reload,
-      ctas.reload,
       captions.reload,
       verbatims.reload,
       hooks.reload,
+      showedMeHooks.reload,
       thisPeople.reload,
-      screens.reload,
       reloadScreenSequences,
     ],
     [
       characters.reload,
       goals.reload,
-      ctas.reload,
       captions.reload,
       verbatims.reload,
       hooks.reload,
+      showedMeHooks.reload,
       thisPeople.reload,
-      screens.reload,
       reloadScreenSequences,
     ]
   );
@@ -229,12 +211,11 @@ export function ResourcesProvider({ children }) {
     () => ({
       characters,
       goals,
-      ctas,
       captions,
       verbatims,
       hooks,
+      showedMeHooks,
       thisPeople,
-      screens,
       screenSequences: {
         items: screenSequences,
         loading: screenSequencesLoading,
@@ -245,12 +226,11 @@ export function ResourcesProvider({ children }) {
     [
       characters,
       goals,
-      ctas,
       captions,
       verbatims,
       hooks,
+      showedMeHooks,
       thisPeople,
-      screens,
       screenSequences,
       screenSequencesLoading,
       screenSequencesError,

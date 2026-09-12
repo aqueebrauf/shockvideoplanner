@@ -54,6 +54,31 @@ export function buildStorageKey({ goalId, planId, assetType, iteration, ext }) {
   return `goals/${goalId}/plans/${planId}/${assetType}/iter-${iteration}.${safeExt}`;
 }
 
+export function sanitizePathSegment(name, fallback = 'untitled') {
+  const trimmed = (name ?? '').trim();
+  const base = trimmed || fallback;
+  return (
+    base
+      .replace(/[/\\?%*:|"<>#]/g, '-')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 120) || fallback
+  );
+}
+
+/** Demo library: {goalName}/{backgroundName}/video.{ext} or first-frame.{ext} */
+export function buildLibraryStorageKey({ goalName, backgroundName, kind, ext }) {
+  const safeExt = ext.replace(/^\./, '');
+  const goal = sanitizePathSegment(goalName, 'Goal');
+  const background = sanitizePathSegment(backgroundName, 'Background1');
+  const fileName = kind === 'frame' ? `first-frame.${safeExt}` : `video.${safeExt}`;
+  return `${goal}/${background}/${fileName}`;
+}
+
+export function isPlanScopedStorageKey(storageKey) {
+  return (storageKey ?? '').includes('/plans/');
+}
+
 export function buildPublicUrl(storageKey) {
   const { publicUrl } = getR2Config();
   return `${publicUrl}/${storageKey}`;

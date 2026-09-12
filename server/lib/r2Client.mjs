@@ -5,19 +5,31 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-function requireEnv(name) {
-  const value = process.env[name]?.trim();
-  if (!value) throw new Error(`${name} is not configured.`);
-  return value;
+const R2_ENV_KEYS = [
+  'R2_ACCOUNT_ID',
+  'R2_ACCESS_KEY_ID',
+  'R2_SECRET_ACCESS_KEY',
+  'R2_BUCKET_NAME',
+  'R2_PUBLIC_URL',
+];
+
+function assertR2Env() {
+  const missing = R2_ENV_KEYS.filter((name) => !process.env[name]?.trim());
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing R2 env: ${missing.join(', ')}. Add them in Vercel → Settings → Environment Variables (Production + Preview), then redeploy.`
+    );
+  }
 }
 
 export function getR2Config() {
+  assertR2Env();
   return {
-    accountId: requireEnv('R2_ACCOUNT_ID'),
-    accessKeyId: requireEnv('R2_ACCESS_KEY_ID'),
-    secretAccessKey: requireEnv('R2_SECRET_ACCESS_KEY'),
-    bucket: requireEnv('R2_BUCKET_NAME'),
-    publicUrl: requireEnv('R2_PUBLIC_URL').replace(/\/$/, ''),
+    accountId: process.env.R2_ACCOUNT_ID.trim(),
+    accessKeyId: process.env.R2_ACCESS_KEY_ID.trim(),
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY.trim(),
+    bucket: process.env.R2_BUCKET_NAME.trim(),
+    publicUrl: process.env.R2_PUBLIC_URL.trim().replace(/\/$/, ''),
   };
 }
 

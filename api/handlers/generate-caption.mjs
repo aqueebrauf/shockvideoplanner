@@ -4,7 +4,7 @@ import {
   buildSystemPrompt,
   buildUserPrompt,
   parseModelJson,
-} from './lib/captionPrompt.mjs';
+} from '../lib/captionPrompt.mjs';
 import {
   assembleCaption,
   buildHashtagPool,
@@ -13,7 +13,7 @@ import {
   normalizeHashtagRow,
   pickHashtagsForContent,
   validateHashtags,
-} from './lib/hashtagFilter.mjs';
+} from '../lib/hashtagFilter.mjs';
 
 // Dateless ID avoids gateways that strip "0" from dated IDs (e.g. 20250514 → 2-25-514).
 const DEFAULT_MODEL = 'claude-sonnet-4-6';

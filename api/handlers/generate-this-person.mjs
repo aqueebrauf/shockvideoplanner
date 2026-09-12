@@ -1,19 +1,25 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import {
-  buildHookSystemPrompt,
-  buildHookUserPrompt,
-  normalizeHookTexts,
+  fetchAllHashtagRows,
+  normalizeHashtagRow,
+  pickHashtagsForContent,
+} from '../lib/hashtagFilter.mjs';
+import {
+  buildThisPersonSystemPrompt,
+  buildThisPersonUserPrompt,
+  normalizeThisPersonEntries,
   parseModelJson,
-} from './lib/hookPrompt.mjs';
+} from '../lib/thisPersonPrompt.mjs';
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6';
 const MODEL = process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL;
+const DEFAULT_COUNT = 3;
 
 function anthropicErrorMessage(err) {
   if (err?.error?.message) return err.error.message;
   if (err?.message) return err.message;
-  return 'Hook generation failed.';
+  return 'This person generation failed.';
 }
 
 function anthropicErrorStatus(err) {
@@ -34,24 +40,20 @@ function jsonResponse(status, body) {
   });
 }
 
-function nextIdFromRows(rows) {
-  if (!rows?.length) return 1;
-  return Math.max(...rows.map((row) => row.id)) + 1;
+function normalizeHashtag(row) {
+  return normalizeHashtagRow(row);
 }
 
-async function findNextVerbatim(supabase) {
-  const { data, error } = await supabase
-    .from('verbatims')
-    .select('id, text, status')
-    .eq('status', 'not_started')
-    .neq('text', '')
-    .order('id')
-    .limit(50);
+async function loadHashtags(supabase) {
+  const data = await fetchAllHashtagRows(supabase);
+  return data.map(normalizeHashtag);
+}
 
-  if (error) throw error;
-
-  const verbatim = (data ?? []).find((row) => row.text?.trim());
-  return verbatim ?? null;
+function applyHashtagPool(entries, goalName, allHashtags) {
+  return entries.map((entry) => ({
+    ...entry,
+    hashtag: pickHashtagsForContent(allHashtags, goalName, entry.hookText, 3).join(' '),
+  }));
 }
 
 export default async (req) => {
@@ -75,27 +77,48 @@ export default async (req) => {
     return jsonResponse(500, { error: 'Supabase credentials are not configured.' });
   }
 
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return jsonResponse(400, { error: 'Invalid JSON body.' });
+  }
+
+  const goalName = body.goalName?.trim();
+  const hookText = body.hookText?.trim() ?? '';
+  const customInstruction = body.customInstruction?.trim() ?? '';
+  const count = hookText ? 1 : DEFAULT_COUNT;
+
+  if (!goalName) {
+    return jsonResponse(400, { error: 'goalName is required.' });
+  }
+  if (hookText.length > 60) {
+    return jsonResponse(400, { error: 'Hook text must be 60 characters or fewer.' });
+  }
+
   try {
     const supabase = createClient(supabaseUrl, supabaseKey, {
       db: { schema: 'videoplanner' },
     });
 
-    const verbatim = await findNextVerbatim(supabase);
-    if (!verbatim) {
-      return jsonResponse(404, {
-        error: 'No verbatims left to extract. Mark some as "Not started" or add new verbatims.',
-      });
-    }
+    const hashtags = await loadHashtags(supabase);
+    const hashtagPool = buildHashtagPool(hashtags, goalName, hookText || goalName);
 
     const anthropic = new Anthropic({ apiKey });
     const message = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 1024,
-      system: buildHookSystemPrompt(),
+      max_tokens: 2048,
+      system: buildThisPersonSystemPrompt(),
       messages: [
         {
           role: 'user',
-          content: buildHookUserPrompt(verbatim.text),
+          content: buildThisPersonUserPrompt({
+            goalName,
+            hookText,
+            customInstruction,
+            hashtagPool,
+            count,
+          }),
         },
       ],
     });
@@ -106,52 +129,17 @@ export default async (req) => {
     }
 
     const parsed = parseModelJson(textBlock.text);
-    const hookTexts = normalizeHookTexts(parsed);
+    let entries = normalizeThisPersonEntries(parsed, { fixedHookText: hookText });
 
-    if (hookTexts.length === 0) {
-      return jsonResponse(502, { error: 'Model returned no hooks.' });
+    if (entries.length === 0) {
+      return jsonResponse(502, { error: 'Model returned no entries.' });
     }
 
-    const { data: existingHooks, error: hooksError } = await supabase
-      .from('hooks')
-      .select('id')
-      .order('id', { ascending: false })
-      .limit(1);
+    entries = applyHashtagPool(entries, goalName, hashtags);
 
-    if (hooksError) throw hooksError;
-
-    let nextId = nextIdFromRows(existingHooks);
-    const rows = hookTexts.map((text) => {
-      const row = { id: nextId, text, verbatim_id: verbatim.id };
-      nextId += 1;
-      return row;
-    });
-
-    const { data: insertedHooks, error: insertError } = await supabase
-      .from('hooks')
-      .upsert(rows)
-      .select();
-
-    if (insertError) throw insertError;
-
-    const { error: updateError } = await supabase
-      .from('verbatims')
-      .update({ status: 'extracted' })
-      .eq('id', verbatim.id);
-
-    if (updateError) throw updateError;
-
-    return jsonResponse(200, {
-      verbatimId: verbatim.id,
-      verbatimText: verbatim.text,
-      hooks: (insertedHooks ?? []).map((row) => ({
-        id: row.id,
-        text: row.text,
-        verbatimId: row.verbatim_id,
-      })),
-    });
+    return jsonResponse(200, { entries });
   } catch (err) {
-    console.error('generate-hooks error:', err);
+    console.error('generate-this-person error:', err);
     return jsonResponse(anthropicErrorStatus(err), {
       error: anthropicErrorMessage(err),
     });

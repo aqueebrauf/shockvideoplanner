@@ -9,7 +9,10 @@ import AppSidebar from '@/components/layout/AppSidebar';
 import Home from './pages/Home';
 import CharacterWalkthroughHome from './pages/home/CharacterWalkthroughHome';
 import ThisPersonHome from './pages/home/ThisPersonHome';
+import PersonVideoPlanHome from './pages/home/PersonVideoPlanHome';
 import Plan from './pages/Plan';
+import PersonVideoPlans from './pages/PersonVideoPlans';
+import PersonVideoPlanDetail from './pages/PersonVideoPlanDetail';
 import Generator from './pages/Generator';
 import CharacterWalkthroughGenerator from './pages/generators/CharacterWalkthroughGenerator';
 import ThisPersonGenerator from './pages/generators/ThisPersonGenerator';
@@ -28,6 +31,8 @@ const pageTitles = {
   '/': 'Home',
   '/home/character-walkthrough': 'Character Walkthrough',
   '/home/this-person': 'This person',
+  '/home/person-video-plan': 'Person video plan',
+  '/person-video-plans': 'Person video plans',
   '/plan': 'Plan',
   '/generator': 'Generator',
   '/generator/character-walkthrough': 'Character Walkthrough',
@@ -47,6 +52,7 @@ const pageTitles = {
 function getPageTitle(pathname) {
   if (pageTitles[pathname]) return pageTitles[pathname];
   if (pathname.startsWith('/resources')) return 'Resources';
+  if (pathname.startsWith('/person-video-plans')) return 'Person video plans';
   return 'Smash Video Planner';
 }
 
@@ -76,6 +82,9 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/home/character-walkthrough" element={<CharacterWalkthroughHome />} />
             <Route path="/home/this-person" element={<ThisPersonHome />} />
+            <Route path="/home/person-video-plan" element={<PersonVideoPlanHome />} />
+            <Route path="/person-video-plans" element={<PersonVideoPlans />} />
+            <Route path="/person-video-plans/:planId" element={<PersonVideoPlanDetail />} />
             <Route path="/plan" element={<Plan />} />
             <Route path="/generator" element={<Generator />} />
             <Route

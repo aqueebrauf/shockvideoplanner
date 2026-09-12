@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { UserCircle, Users } from 'lucide-react';
+import { UserCircle, Users, Video } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const homeViews = [
@@ -16,12 +16,19 @@ const homeViews = [
       'Pick a goal and scroll through all This person hooks, captions, and drive links in one view.',
     icon: UserCircle,
   },
+  {
+    to: '/home/person-video-plan',
+    title: 'Person video plan',
+    description:
+      'Editor view: hook clip, demo clip, copy hook, and copy caption for each ready video plan.',
+    icon: Video,
+  },
 ];
 
 export default function Home() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl">
         {homeViews.map(({ to, title, description, icon: Icon }) => (
           <Link key={to} to={to} className="block h-full">
             <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/30">

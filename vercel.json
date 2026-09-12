@@ -13,6 +13,9 @@
     },
     "api/generate-this-person.js": {
       "maxDuration": 60
+    },
+    "api/person-video.js": {
+      "maxDuration": 60
     }
   }
 }

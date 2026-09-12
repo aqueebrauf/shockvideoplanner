@@ -1,4 +1,4 @@
-import { fetchAllHashtagRows } from '../../../shared/fetchHashtagRows.js';
+import { fetchAllHashtagRows } from '../../shared/fetchHashtagRows.js';
 import {
   BRAND_THEMES,
   THEME_DEFINITIONS,
@@ -11,7 +11,7 @@ import {
   scoreHashtagForContent,
   splitHashtagText,
   tokenizeContent,
-} from '../../../shared/hashtagMatching.js';
+} from '../../shared/hashtagMatching.js';
 
 export {
   BRAND_THEMES,

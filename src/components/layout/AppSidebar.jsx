@@ -11,6 +11,7 @@ import {
   Sparkles,
   Target,
   UserCircle,
+  Video,
   Zap,
 } from 'lucide-react';
 import {
@@ -30,6 +31,7 @@ import logo from '@/assets/logo.png';
 const mainNav = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/plan', label: 'Plan', icon: LayoutGrid },
+  { to: '/person-video-plans', label: 'Person video', icon: Video },
   { to: '/generator', label: 'Generator', icon: Sparkles },
 ];
 

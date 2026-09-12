@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Eye, Loader2, Upload } from 'lucide-react';
+import { Download, Loader2, Trash2, Upload } from 'lucide-react';
 import DataStatus from '@/components/DataStatus';
 import UploadProgress from '@/components/showedMe/UploadProgress';
-import { DeleteRowButton } from '@/components/table/TableActions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,7 +20,8 @@ import {
 } from '@/components/ui/select';
 import { useGoalDemoBackgrounds } from '@/hooks/useGoalDemoBackgrounds';
 import { useGoals } from '@/hooks/useGoals';
-import { extractFirstVideoFrame } from '@/lib/extractVideoFrame';
+import { downloadUrlAsFile, fileSafeName, triggerBlobDownload } from '@/lib/downloadFile';
+import { extractFirstVideoFrame, extractFirstVideoFrameFromUrl } from '@/lib/extractVideoFrame';
 import {
   goalDisplayName,
   groupBackgroundsByGoalId,
@@ -33,6 +33,34 @@ import {
   ASSET_TYPE_GOAL_DEMO_LIBRARY_FRAME,
 } from '@/lib/showedMeAssetTypes';
 import { deleteShowedMeObject, uploadFileToR2 } from '@/lib/showedMeApi';
+import { cn } from '@/lib/utils';
+
+function firstFrameFileName(entry, goalTitle) {
+  const goal = fileSafeName(goalTitle, `goal-${entry.goalId}`);
+  const background = fileSafeName(entry.backgroundName, `background-${entry.id}`);
+  return `${goal}-${background}-first-frame.jpg`;
+}
+
+function OverlayIconButton({ label, disabled, onClick, children, destructive = false }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick?.();
+      }}
+      className={cn(
+        'inline-flex size-7 items-center justify-center rounded-md bg-black/70 text-white ring-1 ring-white/30 backdrop-blur-sm transition hover:bg-black/85 disabled:pointer-events-none disabled:opacity-50',
+        destructive && 'hover:bg-destructive hover:text-destructive-foreground'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function GoalDemoLibrary() {
   const { goals } = useGoals();
@@ -161,26 +189,49 @@ export default function GoalDemoLibrary() {
     }
   };
 
+  const handleDownloadFrame = async (entry, goalTitle) => {
+    if (!entry.framePublicUrl && !entry.demoPublicUrl) {
+      setActionError('No first frame available to download.');
+      return;
+    }
+
+    setBusy(`download-${entry.id}`);
+    setActionError('');
+    try {
+      const filename = firstFrameFileName(entry, goalTitle);
+      if (entry.framePublicUrl) {
+        await downloadUrlAsFile(entry.framePublicUrl, filename);
+        return;
+      }
+      const blob = await extractFirstVideoFrameFromUrl(entry.demoPublicUrl);
+      triggerBlobDownload(blob, filename);
+    } catch (err) {
+      if (entry.framePublicUrl) {
+        window.open(entry.framePublicUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+      setActionError(err.message ?? 'Could not download first frame.');
+    } finally {
+      setBusy('');
+    }
+  };
+
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-5 pb-10">
       <p className="text-sm text-muted-foreground">
         Upload demo clips once per goal and background. Showed Me plans reuse these files.
       </p>
 
       <DataStatus loading={loading} error={error || actionError} />
 
-      <section className="space-y-4 rounded-xl border bg-card p-4 md:p-6">
-        <h2 className="text-lg font-semibold">Upload demo</h2>
-        <UploadProgress
-          label={uploadState?.label}
-          progress={uploadState?.progress}
-          phase={uploadState?.phase}
-        />
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="upload-goal">Goal</Label>
+      <section className="space-y-3 rounded-lg border bg-card p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="space-y-1 sm:w-52">
+            <Label htmlFor="upload-goal" className="text-xs">
+              Goal
+            </Label>
             <Select value={uploadGoalId} onValueChange={setUploadGoalId}>
-              <SelectTrigger id="upload-goal" className="w-full">
+              <SelectTrigger id="upload-goal" className="h-8 w-full">
                 <SelectValue placeholder="Select goal" />
               </SelectTrigger>
               <SelectContent>
@@ -192,102 +243,129 @@ export default function GoalDemoLibrary() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="background-name">Background name (optional)</Label>
+          <div className="min-w-0 flex-1 space-y-1">
+            <Label htmlFor="background-name" className="text-xs">
+              Background name
+            </Label>
             <Input
               id="background-name"
               value={backgroundName}
               onChange={(e) => setBackgroundName(e.target.value)}
-              placeholder="e.g. white tiles, grey tiles, road, grass"
+              placeholder="Optional · e.g. white tiles"
             />
           </div>
+          <Label
+            className={`inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 text-sm hover:bg-muted ${
+              busy === 'upload-library' ? 'pointer-events-none opacity-50' : ''
+            }`}
+          >
+            {busy === 'upload-library' ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Upload className="size-3.5" />
+            )}
+            Upload
+            <input
+              type="file"
+              accept="video/*"
+              className="sr-only"
+              disabled={busy === 'upload-library'}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleUpload(file);
+                e.target.value = '';
+              }}
+            />
+          </Label>
         </div>
-        <Label
-          className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted ${
-            busy === 'upload-library' ? 'pointer-events-none opacity-50' : ''
-          }`}
-        >
-          {busy === 'upload-library' ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Upload className="size-4" />
-          )}
-          Upload demo video
-          <input
-            type="file"
-            accept="video/*"
-            className="sr-only"
-            disabled={busy === 'upload-library'}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleUpload(file);
-              e.target.value = '';
-            }}
-          />
-        </Label>
-        <p className="text-xs text-muted-foreground">
-          First frame is extracted automatically. Files are stored as goal name → background name →
-          video / first-frame. Empty names become Background1, Background2, …
+        <UploadProgress
+          label={uploadState?.label}
+          progress={uploadState?.progress}
+          phase={uploadState?.phase}
+        />
+        <p className="text-[11px] text-muted-foreground">
+          First frame is extracted automatically. Empty names become Background1, Background2, …
         </p>
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-lg font-semibold">Library by goal</h2>
+      <section className="space-y-5">
         {grouped.length === 0 ? (
           <p className="text-sm text-muted-foreground">No demo backgrounds yet.</p>
         ) : (
           grouped.map((group) => (
             <div key={group.goalId} className="space-y-2">
-              <h3 className="text-sm font-medium">{group.goalTitle}</h3>
-              <div className="data-table-wrap">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th className="w-28">First frame</th>
-                      <th>Background</th>
-                      <th className="w-32">Demo</th>
-                      <th className="w-24" aria-label="Actions" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {group.entries.map((entry) => (
-                      <tr key={entry.id}>
-                        <td>
-                          {entry.framePublicUrl ? (
-                            <img
-                              src={entry.framePublicUrl}
-                              alt=""
-                              className="aspect-[9/16] w-16 rounded border object-cover"
-                            />
-                          ) : null}
-                        </td>
-                        <td>
-                          <Input
-                            key={`${entry.id}-${entry.backgroundName}`}
-                            defaultValue={entry.backgroundName}
-                            placeholder="Untitled background"
-                            onBlur={(e) => handleSaveName(entry, e.target.value.trim())}
+              <div className="flex items-baseline justify-between gap-2">
+                <h3 className="text-sm font-medium">{group.goalTitle}</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  {group.entries.length} {group.entries.length === 1 ? 'clip' : 'clips'}
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+                {group.entries.map((entry) => {
+                  const downloading = busy === `download-${entry.id}`;
+                  const deleting = busy === `delete-${entry.id}`;
+                  return (
+                    <div
+                      key={entry.id}
+                      className="group relative overflow-hidden rounded-md border bg-muted"
+                    >
+                      <button
+                        type="button"
+                        className="block w-full text-left"
+                        disabled={!entry.demoPublicUrl}
+                        onClick={() => setPreviewEntry(entry)}
+                        aria-label={`Preview ${entry.backgroundName?.trim() || 'demo'}`}
+                      >
+                        {entry.framePublicUrl ? (
+                          <img
+                            src={entry.framePublicUrl}
+                            alt=""
+                            className="aspect-[9/16] w-full object-cover"
                           />
-                        </td>
-                        <td>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={!entry.demoPublicUrl}
-                            onClick={() => setPreviewEntry(entry)}
+                        ) : (
+                          <div className="flex aspect-[9/16] items-center justify-center text-[10px] text-muted-foreground">
+                            No frame
+                          </div>
+                        )}
+                      </button>
+                      <div className="absolute top-1 right-1 flex gap-0.5">
+                        <OverlayIconButton
+                          label="Download first frame"
+                          disabled={downloading || (!entry.framePublicUrl && !entry.demoPublicUrl)}
+                          onClick={() => handleDownloadFrame(entry, group.goalTitle)}
+                        >
+                          {downloading ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <Download className="size-3.5" />
+                          )}
+                        </OverlayIconButton>
+                        <span className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                          <OverlayIconButton
+                            label="Delete demo"
+                            destructive
+                            disabled={deleting}
+                            onClick={() => handleDelete(entry)}
                           >
-                            <Eye className="size-4" />
-                            Preview
-                          </Button>
-                        </td>
-                        <td>
-                          <DeleteRowButton onClick={() => handleDelete(entry)} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            {deleting ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="size-3.5" />
+                            )}
+                          </OverlayIconButton>
+                        </span>
+                      </div>
+                      <Input
+                        key={`${entry.id}-${entry.backgroundName}`}
+                        defaultValue={entry.backgroundName}
+                        placeholder="Untitled"
+                        className="absolute inset-x-0 bottom-0 h-7 rounded-none border-0 bg-black/55 px-1.5 text-[11px] text-white shadow-none placeholder:text-white/60 focus-visible:ring-0 dark:bg-black/55"
+                        onClick={(event) => event.stopPropagation()}
+                        onBlur={(e) => handleSaveName(entry, e.target.value.trim())}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))
@@ -297,7 +375,7 @@ export default function GoalDemoLibrary() {
       <Dialog open={Boolean(previewEntry)} onOpenChange={(open) => !open && setPreviewEntry(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="pr-8">
               {previewEntry?.backgroundName?.trim() || 'Demo preview'}
             </DialogTitle>
           </DialogHeader>
@@ -309,6 +387,28 @@ export default function GoalDemoLibrary() {
               autoPlay
               playsInline
             />
+          ) : null}
+          {previewEntry ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={
+                busy === `download-${previewEntry.id}` ||
+                (!previewEntry.framePublicUrl && !previewEntry.demoPublicUrl)
+              }
+              onClick={() => {
+                const group = grouped.find((item) => item.goalId === previewEntry.goalId);
+                handleDownloadFrame(previewEntry, group?.goalTitle);
+              }}
+            >
+              {busy === `download-${previewEntry.id}` ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Download className="size-3.5" />
+              )}
+              Download first frame
+            </Button>
           ) : null}
         </DialogContent>
       </Dialog>

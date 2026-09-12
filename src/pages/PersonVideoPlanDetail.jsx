@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Loader2, Sparkles, Upload } from 'lucide-react';
+import { Loader2, RefreshCw, RotateCcw, RotateCw, Sparkles, Upload } from 'lucide-react';
 import PersonPlanAssetGrid from '@/components/personVideo/PersonPlanAssetGrid';
 import AssetThumbnail from '@/components/personVideo/AssetThumbnail';
 import DataStatus from '@/components/DataStatus';
@@ -19,7 +19,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { useGoals } from '@/hooks/useGoals';
 import { usePersonPlanAssets } from '@/hooks/usePersonPlanAssets';
 import { usePersonVideoPlans } from '@/hooks/usePersonVideoPlans';
-import { extractFirstVideoFrame } from '@/lib/extractVideoFrame';
+import {
+  extractFirstVideoFrame,
+  extractFirstVideoFrameFromUrl,
+  rotateImageBlob,
+} from '@/lib/extractVideoFrame';
 import { nextIterationForType } from '@/lib/personPlanAssetStorage';
 import {
   ASSET_TYPE_DEMO_CLIP,
@@ -194,6 +198,61 @@ export default function PersonVideoPlanDetail() {
       }
     },
     [handleUpload]
+  );
+
+  const handleReextractFirstFrame = useCallback(async () => {
+    if (!selectedDemo?.publicUrl) {
+      setActionError('Upload a demo clip first.');
+      return;
+    }
+    setBusy('reextract-frame');
+    setActionError('');
+    try {
+      const frameBlob = await extractFirstVideoFrameFromUrl(selectedDemo.publicUrl);
+      const frameFile = new File([frameBlob], 'demo-first-frame.jpg', { type: 'image/jpeg' });
+      await handleUpload(frameFile, ASSET_TYPE_DEMO_FIRST_FRAME, {
+        parentAssetId: selectedDemo.id,
+        autoSelect: true,
+      });
+    } catch (err) {
+      setActionError(err.message ?? 'Could not re-extract first frame from demo.');
+    } finally {
+      setBusy('');
+    }
+  }, [handleUpload, selectedDemo]);
+
+  const handleRotateFirstFrame = useCallback(
+    async (degrees) => {
+      const frame = assets.find(
+        (a) => a.assetType === ASSET_TYPE_DEMO_FIRST_FRAME && a.isSelected
+      );
+      if (!frame?.publicUrl) {
+        setActionError('Select a demo first frame to rotate.');
+        return;
+      }
+      setBusy('rotate-frame');
+      setActionError('');
+      try {
+        const response = await fetch(frame.publicUrl);
+        if (!response.ok) {
+          throw new Error('Could not load the selected first frame.');
+        }
+        const blob = await response.blob();
+        const rotatedBlob = await rotateImageBlob(blob, degrees);
+        const frameFile = new File([rotatedBlob], 'demo-first-frame-rotated.jpg', {
+          type: 'image/jpeg',
+        });
+        await handleUpload(frameFile, ASSET_TYPE_DEMO_FIRST_FRAME, {
+          parentAssetId: frame.parentAssetId ?? selectedDemo?.id ?? null,
+          autoSelect: true,
+        });
+      } catch (err) {
+        setActionError(err.message ?? 'Could not rotate first frame.');
+      } finally {
+        setBusy('');
+      }
+    },
+    [assets, handleUpload, selectedDemo?.id]
   );
 
   const handleGenerateHookImage = useCallback(async () => {
@@ -423,7 +482,7 @@ export default function PersonVideoPlanDetail() {
 
       <Section
         title="2. Demo first frame"
-        description="End frame for hook video — auto-extracted when you upload a demo, or upload manually."
+        description="End frame for hook video — extracted free in your browser when you upload a demo. Upload manually if needed."
       >
         <div className="flex flex-wrap gap-3">
           <Label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
@@ -443,6 +502,48 @@ export default function PersonVideoPlanDetail() {
               }}
             />
           </Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={Boolean(busy) || !selectedDemo?.publicUrl}
+            onClick={handleReextractFirstFrame}
+          >
+            {busy === 'reextract-frame' ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RefreshCw className="size-4" />
+            )}
+            Re-extract from demo
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={Boolean(busy) || !firstFrameSelected?.publicUrl}
+            onClick={() => handleRotateFirstFrame(-90)}
+          >
+            {busy === 'rotate-frame' ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RotateCcw className="size-4" />
+            )}
+            Rotate left
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={Boolean(busy) || !firstFrameSelected?.publicUrl}
+            onClick={() => handleRotateFirstFrame(90)}
+          >
+            {busy === 'rotate-frame' ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RotateCw className="size-4" />
+            )}
+            Rotate right
+          </Button>
         </div>
         {firstFrameSelected ? (
           <div className="max-w-[200px]">

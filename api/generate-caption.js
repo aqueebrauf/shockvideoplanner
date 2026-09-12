@@ -1,4 +1,0 @@
-import { adaptWebHandler } from './_adapter.js';
-import handler from './handlers/generate-caption.mjs';
-
-export default adaptWebHandler(handler);

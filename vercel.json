@@ -5,16 +5,7 @@
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/generate-caption.js": {
-      "maxDuration": 60
-    },
-    "api/generate-hooks.js": {
-      "maxDuration": 60
-    },
-    "api/generate-this-person.js": {
-      "maxDuration": 60
-    },
-    "api/person-video.js": {
+    "api/[route].js": {
       "maxDuration": 60
     }
   }

@@ -37,7 +37,9 @@ src/
   hooks/          # React data hooks
   pages/          # App screens
 api/
-  handlers/       # Serverless route handlers
+  [route].js      # Single Vercel serverless entry (Hobby plan limit)
+server/
+  handlers/       # Route handlers
   lib/            # Shared handler utilities
 supabase/
   migrations/     # SQL schema (version controlled)

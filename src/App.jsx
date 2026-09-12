@@ -27,7 +27,8 @@ const pageTitles = {
   '/resources/hashtags': 'Hashtags',
   '/resources/goals': 'Goals',
   '/resources/captions': 'Captions',
-  '/resources/characters': 'Characters',
+  '/resources/characters': 'Editors',
+  '/resources/editors': 'Editors',
   '/resources/verbatims': 'Verbatims',
   '/resources/hooks': 'Hooks',
   '/resources/showed-me-hooks': 'Showed me hooks',
@@ -84,7 +85,8 @@ export default function App() {
               <Route path="goals" element={<Goals />} />
               <Route path="ctas" element={<Navigate to="/resources/hashtags" replace />} />
               <Route path="captions" element={<Captions />} />
-              <Route path="characters" element={<Characters />} />
+              <Route path="characters" element={<Navigate to="/resources/editors" replace />} />
+              <Route path="editors" element={<Characters />} />
               <Route path="verbatims" element={<Verbatims />} />
               <Route path="hooks" element={<Hooks />} />
               <Route path="showed-me-hooks" element={<ShowedMeHooks />} />

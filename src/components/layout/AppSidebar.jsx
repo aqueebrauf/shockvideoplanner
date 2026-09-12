@@ -35,7 +35,7 @@ const resourceNav = [
   { to: '/resources/hashtags', label: 'Hashtags', icon: Hash },
   { to: '/resources/goals', label: 'Goals', icon: Target },
   { to: '/resources/captions', label: 'Captions', icon: ListChecks },
-  { to: '/resources/characters', label: 'Characters', icon: Users },
+  { to: '/resources/editors', label: 'Editors', icon: Users },
   { to: '/resources/verbatims', label: 'Verbatims', icon: Quote },
   { to: '/resources/hooks', label: 'Hooks', icon: Zap },
   { to: '/resources/showed-me-hooks', label: 'Showed me hooks', icon: Video },

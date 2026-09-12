@@ -20,7 +20,7 @@ Local dev: copy env vars into `.env.local`, then run `npm run dev` (`vercel dev`
 
 ## Supabase
 
-- Schema: `videoplanner` (tables: hashtags, goals, captions, verbatims, characters, screen_sequences, this_people, showed_me_hooks, showed_me_plans, showed_me_plan_assets, goal_demo_backgrounds)
+- Schema: `videoplanner` (tables: hashtags, goals, captions, verbatims, characters/editors, screen_sequences, this_people, showed_me_hooks, showed_me_plans, showed_me_plan_assets, goal_demo_backgrounds)
 - Migrations: `supabase/migrations/`
 - Baseline data: `scripts/data/`
 

@@ -3,6 +3,10 @@ export function findCharacter(characters, characterId) {
   return characters.find((character) => character.id === characterId) ?? null;
 }
 
+export function findEditor(editors, editorId) {
+  return findCharacter(editors, editorId);
+}
+
 export function findGoal(goals, goalId) {
   if (goalId == null) return null;
   return goals.find((goal) => goal.id === goalId) ?? null;
@@ -22,6 +26,10 @@ export function findCaptionStyle(captions, captionStyleId) {
 
 export function resolveCharacterName(plan, characters) {
   return findCharacter(characters, plan.characterId)?.name?.trim() ?? '';
+}
+
+export function resolveEditorName(plan, editors) {
+  return findEditor(editors, plan.editorId)?.name?.trim() ?? '';
 }
 
 export function resolveGoalTitle(plan, goals) {

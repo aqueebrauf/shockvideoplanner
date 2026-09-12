@@ -48,6 +48,11 @@ export function filterShowedMePlansByGoalId(plans, goalId) {
   return plans.filter((plan) => String(plan.goalId) === String(goalId));
 }
 
+export function filterShowedMePlansByEditorId(plans, editorId) {
+  if (!editorId) return plans;
+  return plans.filter((plan) => String(plan.editorId) === String(editorId));
+}
+
 export function getGoalsWithShowedMePlans(plans, goals) {
   const goalIds = new Set(plans.map((plan) => plan.goalId).filter(Boolean));
   return goals.filter((goal) => goalIds.has(goal.id));

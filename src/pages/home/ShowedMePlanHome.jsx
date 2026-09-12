@@ -13,10 +13,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAllShowedMePlanAssets } from '@/hooks/useShowedMePlanAssets';
+import { useCharacters } from '@/hooks/useCharacters';
 import { useGoals } from '@/hooks/useGoals';
 import { useShowedMePlans } from '@/hooks/useShowedMePlans';
 import { formatGoalDateLabel } from '@/lib/goalDateLabel';
-import { findGoal } from '@/lib/planResolvers';
+import { findEditor, findGoal } from '@/lib/planResolvers';
 import { PLAN_STATUS_COMPLETED, PLAN_STATUS_NOT_STARTED } from '@/lib/planStatus';
 import {
   ASSET_TYPE_DEMO_CLIP,
@@ -24,6 +25,7 @@ import {
 } from '@/lib/showedMeAssetTypes';
 import { getActivePlanAsset } from '@/lib/showedMePlanAssetStorage';
 import {
+  filterShowedMePlansByEditorId,
   filterShowedMePlansByGoalId,
   getGoalsWithShowedMePlans,
   mergeShowedMeCaption,
@@ -52,6 +54,7 @@ function VideoLinkButton({ href, label }) {
 function ShowedMePlanEntryCard({
   plan,
   assets,
+  editorName,
   index,
   isCompleted,
   onToggleComplete,
@@ -94,6 +97,11 @@ function ShowedMePlanEntryCard({
 
       <div className="home-plan-content">
         <div className="home-plan-field">
+          <span className="home-plan-field__label">Editor</span>
+          <p className="home-plan-field__value">{editorName || 'Unassigned'}</p>
+        </div>
+
+        <div className="home-plan-field">
           <span className="home-plan-field__label">Hook</span>
           <p className="home-plan-field__value whitespace-pre-wrap">
             {plan.hookText.trim() || '—'}
@@ -135,6 +143,7 @@ function ShowedMePlanEntryCard({
 
 export default function ShowedMePlanHome() {
   const { goals } = useGoals();
+  const { characters: editors } = useCharacters();
   const { plans, loading, error, updatePlan } = useShowedMePlans();
   const {
     assets,
@@ -142,6 +151,7 @@ export default function ShowedMePlanHome() {
     error: assetsError,
   } = useAllShowedMePlanAssets();
   const [selectedGoalId, setSelectedGoalId] = useState('');
+  const [selectedEditorId, setSelectedEditorId] = useState('all');
 
   const homePlans = useMemo(
     () => plans.filter((plan) => planAppearsOnHome(plan, assets)),
@@ -167,12 +177,21 @@ export default function ShowedMePlanHome() {
   }, [goalsWithPlans]);
 
   const selectedGoal = findGoal(goals, selectedGoalId ? Number(selectedGoalId) : null);
+  const selectedEditor = findEditor(
+    editors,
+    selectedEditorId && selectedEditorId !== 'all' ? Number(selectedEditorId) : null
+  );
   const entries = useMemo(
-    () =>
-      selectedGoalId
+    () => {
+      const byGoal = selectedGoalId
         ? filterShowedMePlansByGoalId(homePlans, Number(selectedGoalId))
-        : [],
-    [homePlans, selectedGoalId]
+        : [];
+      return filterShowedMePlansByEditorId(
+        byGoal,
+        selectedEditorId && selectedEditorId !== 'all' ? Number(selectedEditorId) : null
+      );
+    },
+    [homePlans, selectedGoalId, selectedEditorId]
   );
   const { active: activeEntries, completed: completedEntries } = useMemo(
     () => splitShowedMePlansByCompletion(entries),
@@ -212,26 +231,46 @@ export default function ShowedMePlanHome() {
 
       {!loading && homePlans.length > 0 ? (
         <>
-          <div className="shrink-0 space-y-2">
-            <Label htmlFor="showed-me-goal">Goal</Label>
-            <Select value={selectedGoalId} onValueChange={setSelectedGoalId}>
-              <SelectTrigger id="showed-me-goal" className="w-full max-w-md">
-                <SelectValue placeholder="Select a goal">{goalSelectLabel}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {goalsWithPlans.map((goal) => (
-                  <SelectItem key={goal.id} value={String(goal.id)}>
-                    {goal.title.trim() || `Goal ${goal.id}`}
-                    {goal.date ? ` · ${formatGoalDateLabel(goal.date)}` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap gap-4">
+            <div className="min-w-[16rem] flex-1 space-y-2">
+              <Label htmlFor="showed-me-goal">Goal</Label>
+              <Select value={selectedGoalId} onValueChange={setSelectedGoalId}>
+                <SelectTrigger id="showed-me-goal" className="w-full max-w-md">
+                  <SelectValue placeholder="Select a goal">{goalSelectLabel}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {goalsWithPlans.map((goal) => (
+                    <SelectItem key={goal.id} value={String(goal.id)}>
+                      {goal.title.trim() || `Goal ${goal.id}`}
+                      {goal.date ? ` · ${formatGoalDateLabel(goal.date)}` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[12rem] space-y-2">
+              <Label htmlFor="showed-me-editor">Editor</Label>
+              <Select value={selectedEditorId} onValueChange={setSelectedEditorId}>
+                <SelectTrigger id="showed-me-editor" className="w-full max-w-xs">
+                  <SelectValue placeholder="All editors">
+                    {selectedEditor?.name?.trim() || 'All editors'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All editors</SelectItem>
+                  {editors.map((person) => (
+                    <SelectItem key={person.id} value={String(person.id)}>
+                      {person.name.trim() || `Editor ${person.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="home-this-person-list">
             {entries.length === 0 ? (
-              <p className="home-plan-empty">No plans for this goal.</p>
+              <p className="home-plan-empty">No plans match these filters.</p>
             ) : (
               <>
                 {activeEntries.length === 0 ? (
@@ -242,6 +281,7 @@ export default function ShowedMePlanHome() {
                       key={plan.id}
                       plan={plan}
                       assets={assets}
+                      editorName={findEditor(editors, plan.editorId)?.name?.trim() ?? ''}
                       index={index}
                       isCompleted={false}
                       onToggleComplete={toggleComplete}
@@ -261,6 +301,7 @@ export default function ShowedMePlanHome() {
                           key={plan.id}
                           plan={plan}
                           assets={assets}
+                          editorName={findEditor(editors, plan.editorId)?.name?.trim() ?? ''}
                           index={index}
                           isCompleted
                           onToggleComplete={toggleComplete}

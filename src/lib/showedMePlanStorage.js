@@ -21,6 +21,7 @@ export function normalizeShowedMePlan(row) {
     selectedHookImageId: row.selected_hook_image_id ?? row.selectedHookImageId ?? null,
     selectedHookVideoId: row.selected_hook_video_id ?? row.selectedHookVideoId ?? null,
     demoLibraryId: row.demo_library_id ?? row.demoLibraryId ?? null,
+    editorId: row.editor_id ?? row.editorId ?? null,
     updatedAt: row.updated_at ?? row.updatedAt ?? null,
   };
 }
@@ -38,6 +39,7 @@ function toRow(plan) {
     selected_hook_image_id: plan.selectedHookImageId ?? null,
     selected_hook_video_id: plan.selectedHookVideoId ?? null,
     demo_library_id: plan.demoLibraryId ?? null,
+    editor_id: plan.editorId ?? null,
   };
 }
 

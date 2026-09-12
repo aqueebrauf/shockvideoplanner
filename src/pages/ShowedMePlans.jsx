@@ -4,15 +4,17 @@ import DataStatus from '@/components/DataStatus';
 import PageHeader from '@/components/layout/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useCharacters } from '@/hooks/useCharacters';
 import { useGoals } from '@/hooks/useGoals';
 import { useShowedMePlans } from '@/hooks/useShowedMePlans';
 import { formatGoalDateLabel } from '@/lib/goalDateLabel';
-import { findGoal } from '@/lib/planResolvers';
+import { findEditor, findGoal } from '@/lib/planResolvers';
 import { WORKFLOW_STATUS_READY } from '@/lib/showedMeAssetTypes';
 
 export default function ShowedMePlans() {
   const navigate = useNavigate();
   const { goals } = useGoals();
+  const { characters: editors } = useCharacters();
   const { plans, loading, error, addPlan } = useShowedMePlans();
 
   const handleCreate = async () => {
@@ -46,7 +48,9 @@ export default function ShowedMePlans() {
       <div className="grid gap-3">
         {plans.map((plan) => {
           const goal = findGoal(goals, plan.goalId);
+          const editor = findEditor(editors, plan.editorId);
           const goalLabel = goal?.title?.trim() || (plan.goalId ? `Goal ${plan.goalId}` : 'No goal');
+          const editorLabel = editor?.name?.trim() || 'No editor';
           return (
             <Link
               key={plan.id}
@@ -62,15 +66,21 @@ export default function ShowedMePlans() {
                   <p className="text-sm text-muted-foreground truncate">
                     {goalLabel}
                     {goal?.date ? ` · ${formatGoalDateLabel(goal.date)}` : ''}
+                    {` · ${editorLabel}`}
                   </p>
                   <p className="text-sm text-muted-foreground truncate mt-1">
                     {plan.hookText.trim() || 'No hook text yet'}
                   </p>
                 </div>
               </div>
-              <Badge variant={plan.workflowStatus === WORKFLOW_STATUS_READY ? 'default' : 'secondary'}>
-                {plan.workflowStatus === WORKFLOW_STATUS_READY ? 'Ready' : 'Draft'}
-              </Badge>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <Badge variant={plan.workflowStatus === WORKFLOW_STATUS_READY ? 'default' : 'secondary'}>
+                  {plan.workflowStatus === WORKFLOW_STATUS_READY ? 'Ready' : 'Draft'}
+                </Badge>
+                {editor?.name?.trim() ? (
+                  <Badge variant="outline">{editor.name.trim()}</Badge>
+                ) : null}
+              </div>
             </Link>
           );
         })}

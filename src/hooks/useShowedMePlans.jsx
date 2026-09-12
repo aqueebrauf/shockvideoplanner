@@ -119,6 +119,7 @@ function useShowedMePlanState() {
         selectedHookImageId: null,
         selectedHookVideoId: null,
         demoLibraryId: null,
+        editorId: partial.editorId ?? null,
         ...partial,
       });
       await upsertShowedMePlan(row);

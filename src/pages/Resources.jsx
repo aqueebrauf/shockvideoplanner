@@ -6,7 +6,7 @@ const resourceTabs = [
   { to: '/resources/hashtags', label: 'Hashtags' },
   { to: '/resources/goals', label: 'Goals' },
   { to: '/resources/captions', label: 'Captions' },
-  { to: '/resources/characters', label: 'Characters' },
+  { to: '/resources/editors', label: 'Editors' },
   { to: '/resources/verbatims', label: 'Verbatims' },
   { to: '/resources/hooks', label: 'Hooks' },
   { to: '/resources/showed-me-hooks', label: 'Showed me hooks' },

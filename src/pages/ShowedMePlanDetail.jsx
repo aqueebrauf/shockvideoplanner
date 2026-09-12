@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useCharacters } from '@/hooks/useCharacters';
 import { useGoalDemoBackgrounds } from '@/hooks/useGoalDemoBackgrounds';
 import { useGoals } from '@/hooks/useGoals';
 import { useShowedMePlanAssets } from '@/hooks/useShowedMePlanAssets';
@@ -52,7 +53,7 @@ import {
   pollGenerationUntilComplete,
   uploadFileToR2,
 } from '@/lib/showedMeApi';
-import { findGoal } from '@/lib/planResolvers';
+import { findEditor, findGoal } from '@/lib/planResolvers';
 
 function Section({ title, description, children }) {
   return (
@@ -72,6 +73,7 @@ export default function ShowedMePlanDetail() {
   const { planId } = useParams();
   const numericPlanId = Number(planId);
   const { goals } = useGoals();
+  const { characters: editors } = useCharacters();
   const { backgrounds: libraryBackgrounds } = useGoalDemoBackgrounds();
   const { plans, loading: plansLoading, error: plansError, updatePlan, flushPlan } =
     useShowedMePlans();
@@ -99,6 +101,7 @@ export default function ShowedMePlanDetail() {
     [plans, numericPlanId]
   );
   const goal = findGoal(goals, plan?.goalId ?? null);
+  const editor = findEditor(editors, plan?.editorId ?? null);
 
   const backgroundsForGoal = useMemo(
     () =>
@@ -688,36 +691,64 @@ export default function ShowedMePlanDetail() {
 
       <DataStatus loading={assetsLoading} error={plansError || assetsError || actionError} />
 
-      <Section title="Goal" description="Link this plan to a goal for organization.">
-        <div className="max-w-md space-y-2">
-          <Label htmlFor="plan-goal">Goal</Label>
-          <Select
-            value={plan.goalId ? String(plan.goalId) : ''}
-            onValueChange={(value) => {
-              const nextGoalId = value ? Number(value) : null;
-              updatePlan(
-                plan.id,
-                {
-                  goalId: nextGoalId,
-                  demoLibraryId: nextGoalId === plan.goalId ? plan.demoLibraryId : null,
-                },
-                { immediate: true }
-              );
-            }}
-          >
-            <SelectTrigger id="plan-goal">
-              <SelectValue placeholder="Select goal">
-                {goal?.title?.trim() || 'Select goal'}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {goals.map((g) => (
-                <SelectItem key={g.id} value={String(g.id)}>
-                  {g.title.trim() || `Goal ${g.id}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <Section title="Goal & editor" description="Link this plan to a goal and assign it to Aftab or Anni.">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="plan-goal">Goal</Label>
+            <Select
+              value={plan.goalId ? String(plan.goalId) : ''}
+              onValueChange={(value) => {
+                const nextGoalId = value ? Number(value) : null;
+                updatePlan(
+                  plan.id,
+                  {
+                    goalId: nextGoalId,
+                    demoLibraryId: nextGoalId === plan.goalId ? plan.demoLibraryId : null,
+                  },
+                  { immediate: true }
+                );
+              }}
+            >
+              <SelectTrigger id="plan-goal">
+                <SelectValue placeholder="Select goal">
+                  {goal?.title?.trim() || 'Select goal'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {goals.map((g) => (
+                  <SelectItem key={g.id} value={String(g.id)}>
+                    {g.title.trim() || `Goal ${g.id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="plan-editor">Editor</Label>
+            <Select
+              value={plan.editorId ? String(plan.editorId) : ''}
+              onValueChange={(value) => {
+                updatePlan(
+                  plan.id,
+                  { editorId: value ? Number(value) : null },
+                  { immediate: true }
+                );
+              }}
+            >
+              <SelectTrigger id="plan-editor">
+                <SelectValue placeholder="Select editor">
+                  {editor?.name?.trim() || 'Select editor'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {editors.map((person) => (
+                  <SelectItem key={person.id} value={String(person.id)}>
+                    {person.name.trim() || `Editor ${person.id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </Section>
 

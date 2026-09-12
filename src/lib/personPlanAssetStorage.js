@@ -4,6 +4,7 @@ import {
   ASSET_STATUS_ACTIVE,
   ASSET_STATUS_DELETED,
   ASSET_STATUS_GENERATING,
+  isSingleSlotAssetType,
 } from './personVideoAssetTypes';
 
 function normalizeAssetStatus(value) {
@@ -108,4 +109,35 @@ export function nextIterationForType(assets, assetType) {
   const matching = assetsByType(assets, assetType);
   if (matching.length === 0) return 1;
   return Math.max(...matching.map((asset) => asset.iteration)) + 1;
+}
+
+export function getActiveAssetForType(assets, assetType) {
+  const matching = assetsByType(assets, assetType);
+  if (matching.length === 0) return null;
+  return matching.reduce((best, row) => (row.iteration >= best.iteration ? row : best));
+}
+
+export function iterationForUpload(assets, assetType) {
+  if (isSingleSlotAssetType(assetType)) return 1;
+  return nextIterationForType(assets, assetType);
+}
+
+/** If legacy data has duplicates for a single-slot type, pick one keeper. */
+export function pickSingleSlotKeeper(assets, assetType, selectedId = null) {
+  const matching = assetsByType(assets, assetType);
+  if (matching.length === 0) return { keeper: null, orphans: [] };
+  if (matching.length === 1) return { keeper: matching[0], orphans: [] };
+
+  const bySelected = selectedId
+    ? matching.find((row) => row.id === selectedId)
+    : null;
+  const keeper =
+    bySelected ??
+    matching.find((row) => row.isSelected) ??
+    matching.reduce((best, row) => (row.iteration >= best.iteration ? row : best));
+
+  return {
+    keeper,
+    orphans: matching.filter((row) => row.id !== keeper.id),
+  };
 }

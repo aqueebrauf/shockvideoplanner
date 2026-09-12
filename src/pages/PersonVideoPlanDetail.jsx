@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Loader2, RefreshCw, RotateCcw, RotateCw, Sparkles, Upload } from 'lucide-react';
-import PersonPlanAssetGrid from '@/components/personVideo/PersonPlanAssetGrid';
-import AssetThumbnail from '@/components/personVideo/AssetThumbnail';
+import { Loader2, RefreshCw, RotateCcw, RotateCw, Sparkles, Trash2, Upload } from 'lucide-react';
+import PersonSlotAsset from '@/components/personVideo/PersonSlotAsset';
 import UploadProgress from '@/components/personVideo/UploadProgress';
 import DataStatus from '@/components/DataStatus';
 import PageHeader from '@/components/layout/PageHeader';
@@ -25,15 +24,22 @@ import {
   extractFirstVideoFrameFromUrl,
   rotateImageBlob,
 } from '@/lib/extractVideoFrame';
-import { nextIterationForType } from '@/lib/personPlanAssetStorage';
+import {
+  getActiveAssetForType,
+  iterationForUpload,
+  normalizePersonPlanAsset,
+  pickSingleSlotKeeper,
+} from '@/lib/personPlanAssetStorage';
 import {
   ASSET_TYPE_DEMO_CLIP,
   ASSET_TYPE_DEMO_FIRST_FRAME,
   ASSET_TYPE_HOOK_IMAGE,
   ASSET_TYPE_HOOK_VIDEO,
   ASSET_TYPE_REFERENCE_IMAGE,
-  ASSET_STATUS_DELETED,
+  ASSET_STATUS_ACTIVE,
   HIGGSFIELD_ASPECT_RATIOS,
+  SINGLE_SLOT_ASSET_TYPES,
+  assetTypeLabel,
   HIGGSFIELD_RESOLUTIONS,
   WORKFLOW_STATUS_DRAFT,
   WORKFLOW_STATUS_READY,
@@ -73,9 +79,16 @@ export default function PersonVideoPlanDetail() {
     error: assetsError,
     createAsset,
     updateAsset,
+    saveAsset,
     removeAsset,
     reload: reloadAssets,
   } = usePersonPlanAssets(numericPlanId);
+
+  const cleanedPlanRef = useRef(null);
+
+  useEffect(() => {
+    cleanedPlanRef.current = null;
+  }, [numericPlanId]);
 
   const plan = useMemo(
     () => plans.find((row) => row.id === numericPlanId) ?? null,
@@ -92,50 +105,29 @@ export default function PersonVideoPlanDetail() {
   const [resolution, setResolution] = useState('720p');
   const [generationStatus, setGenerationStatus] = useState('');
 
-  const selectedDemo = useMemo(() => {
-    if (plan?.selectedDemoAssetId) {
-      const match = assets.find((a) => a.id === plan.selectedDemoAssetId);
-      if (match) return match;
-    }
-    return (
-      assets.find(
-        (a) =>
-          a.assetType === ASSET_TYPE_DEMO_CLIP &&
-          a.isSelected &&
-          a.status !== ASSET_STATUS_DELETED
-      ) ?? null
-    );
-  }, [assets, plan?.selectedDemoAssetId]);
+  const selectedDemo = useMemo(
+    () => getActiveAssetForType(assets, ASSET_TYPE_DEMO_CLIP),
+    [assets]
+  );
 
-  const selectedHookImage = useMemo(() => {
-    if (plan?.selectedHookImageId) {
-      const match = assets.find((a) => a.id === plan.selectedHookImageId);
-      if (match) return match;
-    }
-    return (
-      assets.find(
-        (a) =>
-          a.assetType === ASSET_TYPE_HOOK_IMAGE &&
-          a.isSelected &&
-          a.status !== ASSET_STATUS_DELETED
-      ) ?? null
-    );
-  }, [assets, plan?.selectedHookImageId]);
+  const firstFrameAsset = useMemo(
+    () => getActiveAssetForType(assets, ASSET_TYPE_DEMO_FIRST_FRAME),
+    [assets]
+  );
 
-  const selectedHookVideo = useMemo(() => {
-    if (plan?.selectedHookVideoId) {
-      const match = assets.find((a) => a.id === plan.selectedHookVideoId);
-      if (match) return match;
-    }
-    return (
-      assets.find(
-        (a) =>
-          a.assetType === ASSET_TYPE_HOOK_VIDEO &&
-          a.isSelected &&
-          a.status !== ASSET_STATUS_DELETED
-      ) ?? null
-    );
-  }, [assets, plan?.selectedHookVideoId]);
+  const selectedHookImage = useMemo(
+    () => getActiveAssetForType(assets, ASSET_TYPE_HOOK_IMAGE),
+    [assets]
+  );
+
+  const selectedHookVideo = useMemo(
+    () => getActiveAssetForType(assets, ASSET_TYPE_HOOK_VIDEO),
+    [assets]
+  );
+
+  const deletingAssetId = busy.startsWith('delete-')
+    ? Number(busy.replace('delete-', ''))
+    : null;
 
   const referenceImages = useMemo(
     () => assets.filter((a) => a.assetType === ASSET_TYPE_REFERENCE_IMAGE && a.status === 'active'),
@@ -162,31 +154,146 @@ export default function PersonVideoPlanDetail() {
     [assets, plan?.id, updateAsset, updatePlan]
   );
 
+  const clearPlanSelectionForAsset = useCallback(
+    (asset) => {
+      const patch = {};
+      if (plan.selectedDemoAssetId === asset.id) patch.selectedDemoAssetId = null;
+      if (plan.selectedHookImageId === asset.id) patch.selectedHookImageId = null;
+      if (plan.selectedHookVideoId === asset.id) patch.selectedHookVideoId = null;
+      if (Object.keys(patch).length > 0) {
+        updatePlan(plan.id, patch, { immediate: true });
+      }
+    },
+    [plan, updatePlan]
+  );
+
   const handleDeleteAsset = useCallback(
     async (asset) => {
+      if (!plan || asset.planId !== plan.id) {
+        setActionError('This asset does not belong to the current plan.');
+        return;
+      }
+
       setBusy(`delete-${asset.id}`);
       setActionError('');
       try {
         if (asset.storageKey) {
           await deletePersonVideoObject(asset.storageKey);
         }
-        await updateAsset(asset.id, { status: ASSET_STATUS_DELETED, isSelected: false });
-        const patch = {};
-        if (plan.selectedDemoAssetId === asset.id) patch.selectedDemoAssetId = null;
-        if (plan.selectedHookImageId === asset.id) patch.selectedHookImageId = null;
-        if (plan.selectedHookVideoId === asset.id) patch.selectedHookVideoId = null;
-        if (Object.keys(patch).length > 0) {
-          updatePlan(plan.id, patch, { immediate: true });
-        }
+        clearPlanSelectionForAsset(asset);
+        await removeAsset(asset.id);
         await reloadAssets();
       } catch (err) {
-        setActionError(err.message ?? 'Delete failed.');
+        setActionError(err.message ?? `Could not remove ${assetTypeLabel(asset.assetType).toLowerCase()}.`);
       } finally {
         setBusy('');
       }
     },
-    [plan, reloadAssets, updateAsset, updatePlan]
+    [clearPlanSelectionForAsset, plan, reloadAssets, removeAsset]
   );
+
+  const persistUploadedAsset = useCallback(
+    async ({
+      assetType,
+      storageKey,
+      publicUrl,
+      mimeType,
+      parentAssetId = null,
+      generationParams = {},
+      autoSelect = true,
+      patchKey = null,
+    }) => {
+      const existing = getActiveAssetForType(assets, assetType);
+      const iteration = iterationForUpload(assets, assetType);
+
+      if (existing?.storageKey && existing.storageKey !== storageKey) {
+        await deletePersonVideoObject(existing.storageKey);
+      }
+
+      let asset;
+      if (existing) {
+        asset = await saveAsset(
+          normalizePersonPlanAsset({
+            ...existing,
+            assetType,
+            storageKey,
+            publicUrl,
+            mimeType,
+            iteration,
+            status: ASSET_STATUS_ACTIVE,
+            isSelected: autoSelect,
+            parentAssetId: parentAssetId ?? existing.parentAssetId ?? null,
+            generationParams: generationParams ?? existing.generationParams ?? {},
+          })
+        );
+      } else {
+        asset = await createAsset({
+          assetType,
+          storageKey,
+          publicUrl,
+          mimeType,
+          iteration,
+          isSelected: autoSelect,
+          parentAssetId,
+          generationParams,
+        });
+      }
+
+      if (autoSelect && patchKey) {
+        await selectAssetForPlan(asset, patchKey);
+      }
+
+      await reloadAssets();
+      return asset;
+    },
+    [assets, createAsset, reloadAssets, saveAsset, selectAssetForPlan]
+  );
+
+  useEffect(() => {
+    if (!plan?.id || assetsLoading || cleanedPlanRef.current === plan.id) return;
+    cleanedPlanRef.current = plan.id;
+
+    const selectedByType = {
+      [ASSET_TYPE_DEMO_CLIP]: plan.selectedDemoAssetId,
+      [ASSET_TYPE_HOOK_IMAGE]: plan.selectedHookImageId,
+      [ASSET_TYPE_HOOK_VIDEO]: plan.selectedHookVideoId,
+    };
+
+    let cancelled = false;
+
+    (async () => {
+      let removedAny = false;
+
+      for (const assetType of SINGLE_SLOT_ASSET_TYPES) {
+        const { orphans } = pickSingleSlotKeeper(
+          assets,
+          assetType,
+          selectedByType[assetType] ?? null
+        );
+
+        for (const orphan of orphans) {
+          if (cancelled) return;
+          if (orphan.storageKey) {
+            await deletePersonVideoObject(orphan.storageKey);
+          }
+          await removeAsset(orphan.id);
+          removedAny = true;
+        }
+      }
+
+      if (removedAny && !cancelled) {
+        await reloadAssets();
+      }
+    })().catch((err) => {
+      if (!cancelled) {
+        setActionError(err.message ?? 'Could not clean up duplicate assets.');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [assets, assetsLoading, plan?.id, plan?.selectedDemoAssetId, plan?.selectedHookImageId, plan?.selectedHookVideoId, reloadAssets, removeAsset]);
 
   const handleUpload = useCallback(
     async (
@@ -207,7 +314,7 @@ export default function PersonVideoPlanDetail() {
       setActionError('');
       try {
         const goalId = ensureGoalId();
-        const iteration = nextIterationForType(assets, assetType);
+        const iteration = iterationForUpload(assets, assetType);
 
         if (uploadLabel) {
           setUploadState({ phase: 'presigning', progress: 0, label: uploadLabel, assetType });
@@ -241,19 +348,15 @@ export default function PersonVideoPlanDetail() {
           });
         }
 
-        const asset = await createAsset({
+        const asset = await persistUploadedAsset({
           assetType,
           storageKey: uploaded.storageKey,
           publicUrl: uploaded.publicUrl,
           mimeType: uploaded.mimeType,
-          iteration,
-          isSelected: autoSelect,
           parentAssetId,
+          autoSelect,
+          patchKey,
         });
-        if (autoSelect && patchKey) {
-          await selectAssetForPlan(asset, patchKey);
-        }
-        await reloadAssets();
 
         if (uploadLabel && !skipDoneMessage) {
           setUploadState({
@@ -278,7 +381,7 @@ export default function PersonVideoPlanDetail() {
         if (!skipBusy) setBusy('');
       }
     },
-    [assets, createAsset, ensureGoalId, plan, reloadAssets, selectAssetForPlan]
+    [assets, ensureGoalId, persistUploadedAsset, plan]
   );
 
   const handleDemoClipUpload = useCallback(
@@ -376,9 +479,7 @@ export default function PersonVideoPlanDetail() {
 
   const handleRotateFirstFrame = useCallback(
     async (degrees) => {
-      const frame = assets.find(
-        (a) => a.assetType === ASSET_TYPE_DEMO_FIRST_FRAME && a.isSelected
-      );
+      const frame = getActiveAssetForType(assets, ASSET_TYPE_DEMO_FIRST_FRAME);
       if (!frame?.publicUrl) {
         setActionError('Select a demo first frame to rotate.');
         return;
@@ -418,7 +519,7 @@ export default function PersonVideoPlanDetail() {
     setGenerationStatus('Submitting to Higgsfield…');
     try {
       const goalId = ensureGoalId();
-      const iteration = nextIterationForType(assets, ASSET_TYPE_HOOK_IMAGE);
+      const iteration = iterationForUpload(assets, ASSET_TYPE_HOOK_IMAGE);
       const { requestId } = await generateHookImage({
         prompt: hookImagePrompt.trim(),
         aspectRatio,
@@ -436,16 +537,14 @@ export default function PersonVideoPlanDetail() {
         },
         { onProgress: (p) => setGenerationStatus(`Hook image: ${p.status}`) }
       );
-      const asset = await createAsset({
+      await persistUploadedAsset({
         assetType: ASSET_TYPE_HOOK_IMAGE,
         storageKey: result.storageKey,
         publicUrl: result.publicUrl,
         mimeType: result.mimeType,
-        iteration,
         generationParams: { requestId, prompt: hookImagePrompt, aspectRatio, resolution },
+        patchKey: 'selectedHookImageId',
       });
-      await selectAssetForPlan(asset, 'selectedHookImageId');
-      await reloadAssets();
       setGenerationStatus('');
     } catch (err) {
       setActionError(err.message ?? 'Hook image generation failed.');
@@ -456,19 +555,17 @@ export default function PersonVideoPlanDetail() {
   }, [
     aspectRatio,
     assets,
-    createAsset,
     ensureGoalId,
     hookImagePrompt,
+    persistUploadedAsset,
     plan?.id,
     referenceImages,
-    reloadAssets,
     resolution,
-    selectAssetForPlan,
   ]);
 
   const handleGenerateHookVideo = useCallback(async () => {
-    const hookImage = selectedHookImage ?? assets.find((a) => a.assetType === ASSET_TYPE_HOOK_IMAGE && a.isSelected);
-    const endFrame = assets.find((a) => a.assetType === ASSET_TYPE_DEMO_FIRST_FRAME && a.isSelected);
+    const hookImage = selectedHookImage;
+    const endFrame = firstFrameAsset;
     if (!hookImage?.publicUrl || !endFrame?.publicUrl) {
       setActionError('Select a hook image and extract the demo first frame first.');
       return;
@@ -478,7 +575,7 @@ export default function PersonVideoPlanDetail() {
     setGenerationStatus('Submitting hook video to Higgsfield…');
     try {
       const goalId = ensureGoalId();
-      const iteration = nextIterationForType(assets, ASSET_TYPE_HOOK_VIDEO);
+      const iteration = iterationForUpload(assets, ASSET_TYPE_HOOK_VIDEO);
       const { requestId } = await generateHookVideo({
         prompt: hookVideoPrompt.trim() || 'Smooth cinematic transition',
         imageUrl: hookImage.publicUrl,
@@ -496,16 +593,14 @@ export default function PersonVideoPlanDetail() {
         },
         { onProgress: (p) => setGenerationStatus(`Hook video: ${p.status}`) }
       );
-      const asset = await createAsset({
+      await persistUploadedAsset({
         assetType: ASSET_TYPE_HOOK_VIDEO,
         storageKey: result.storageKey,
         publicUrl: result.publicUrl,
         mimeType: result.mimeType,
-        iteration,
         generationParams: { requestId, prompt: hookVideoPrompt },
+        patchKey: 'selectedHookVideoId',
       });
-      await selectAssetForPlan(asset, 'selectedHookVideoId');
-      await reloadAssets();
       setGenerationStatus('');
     } catch (err) {
       setActionError(err.message ?? 'Hook video generation failed.');
@@ -514,14 +609,13 @@ export default function PersonVideoPlanDetail() {
       setBusy('');
     }
   }, [
-    assets,
-    createAsset,
     ensureGoalId,
+    firstFrameAsset,
     hookVideoPrompt,
+    persistUploadedAsset,
     plan?.id,
-    reloadAssets,
-    selectAssetForPlan,
     selectedHookImage,
+    assets,
   ]);
 
   const markReady = async () => {
@@ -549,10 +643,6 @@ export default function PersonVideoPlanDetail() {
       </div>
     );
   }
-
-  const firstFrameSelected = assets.find(
-    (a) => a.assetType === ASSET_TYPE_DEMO_FIRST_FRAME && a.isSelected
-  );
 
   return (
     <div className="space-y-6 pb-10">
@@ -611,7 +701,7 @@ export default function PersonVideoPlanDetail() {
             ) : (
               <Upload className="size-4" />
             )}
-            {busy === 'upload-demo-pipeline' ? 'Uploading…' : 'Upload demo clip'}
+            {busy === 'upload-demo-pipeline' ? 'Uploading…' : selectedDemo ? 'Replace demo clip' : 'Upload demo clip'}
             <input
               type="file"
               accept="video/*"
@@ -628,24 +718,17 @@ export default function PersonVideoPlanDetail() {
           </Label>
         </div>
         {selectedDemo ? (
-          <div className="max-w-[240px] space-y-1">
-            <p className="text-xs text-muted-foreground">
-              Selected · v{selectedDemo.iteration} · use controls to play
-            </p>
-            <AssetThumbnail asset={selectedDemo} selected className="w-full" />
-          </div>
+          <PersonSlotAsset
+            asset={selectedDemo}
+            hint="Use controls to play · uploading again replaces this clip"
+            deleting={deletingAssetId === selectedDemo.id}
+            onDelete={handleDeleteAsset}
+          />
         ) : (
           <p className="text-sm text-muted-foreground">
             No demo clip yet. Select a goal, then upload a video.
           </p>
         )}
-        <PersonPlanAssetGrid
-          assets={assets}
-          assetType={ASSET_TYPE_DEMO_CLIP}
-          selectedAssetId={plan.selectedDemoAssetId}
-          onSelect={(asset) => selectAssetForPlan(asset, 'selectedDemoAssetId')}
-          onDelete={handleDeleteAsset}
-        />
       </Section>
 
       <Section
@@ -655,7 +738,7 @@ export default function PersonVideoPlanDetail() {
         <div className="flex flex-wrap gap-3">
           <Label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
             <Upload className="size-4" />
-            Upload frame
+            {firstFrameAsset ? 'Replace frame' : 'Upload frame'}
             <input
               type="file"
               accept="image/*"
@@ -688,7 +771,7 @@ export default function PersonVideoPlanDetail() {
             type="button"
             variant="outline"
             size="sm"
-            disabled={Boolean(busy) || !firstFrameSelected?.publicUrl}
+            disabled={Boolean(busy) || !firstFrameAsset?.publicUrl}
             onClick={() => handleRotateFirstFrame(-90)}
           >
             {busy === 'rotate-frame' ? (
@@ -702,7 +785,7 @@ export default function PersonVideoPlanDetail() {
             type="button"
             variant="outline"
             size="sm"
-            disabled={Boolean(busy) || !firstFrameSelected?.publicUrl}
+            disabled={Boolean(busy) || !firstFrameAsset?.publicUrl}
             onClick={() => handleRotateFirstFrame(90)}
           >
             {busy === 'rotate-frame' ? (
@@ -713,28 +796,18 @@ export default function PersonVideoPlanDetail() {
             Rotate right
           </Button>
         </div>
-        {firstFrameSelected ? (
-          <div className="max-w-[200px]">
-            <AssetThumbnail asset={firstFrameSelected} selected />
-          </div>
-        ) : null}
-        <PersonPlanAssetGrid
-          assets={assets}
-          assetType={ASSET_TYPE_DEMO_FIRST_FRAME}
-          selectedAssetId={firstFrameSelected?.id}
-          onSelect={async (asset) => {
-            await Promise.all(
-              assets
-                .filter(
-                  (row) =>
-                    row.assetType === ASSET_TYPE_DEMO_FIRST_FRAME && row.isSelected
-                )
-                .map((row) => updateAsset(row.id, { isSelected: false }))
-            );
-            await updateAsset(asset.id, { isSelected: true });
-          }}
-          onDelete={handleDeleteAsset}
-        />
+        {firstFrameAsset ? (
+          <PersonSlotAsset
+            asset={firstFrameAsset}
+            hint="End frame for hook video · upload or re-extract replaces this"
+            deleting={deletingAssetId === firstFrameAsset.id}
+            onDelete={handleDeleteAsset}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No first frame yet. Upload a demo clip or add a frame manually.
+          </p>
+        )}
       </Section>
 
       <Section
@@ -764,7 +837,24 @@ export default function PersonVideoPlanDetail() {
         {referenceImages.length > 0 ? (
           <div className="grid grid-cols-4 gap-2 max-w-md">
             {referenceImages.map((asset) => (
-              <AssetThumbnail key={asset.id} asset={asset} />
+              <div key={asset.id} className="space-y-1">
+                <AssetThumbnail asset={asset} showControls={false} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 w-full text-xs"
+                  disabled={deletingAssetId === asset.id}
+                  onClick={() => handleDeleteAsset(asset)}
+                >
+                  {deletingAssetId === asset.id ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3.5" />
+                  )}
+                  Remove
+                </Button>
+              </div>
             ))}
           </div>
         ) : null}
@@ -828,18 +918,15 @@ export default function PersonVideoPlanDetail() {
         </Button>
 
         {selectedHookImage ? (
-          <div className="max-w-[200px]">
-            <AssetThumbnail asset={selectedHookImage} selected />
-          </div>
-        ) : null}
-
-        <PersonPlanAssetGrid
-          assets={assets}
-          assetType={ASSET_TYPE_HOOK_IMAGE}
-          selectedAssetId={plan.selectedHookImageId}
-          onSelect={(asset) => selectAssetForPlan(asset, 'selectedHookImageId')}
-          onDelete={handleDeleteAsset}
-        />
+          <PersonSlotAsset
+            asset={selectedHookImage}
+            hint="Generate or upload again to replace"
+            deleting={deletingAssetId === selectedHookImage.id}
+            onDelete={handleDeleteAsset}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">No hook image yet.</p>
+        )}
       </Section>
 
       <Section
@@ -862,7 +949,7 @@ export default function PersonVideoPlanDetail() {
             ) : (
               <Upload className="size-4" />
             )}
-            Upload hook video
+            {selectedHookVideo ? 'Replace hook video' : 'Upload hook video'}
             <input
               type="file"
               accept="video/*"
@@ -899,17 +986,15 @@ export default function PersonVideoPlanDetail() {
           Generate hook video
         </Button>
         {selectedHookVideo ? (
-          <div className="max-w-[200px]">
-            <AssetThumbnail asset={selectedHookVideo} selected />
-          </div>
-        ) : null}
-        <PersonPlanAssetGrid
-          assets={assets}
-          assetType={ASSET_TYPE_HOOK_VIDEO}
-          selectedAssetId={plan.selectedHookVideoId}
-          onSelect={(asset) => selectAssetForPlan(asset, 'selectedHookVideoId')}
-          onDelete={handleDeleteAsset}
-        />
+          <PersonSlotAsset
+            asset={selectedHookVideo}
+            hint="Use controls to play · uploading again replaces this"
+            deleting={deletingAssetId === selectedHookVideo.id}
+            onDelete={handleDeleteAsset}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">No hook video yet.</p>
+        )}
       </Section>
 
       <Section title="5. Copy" description="Hook text and caption for editors.">

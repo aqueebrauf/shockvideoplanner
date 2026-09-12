@@ -10,6 +10,7 @@ export default function PersonPlanAssetGrid({
   selectedAssetId,
   onSelect,
   onDelete,
+  deletingAssetId = null,
   emptyLabel = 'No assets yet.',
 }) {
   const items = assetsByType(assets, assetType);
@@ -30,6 +31,7 @@ export default function PersonPlanAssetGrid({
               asset={asset}
               selected={selectedAssetId === asset.id}
               onClick={() => onSelect?.(asset)}
+              showControls={false}
             />
             <div className="flex gap-1">
               <Button
@@ -37,7 +39,10 @@ export default function PersonPlanAssetGrid({
                 variant="outline"
                 size="sm"
                 className="h-7 flex-1 text-xs"
-                onClick={() => onSelect?.(asset)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelect?.(asset);
+                }}
               >
                 {selectedAssetId === asset.id ? 'Selected' : 'Select'}
               </Button>
@@ -46,7 +51,11 @@ export default function PersonPlanAssetGrid({
                 variant="outline"
                 size="sm"
                 className="h-7 px-2"
-                onClick={() => onDelete?.(asset)}
+                disabled={deletingAssetId === asset.id}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDelete?.(asset);
+                }}
                 aria-label={`Delete iteration ${asset.iteration}`}
               >
                 <Trash2 className="size-3.5" />

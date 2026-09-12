@@ -6,7 +6,7 @@ import {
 } from '@/lib/personVideoAssetTypes';
 import { cn } from '@/lib/utils';
 
-export default function AssetThumbnail({ asset, selected, onClick, className }) {
+export default function AssetThumbnail({ asset, selected, onClick, className, showControls = true }) {
   const [loadError, setLoadError] = useState(false);
 
   if (!asset?.publicUrl) {
@@ -27,13 +27,15 @@ export default function AssetThumbnail({ asset, selected, onClick, className }) 
     asset.assetType === ASSET_TYPE_DEMO_CLIP ||
     asset.assetType === ASSET_TYPE_HOOK_VIDEO;
 
+  const Wrapper = onClick ? 'button' : 'div';
+  const wrapperProps = onClick ? { type: 'button', onClick } : {};
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Wrapper
+      {...wrapperProps}
       className={cn(
         'group relative overflow-hidden rounded-lg border bg-black/5 text-left transition-colors',
-        selected ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50',
+        selected ? 'ring-2 ring-primary border-primary' : onClick ? 'hover:border-primary/50' : '',
         className
       )}
     >
@@ -46,7 +48,7 @@ export default function AssetThumbnail({ asset, selected, onClick, className }) 
         <video
           src={asset.publicUrl}
           className="aspect-[9/16] w-full object-cover"
-          controls
+          controls={showControls}
           playsInline
           preload="metadata"
           onError={() => setLoadError(true)}
@@ -68,6 +70,6 @@ export default function AssetThumbnail({ asset, selected, onClick, className }) 
           Selected
         </span>
       ) : null}
-    </button>
+    </Wrapper>
   );
 }

@@ -12,6 +12,18 @@ export const ASSET_TYPES = [
   ASSET_TYPE_HOOK_VIDEO,
 ];
 
+/** One active file per plan — upload/generate replaces instead of adding iterations. */
+export const SINGLE_SLOT_ASSET_TYPES = [
+  ASSET_TYPE_DEMO_CLIP,
+  ASSET_TYPE_DEMO_FIRST_FRAME,
+  ASSET_TYPE_HOOK_IMAGE,
+  ASSET_TYPE_HOOK_VIDEO,
+];
+
+export function isSingleSlotAssetType(assetType) {
+  return SINGLE_SLOT_ASSET_TYPES.includes(assetType);
+}
+
 export const ASSET_STATUS_ACTIVE = 'active';
 export const ASSET_STATUS_DELETED = 'deleted';
 export const ASSET_STATUS_GENERATING = 'generating';

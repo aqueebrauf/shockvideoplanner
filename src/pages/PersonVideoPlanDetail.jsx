@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Loader2, RefreshCw, RotateCcw, RotateCw, Sparkles, Upload } from 'lucide-react';
 import PersonPlanAssetGrid from '@/components/personVideo/PersonPlanAssetGrid';
 import AssetThumbnail from '@/components/personVideo/AssetThumbnail';
+import UploadProgress from '@/components/personVideo/UploadProgress';
 import DataStatus from '@/components/DataStatus';
 import PageHeader from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -83,6 +84,7 @@ export default function PersonVideoPlanDetail() {
   const goal = findGoal(goals, plan?.goalId ?? null);
 
   const [busy, setBusy] = useState('');
+  const [uploadState, setUploadState] = useState(null);
   const [actionError, setActionError] = useState('');
   const [hookImagePrompt, setHookImagePrompt] = useState('');
   const [hookVideoPrompt, setHookVideoPrompt] = useState('Smooth cinematic transition');
@@ -90,9 +92,50 @@ export default function PersonVideoPlanDetail() {
   const [resolution, setResolution] = useState('720p');
   const [generationStatus, setGenerationStatus] = useState('');
 
-  const selectedDemo = assets.find((a) => a.id === plan?.selectedDemoAssetId);
-  const selectedHookImage = assets.find((a) => a.id === plan?.selectedHookImageId);
-  const selectedHookVideo = assets.find((a) => a.id === plan?.selectedHookVideoId);
+  const selectedDemo = useMemo(() => {
+    if (plan?.selectedDemoAssetId) {
+      const match = assets.find((a) => a.id === plan.selectedDemoAssetId);
+      if (match) return match;
+    }
+    return (
+      assets.find(
+        (a) =>
+          a.assetType === ASSET_TYPE_DEMO_CLIP &&
+          a.isSelected &&
+          a.status !== ASSET_STATUS_DELETED
+      ) ?? null
+    );
+  }, [assets, plan?.selectedDemoAssetId]);
+
+  const selectedHookImage = useMemo(() => {
+    if (plan?.selectedHookImageId) {
+      const match = assets.find((a) => a.id === plan.selectedHookImageId);
+      if (match) return match;
+    }
+    return (
+      assets.find(
+        (a) =>
+          a.assetType === ASSET_TYPE_HOOK_IMAGE &&
+          a.isSelected &&
+          a.status !== ASSET_STATUS_DELETED
+      ) ?? null
+    );
+  }, [assets, plan?.selectedHookImageId]);
+
+  const selectedHookVideo = useMemo(() => {
+    if (plan?.selectedHookVideoId) {
+      const match = assets.find((a) => a.id === plan.selectedHookVideoId);
+      if (match) return match;
+    }
+    return (
+      assets.find(
+        (a) =>
+          a.assetType === ASSET_TYPE_HOOK_VIDEO &&
+          a.isSelected &&
+          a.status !== ASSET_STATUS_DELETED
+      ) ?? null
+    );
+  }, [assets, plan?.selectedHookVideoId]);
 
   const referenceImages = useMemo(
     () => assets.filter((a) => a.assetType === ASSET_TYPE_REFERENCE_IMAGE && a.status === 'active'),
@@ -146,20 +189,58 @@ export default function PersonVideoPlanDetail() {
   );
 
   const handleUpload = useCallback(
-    async (file, assetType, { parentAssetId = null, autoSelect = true, patchKey = null } = {}) => {
+    async (
+      file,
+      assetType,
+      {
+        parentAssetId = null,
+        autoSelect = true,
+        patchKey = null,
+        onProgress,
+        uploadLabel,
+        skipBusy = false,
+        skipDoneMessage = false,
+      } = {}
+    ) => {
       if (!file || !plan) return null;
-      setBusy(`upload-${assetType}`);
+      if (!skipBusy) setBusy(`upload-${assetType}`);
       setActionError('');
       try {
         const goalId = ensureGoalId();
         const iteration = nextIterationForType(assets, assetType);
+
+        if (uploadLabel) {
+          setUploadState({ phase: 'presigning', progress: 0, label: uploadLabel, assetType });
+        }
+
         const uploaded = await uploadFileToR2({
           file,
           goalId,
           planId: plan.id,
           assetType,
           iteration,
+          onProgress: (pct) => {
+            onProgress?.(pct);
+            if (uploadLabel) {
+              setUploadState({
+                phase: 'uploading',
+                progress: pct,
+                label: uploadLabel,
+                assetType,
+              });
+            }
+          },
         });
+
+        if (uploadLabel) {
+          setUploadState({
+            phase: 'saving',
+            progress: 100,
+            label: 'Saving to plan…',
+            assetType,
+          });
+        }
+
         const asset = await createAsset({
           assetType,
           storageKey: uploaded.storageKey,
@@ -173,31 +254,103 @@ export default function PersonVideoPlanDetail() {
           await selectAssetForPlan(asset, patchKey);
         }
         await reloadAssets();
+
+        if (uploadLabel && !skipDoneMessage) {
+          setUploadState({
+            phase: 'done',
+            progress: 100,
+            label: 'Upload complete — preview below.',
+            assetType,
+          });
+          window.setTimeout(() => {
+            setUploadState((current) =>
+              current?.phase === 'done' && current?.assetType === assetType ? null : current
+            );
+          }, 4000);
+        }
+
         return asset;
       } catch (err) {
         setActionError(err.message ?? 'Upload failed.');
+        if (uploadLabel) setUploadState(null);
         return null;
       } finally {
-        setBusy('');
+        if (!skipBusy) setBusy('');
       }
     },
     [assets, createAsset, ensureGoalId, plan, reloadAssets, selectAssetForPlan]
   );
 
-  const uploadDemoFirstFrame = useCallback(
-    async (videoFile, demoAssetId) => {
+  const handleDemoClipUpload = useCallback(
+    async (file) => {
+      if (!file || !plan) return;
+
+      setBusy('upload-demo-pipeline');
+      setActionError('');
+      setUploadState({
+        phase: 'presigning',
+        progress: 0,
+        label: `Uploading ${file.name}…`,
+        assetType: ASSET_TYPE_DEMO_CLIP,
+      });
+
       try {
-        const frameBlob = await extractFirstVideoFrame(videoFile);
-        const frameFile = new File([frameBlob], 'demo-first-frame.jpg', { type: 'image/jpeg' });
-        await handleUpload(frameFile, ASSET_TYPE_DEMO_FIRST_FRAME, {
-          parentAssetId: demoAssetId,
-          autoSelect: true,
+        ensureGoalId();
+
+        const asset = await handleUpload(file, ASSET_TYPE_DEMO_CLIP, {
+          patchKey: 'selectedDemoAssetId',
+          uploadLabel: `Uploading ${file.name}…`,
+          skipBusy: true,
+          skipDoneMessage: true,
         });
+
+        if (!asset) return;
+
+        setUploadState({
+          phase: 'extracting',
+          progress: 100,
+          label: 'Extracting first frame…',
+          assetType: ASSET_TYPE_DEMO_CLIP,
+        });
+
+        try {
+          const frameBlob = await extractFirstVideoFrame(file);
+          const frameFile = new File([frameBlob], 'demo-first-frame.jpg', {
+            type: 'image/jpeg',
+          });
+          await handleUpload(frameFile, ASSET_TYPE_DEMO_FIRST_FRAME, {
+            parentAssetId: asset.id,
+            autoSelect: true,
+            skipBusy: true,
+          });
+        } catch (err) {
+          setActionError(
+            err.message ??
+              'Demo uploaded, but first frame extraction failed. Use Re-extract or upload a frame manually.'
+          );
+        }
+
+        setUploadState({
+          phase: 'done',
+          progress: 100,
+          label: 'Demo clip uploaded — play the video below to preview.',
+          assetType: ASSET_TYPE_DEMO_CLIP,
+        });
+        window.setTimeout(() => {
+          setUploadState((current) =>
+            current?.phase === 'done' && current?.assetType === ASSET_TYPE_DEMO_CLIP
+              ? null
+              : current
+          );
+        }, 5000);
       } catch (err) {
-        setActionError(err.message ?? 'Could not extract first frame from demo.');
+        setActionError(err.message ?? 'Demo upload failed.');
+        setUploadState(null);
+      } finally {
+        setBusy('');
       }
     },
-    [handleUpload]
+    [ensureGoalId, handleUpload, plan]
   );
 
   const handleReextractFirstFrame = useCallback(async () => {
@@ -442,24 +595,32 @@ export default function PersonVideoPlanDetail() {
       </Section>
 
       <Section title="1. Demo clip" description="Upload the demo reel editors will pair with the hook.">
+        <UploadProgress
+          label={uploadState?.assetType === ASSET_TYPE_DEMO_CLIP ? uploadState.label : null}
+          progress={uploadState?.progress}
+          phase={uploadState?.phase}
+        />
         <div className="flex flex-wrap gap-3">
-          <Label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
-            <Upload className="size-4" />
-            Upload demo clip
+          <Label
+            className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted ${
+              busy === 'upload-demo-pipeline' ? 'pointer-events-none opacity-50' : ''
+            }`}
+          >
+            {busy === 'upload-demo-pipeline' ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Upload className="size-4" />
+            )}
+            {busy === 'upload-demo-pipeline' ? 'Uploading…' : 'Upload demo clip'}
             <input
               type="file"
               accept="video/*"
               className="sr-only"
-              disabled={Boolean(busy)}
+              disabled={busy === 'upload-demo-pipeline'}
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (file) {
-                  const asset = await handleUpload(file, ASSET_TYPE_DEMO_CLIP, {
-                    patchKey: 'selectedDemoAssetId',
-                  });
-                  if (asset) {
-                    await uploadDemoFirstFrame(file, asset.id);
-                  }
+                  await handleDemoClipUpload(file);
                 }
                 e.target.value = '';
               }}
@@ -467,10 +628,17 @@ export default function PersonVideoPlanDetail() {
           </Label>
         </div>
         {selectedDemo ? (
-          <div className="max-w-[200px]">
-            <AssetThumbnail asset={selectedDemo} selected />
+          <div className="max-w-[240px] space-y-1">
+            <p className="text-xs text-muted-foreground">
+              Selected · v{selectedDemo.iteration} · use controls to play
+            </p>
+            <AssetThumbnail asset={selectedDemo} selected className="w-full" />
           </div>
-        ) : null}
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No demo clip yet. Select a goal, then upload a video.
+          </p>
+        )}
         <PersonPlanAssetGrid
           assets={assets}
           assetType={ASSET_TYPE_DEMO_CLIP}
@@ -678,9 +846,22 @@ export default function PersonVideoPlanDetail() {
         title="4. Hook video"
         description="Upload manually or generate with Higgsfield (hook image → demo first frame)."
       >
+        <UploadProgress
+          label={uploadState?.assetType === ASSET_TYPE_HOOK_VIDEO ? uploadState.label : null}
+          progress={uploadState?.progress}
+          phase={uploadState?.phase}
+        />
         <div className="flex flex-wrap gap-3">
-          <Label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
-            <Upload className="size-4" />
+          <Label
+            className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted ${
+              busy === `upload-${ASSET_TYPE_HOOK_VIDEO}` ? 'pointer-events-none opacity-50' : ''
+            }`}
+          >
+            {busy === `upload-${ASSET_TYPE_HOOK_VIDEO}` ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Upload className="size-4" />
+            )}
             Upload hook video
             <input
               type="file"
@@ -692,6 +873,7 @@ export default function PersonVideoPlanDetail() {
                 if (file) {
                   await handleUpload(file, ASSET_TYPE_HOOK_VIDEO, {
                     patchKey: 'selectedHookVideoId',
+                    uploadLabel: `Uploading ${file.name}…`,
                   });
                 }
                 e.target.value = '';

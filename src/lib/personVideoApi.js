@@ -87,7 +87,43 @@ export async function pollGeneration({
   });
 }
 
-export async function uploadFileToR2({ file, goalId, planId, assetType, iteration }) {
+function putFileWithProgress(url, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        onProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+        return;
+      }
+      reject(new Error(`Upload to R2 failed (${xhr.status}).`));
+    };
+
+    xhr.onerror = () => reject(new Error('Upload to R2 failed (network error).'));
+    xhr.onabort = () => reject(new Error('Upload cancelled.'));
+
+    xhr.send(file);
+  });
+}
+
+export async function uploadFileToR2({
+  file,
+  goalId,
+  planId,
+  assetType,
+  iteration,
+  onProgress,
+}) {
+  onProgress?.(0);
+
   const { uploadUrl, storageKey, publicUrl } = await presignPersonVideoUpload({
     goalId,
     planId,
@@ -97,15 +133,9 @@ export async function uploadFileToR2({ file, goalId, planId, assetType, iteratio
     fileName: file.name,
   });
 
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': file.type || 'application/octet-stream' },
-    body: file,
-  });
+  await putFileWithProgress(uploadUrl, file, onProgress);
 
-  if (!uploadResponse.ok) {
-    throw new Error(`Upload to R2 failed (${uploadResponse.status}).`);
-  }
+  onProgress?.(100);
 
   return { storageKey, publicUrl, mimeType: file.type || 'application/octet-stream' };
 }

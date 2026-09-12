@@ -22,9 +22,9 @@ import {
   ASSET_TYPE_DEMO_CLIP,
   ASSET_TYPE_HOOK_VIDEO,
 } from '@/lib/personVideoAssetTypes';
+import { getActivePlanAsset } from '@/lib/personPlanAssetStorage';
 import {
   filterPersonVideoPlansByGoalId,
-  findAssetById,
   getGoalsWithPersonVideoPlans,
   mergePersonVideoCaption,
   splitPersonVideoPlansByCompletion,
@@ -55,16 +55,18 @@ function PersonVideoPlanEntryCard({
   isCompleted,
   onToggleComplete,
 }) {
-  const hookVideo =
-    findAssetById(assets, plan.selectedHookVideoId) ??
-    assets.find(
-      (a) => a.planId === plan.id && a.assetType === ASSET_TYPE_HOOK_VIDEO && a.isSelected
-    );
-  const demoClip =
-    findAssetById(assets, plan.selectedDemoAssetId) ??
-    assets.find(
-      (a) => a.planId === plan.id && a.assetType === ASSET_TYPE_DEMO_CLIP && a.isSelected
-    );
+  const hookVideo = getActivePlanAsset(
+    assets,
+    plan.id,
+    ASSET_TYPE_HOOK_VIDEO,
+    plan.selectedHookVideoId
+  );
+  const demoClip = getActivePlanAsset(
+    assets,
+    plan.id,
+    ASSET_TYPE_DEMO_CLIP,
+    plan.selectedDemoAssetId
+  );
   const captionCopy = mergePersonVideoCaption(plan.caption, plan.hashtag);
 
   return (

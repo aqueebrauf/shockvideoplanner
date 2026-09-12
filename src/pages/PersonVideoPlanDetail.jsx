@@ -25,7 +25,9 @@ import {
   rotateImageBlob,
 } from '@/lib/extractVideoFrame';
 import {
+  assetHasFile,
   getActiveAssetForType,
+  getActivePlanAsset,
   iterationForUpload,
   normalizePersonPlanAsset,
   pickSingleSlotKeeper,
@@ -106,8 +108,9 @@ export default function PersonVideoPlanDetail() {
   const [generationStatus, setGenerationStatus] = useState('');
 
   const selectedDemo = useMemo(
-    () => getActiveAssetForType(assets, ASSET_TYPE_DEMO_CLIP),
-    [assets]
+    () =>
+      getActivePlanAsset(assets, numericPlanId, ASSET_TYPE_DEMO_CLIP, plan?.selectedDemoAssetId),
+    [assets, numericPlanId, plan?.selectedDemoAssetId]
   );
 
   const firstFrameAsset = useMemo(
@@ -116,14 +119,36 @@ export default function PersonVideoPlanDetail() {
   );
 
   const selectedHookImage = useMemo(
-    () => getActiveAssetForType(assets, ASSET_TYPE_HOOK_IMAGE),
-    [assets]
+    () =>
+      getActivePlanAsset(
+        assets,
+        numericPlanId,
+        ASSET_TYPE_HOOK_IMAGE,
+        plan?.selectedHookImageId
+      ),
+    [assets, numericPlanId, plan?.selectedHookImageId]
   );
 
   const selectedHookVideo = useMemo(
-    () => getActiveAssetForType(assets, ASSET_TYPE_HOOK_VIDEO),
-    [assets]
+    () =>
+      getActivePlanAsset(
+        assets,
+        numericPlanId,
+        ASSET_TYPE_HOOK_VIDEO,
+        plan?.selectedHookVideoId
+      ),
+    [assets, numericPlanId, plan?.selectedHookVideoId]
   );
+
+  const readyCheck = useMemo(
+    () => ({
+      demo: assetHasFile(selectedDemo),
+      hookVideo: assetHasFile(selectedHookVideo),
+    }),
+    [selectedDemo, selectedHookVideo]
+  );
+
+  const canMarkReady = readyCheck.demo && readyCheck.hookVideo;
 
   const deletingAssetId = busy.startsWith('delete-')
     ? Number(busy.replace('delete-', ''))
@@ -192,6 +217,45 @@ export default function PersonVideoPlanDetail() {
     [clearPlanSelectionForAsset, plan, reloadAssets, removeAsset]
   );
 
+  const syncPlanAssetSelections = useCallback(
+    (latestAssets) => {
+      if (!plan?.id) return;
+
+      const demo = getActivePlanAsset(
+        latestAssets,
+        plan.id,
+        ASSET_TYPE_DEMO_CLIP,
+        plan.selectedDemoAssetId
+      );
+      const hookImage = getActivePlanAsset(
+        latestAssets,
+        plan.id,
+        ASSET_TYPE_HOOK_IMAGE,
+        plan.selectedHookImageId
+      );
+      const hookVideo = getActivePlanAsset(
+        latestAssets,
+        plan.id,
+        ASSET_TYPE_HOOK_VIDEO,
+        plan.selectedHookVideoId
+      );
+
+      const patch = {};
+      if (demo && plan.selectedDemoAssetId !== demo.id) patch.selectedDemoAssetId = demo.id;
+      if (hookImage && plan.selectedHookImageId !== hookImage.id) {
+        patch.selectedHookImageId = hookImage.id;
+      }
+      if (hookVideo && plan.selectedHookVideoId !== hookVideo.id) {
+        patch.selectedHookVideoId = hookVideo.id;
+      }
+
+      if (Object.keys(patch).length > 0) {
+        updatePlan(plan.id, patch, { immediate: true });
+      }
+    },
+    [plan, updatePlan]
+  );
+
   const persistUploadedAsset = useCallback(
     async ({
       assetType,
@@ -243,10 +307,11 @@ export default function PersonVideoPlanDetail() {
         await selectAssetForPlan(asset, patchKey);
       }
 
-      await reloadAssets();
+      const latestAssets = await reloadAssets();
+      syncPlanAssetSelections(latestAssets);
       return asset;
     },
-    [assets, createAsset, reloadAssets, saveAsset, selectAssetForPlan]
+    [assets, createAsset, reloadAssets, saveAsset, selectAssetForPlan, syncPlanAssetSelections]
   );
 
   useEffect(() => {
@@ -619,11 +684,39 @@ export default function PersonVideoPlanDetail() {
   ]);
 
   const markReady = async () => {
-    if (!selectedHookVideo?.publicUrl || !selectedDemo?.publicUrl) {
-      setActionError('Select final hook video and demo clip before marking ready.');
+    setActionError('');
+    const latestAssets = await reloadAssets();
+    syncPlanAssetSelections(latestAssets);
+
+    const demo = getActivePlanAsset(
+      latestAssets,
+      plan.id,
+      ASSET_TYPE_DEMO_CLIP,
+      plan.selectedDemoAssetId
+    );
+    const hookVideo = getActivePlanAsset(
+      latestAssets,
+      plan.id,
+      ASSET_TYPE_HOOK_VIDEO,
+      plan.selectedHookVideoId
+    );
+
+    const missing = [];
+    if (!assetHasFile(demo)) missing.push('demo clip (section 1 — upload must finish successfully)');
+    if (!assetHasFile(hookVideo)) {
+      missing.push('hook video (section 4 — upload must finish successfully)');
+    }
+
+    if (missing.length > 0) {
+      setActionError(`Still missing: ${missing.join('; ')}.`);
       return;
     }
-    updatePlan(plan.id, { workflowStatus: WORKFLOW_STATUS_READY }, { immediate: true });
+
+    const patch = { workflowStatus: WORKFLOW_STATUS_READY };
+    if (demo.id !== plan.selectedDemoAssetId) patch.selectedDemoAssetId = demo.id;
+    if (hookVideo.id !== plan.selectedHookVideoId) patch.selectedHookVideoId = hookVideo.id;
+
+    updatePlan(plan.id, patch, { immediate: true });
     await flushPlan(plan.id);
   };
 
@@ -1032,13 +1125,25 @@ export default function PersonVideoPlanDetail() {
       </Section>
 
       <Section title="Publish to editors">
+        <ul className="space-y-1 text-sm">
+          <li className={readyCheck.demo ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'}>
+            {readyCheck.demo ? '✓' : '○'} Demo clip uploaded
+          </li>
+          <li
+            className={
+              readyCheck.hookVideo ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'
+            }
+          >
+            {readyCheck.hookVideo ? '✓' : '○'} Hook video uploaded
+          </li>
+        </ul>
         <div className="flex flex-wrap gap-3">
           {plan.workflowStatus === WORKFLOW_STATUS_READY ? (
             <Button type="button" variant="outline" onClick={markDraft}>
               Mark as draft
             </Button>
           ) : (
-            <Button type="button" onClick={markReady}>
+            <Button type="button" onClick={markReady} disabled={!canMarkReady}>
               Mark ready for editors
             </Button>
           )}

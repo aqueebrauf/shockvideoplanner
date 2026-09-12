@@ -123,6 +123,22 @@ export function iterationForUpload(assets, assetType) {
 }
 
 /** If legacy data has duplicates for a single-slot type, pick one keeper. */
+export function assetHasFile(asset) {
+  return Boolean(asset?.publicUrl?.trim() || asset?.storageKey?.trim());
+}
+
+export function getActivePlanAsset(assets, planId, assetType, preferredId = null) {
+  const matching = filterActiveAssets(assets).filter(
+    (asset) => asset.planId === planId && asset.assetType === assetType
+  );
+  if (matching.length === 0) return null;
+  if (preferredId != null) {
+    const preferred = matching.find((asset) => asset.id === preferredId);
+    if (preferred) return preferred;
+  }
+  return matching.reduce((best, row) => (row.iteration >= best.iteration ? row : best));
+}
+
 export function pickSingleSlotKeeper(assets, assetType, selectedId = null) {
   const matching = assetsByType(assets, assetType);
   if (matching.length === 0) return { keeper: null, orphans: [] };

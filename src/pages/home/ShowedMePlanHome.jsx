@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ChevronDown, ExternalLink } from 'lucide-react';
-import CopyTextButton from '@/components/CopyTextButton';
+import { Check, ChevronLeft, ChevronRight, Copy, ExternalLink } from 'lucide-react';
 import DataStatus from '@/components/DataStatus';
+import EditorToggle from '@/components/showedMe/EditorToggle';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -17,7 +16,7 @@ import { useCharacters } from '@/hooks/useCharacters';
 import { useGoals } from '@/hooks/useGoals';
 import { useShowedMePlans } from '@/hooks/useShowedMePlans';
 import { formatGoalDateLabel } from '@/lib/goalDateLabel';
-import { findEditor, findGoal } from '@/lib/planResolvers';
+import { findGoal } from '@/lib/planResolvers';
 import { PLAN_STATUS_COMPLETED, PLAN_STATUS_NOT_STARTED } from '@/lib/planStatus';
 import {
   ASSET_TYPE_DEMO_CLIP,
@@ -32,33 +31,40 @@ import {
   planAppearsOnHome,
   splitShowedMePlansByCompletion,
 } from '@/lib/showedMePlanDisplay';
-import { cn } from '@/lib/utils';
 
-function VideoLinkButton({ href, label }) {
-  if (!href?.trim()) return null;
+const PAGE_SIZE = 8;
+
+function CopyAction({ value, label }) {
+  const [copied, setCopied] = useState(false);
+  const text = value?.trim() ?? '';
+
+  const copy = async () => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
   return (
     <Button
-      render={
-        <a href={href} target="_blank" rel="noopener noreferrer" />
-      }
+      type="button"
       variant="outline"
-      size="default"
-      className="home-plan-action-btn"
+      size="sm"
+      className="home-gallery-btn"
+      disabled={!text}
+      onClick={copy}
     >
-      <ExternalLink className="size-4" />
-      {label}
+      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      {copied ? 'Copied' : label}
     </Button>
   );
 }
 
-function ShowedMePlanEntryCard({
-  plan,
-  assets,
-  editorName,
-  index,
-  isCompleted,
-  onToggleComplete,
-}) {
+function GalleryCard({ plan, assets, isCompleted, onToggleComplete }) {
   const hookVideo = getActivePlanAsset(
     assets,
     plan.id,
@@ -72,70 +78,51 @@ function ShowedMePlanEntryCard({
     plan.selectedDemoAssetId
   );
   const captionCopy = mergeShowedMeCaption(plan.caption, plan.hashtag);
+  const hookText = plan.hookText.trim();
+  const demoUrl = demoClip?.publicUrl?.trim() || '';
 
   return (
-    <article className="home-this-person-entry">
-      <div className="home-this-person-entry__toolbar">
+    <article className="home-gallery-card">
+      {hookVideo?.publicUrl ? (
+        <video
+          src={hookVideo.publicUrl}
+          className="home-gallery-video"
+          controls
+          playsInline
+          preload="metadata"
+        />
+      ) : (
+        <div className="home-gallery-video home-gallery-video--empty">No hook</div>
+      )}
+      <div className="home-gallery-actions">
+        <CopyAction value={hookText} label="Hook" />
+        <CopyAction value={captionCopy} label="Caption" />
+        {demoUrl ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="home-gallery-btn"
+            render={<a href={demoUrl} target="_blank" rel="noopener noreferrer" />}
+          >
+            <ExternalLink className="size-3.5" />
+            Demo
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm" className="home-gallery-btn" disabled>
+            <ExternalLink className="size-3.5" />
+            Demo
+          </Button>
+        )}
         <Button
           type="button"
-          variant="outline"
-          size="default"
-          className={cn(
-            'home-plan-status-btn home-this-person-status-btn',
-            isCompleted ? 'home-plan-status-btn--marked' : 'home-plan-status-btn--unmarked'
-          )}
+          size="sm"
+          variant={isCompleted ? 'default' : 'outline'}
+          className="home-gallery-btn"
           onClick={() => onToggleComplete(plan)}
-          aria-label={
-            isCompleted
-              ? `Mark plan ${index + 1} as not started`
-              : `Mark plan ${index + 1} as complete`
-          }
         >
-          <Check className="size-5" />
+          {isCompleted ? <Check className="size-3.5" /> : null}
+          {isCompleted ? 'Done' : 'Complete'}
         </Button>
-      </div>
-
-      <div className="home-plan-content">
-        <div className="home-plan-field">
-          <span className="home-plan-field__label">Editor</span>
-          <p className="home-plan-field__value">{editorName || 'Unassigned'}</p>
-        </div>
-
-        <div className="home-plan-field">
-          <span className="home-plan-field__label">Hook</span>
-          <p className="home-plan-field__value whitespace-pre-wrap">
-            {plan.hookText.trim() || '—'}
-          </p>
-        </div>
-
-        <div className="home-plan-field">
-          <span className="home-plan-field__label">Caption</span>
-          <p className="home-plan-field__value whitespace-pre-wrap">
-            {plan.caption.trim() || '—'}
-            {plan.hashtag.trim() ? (
-              <span className="text-muted-foreground"> {plan.hashtag.trim()}</span>
-            ) : null}
-          </p>
-        </div>
-
-        <div className="home-plan-actions">
-          <VideoLinkButton href={hookVideo?.publicUrl} label="Hook clip" />
-          <VideoLinkButton href={demoClip?.publicUrl} label="Demo clip" />
-          <CopyTextButton
-            value={plan.hookText}
-            text="Copy Hook"
-            size="default"
-            label={`Copy hook ${index + 1}`}
-            className="home-plan-action-btn"
-          />
-          <CopyTextButton
-            value={captionCopy}
-            text="Copy caption"
-            size="default"
-            label={`Copy caption ${index + 1}`}
-            className="home-plan-action-btn"
-          />
-        </div>
       </div>
     </article>
   );
@@ -152,6 +139,8 @@ export default function ShowedMePlanHome() {
   } = useAllShowedMePlanAssets();
   const [selectedGoalId, setSelectedGoalId] = useState('');
   const [selectedEditorId, setSelectedEditorId] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('pending');
+  const [page, setPage] = useState(1);
 
   const homePlans = useMemo(
     () => plans.filter((plan) => planAppearsOnHome(plan, assets)),
@@ -177,32 +166,36 @@ export default function ShowedMePlanHome() {
   }, [goalsWithPlans]);
 
   const selectedGoal = findGoal(goals, selectedGoalId ? Number(selectedGoalId) : null);
-  const selectedEditor = findEditor(
-    editors,
-    selectedEditorId && selectedEditorId !== 'all' ? Number(selectedEditorId) : null
+
+  const filteredPlans = useMemo(() => {
+    const byGoal = selectedGoalId
+      ? filterShowedMePlansByGoalId(homePlans, Number(selectedGoalId))
+      : [];
+    return filterShowedMePlansByEditorId(
+      byGoal,
+      selectedEditorId !== 'all' ? Number(selectedEditorId) : null
+    );
+  }, [homePlans, selectedGoalId, selectedEditorId]);
+
+  const { active: pendingPlans, completed: completedPlans } = useMemo(
+    () => splitShowedMePlansByCompletion(filteredPlans),
+    [filteredPlans]
   );
-  const entries = useMemo(
-    () => {
-      const byGoal = selectedGoalId
-        ? filterShowedMePlansByGoalId(homePlans, Number(selectedGoalId))
-        : [];
-      return filterShowedMePlansByEditorId(
-        byGoal,
-        selectedEditorId && selectedEditorId !== 'all' ? Number(selectedEditorId) : null
-      );
-    },
-    [homePlans, selectedGoalId, selectedEditorId]
-  );
-  const { active: activeEntries, completed: completedEntries } = useMemo(
-    () => splitShowedMePlansByCompletion(entries),
-    [entries]
-  );
+
+  const visiblePlans = statusFilter === 'completed' ? completedPlans : pendingPlans;
+  const pageCount = Math.max(1, Math.ceil(visiblePlans.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const pagePlans = visiblePlans.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedGoalId, selectedEditorId, statusFilter]);
 
   const goalSelectLabel = selectedGoal
     ? `${selectedGoal.title.trim() || `Goal ${selectedGoal.id}`}${
         selectedGoal.date ? ` · ${formatGoalDateLabel(selectedGoal.date)}` : ''
       }`
-    : 'Select a goal';
+    : 'Goal';
 
   const toggleComplete = (plan) => {
     const nextStatus =
@@ -224,19 +217,18 @@ export default function ShowedMePlanHome() {
             className="text-primary underline-offset-4 hover:underline"
           >
             Create a plan
-          </Link>{' '}
-          in the generator.
+          </Link>
+          .
         </p>
       ) : null}
 
       {!loading && homePlans.length > 0 ? (
         <>
-          <div className="flex flex-wrap gap-4">
-            <div className="min-w-[16rem] flex-1 space-y-2">
-              <Label htmlFor="showed-me-goal">Goal</Label>
+          <div className="home-gallery-toolbar">
+            <div className="home-gallery-toolbar__row">
               <Select value={selectedGoalId} onValueChange={setSelectedGoalId}>
-                <SelectTrigger id="showed-me-goal" className="w-full max-w-md">
-                  <SelectValue placeholder="Select a goal">{goalSelectLabel}</SelectValue>
+                <SelectTrigger className="w-full sm:max-w-xs" aria-label="Goal">
+                  <SelectValue placeholder="Goal">{goalSelectLabel}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {goalsWithPlans.map((goal) => (
@@ -247,72 +239,76 @@ export default function ShowedMePlanHome() {
                   ))}
                 </SelectContent>
               </Select>
+              <EditorToggle
+                editors={editors}
+                value={selectedEditorId}
+                allowAll
+                onChange={(next) => setSelectedEditorId(next === 'all' ? 'all' : String(next))}
+              />
             </div>
-            <div className="min-w-[12rem] space-y-2">
-              <Label htmlFor="showed-me-editor">Editor</Label>
-              <Select value={selectedEditorId} onValueChange={setSelectedEditorId}>
-                <SelectTrigger id="showed-me-editor" className="w-full max-w-xs">
-                  <SelectValue placeholder="All editors">
-                    {selectedEditor?.name?.trim() || 'All editors'}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All editors</SelectItem>
-                  {editors.map((person) => (
-                    <SelectItem key={person.id} value={String(person.id)}>
-                      {person.name.trim() || `Editor ${person.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={statusFilter === 'pending' ? 'default' : 'outline'}
+                onClick={() => setStatusFilter('pending')}
+              >
+                Pending {pendingPlans.length}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={statusFilter === 'completed' ? 'default' : 'outline'}
+                onClick={() => setStatusFilter('completed')}
+              >
+                Completed {completedPlans.length}
+              </Button>
             </div>
           </div>
 
-          <div className="home-this-person-list">
-            {entries.length === 0 ? (
-              <p className="home-plan-empty">No plans match these filters.</p>
-            ) : (
-              <>
-                {activeEntries.length === 0 ? (
-                  <p className="home-plan-empty">No active plans for this goal.</p>
-                ) : (
-                  activeEntries.map((plan, index) => (
-                    <ShowedMePlanEntryCard
-                      key={plan.id}
-                      plan={plan}
-                      assets={assets}
-                      editorName={findEditor(editors, plan.editorId)?.name?.trim() ?? ''}
-                      index={index}
-                      isCompleted={false}
-                      onToggleComplete={toggleComplete}
-                    />
-                  ))
-                )}
+          {pagePlans.length === 0 ? (
+            <p className="home-plan-empty">Nothing here yet.</p>
+          ) : (
+            <div className="home-gallery">
+              {pagePlans.map((plan) => (
+                <GalleryCard
+                  key={plan.id}
+                  plan={plan}
+                  assets={assets}
+                  isCompleted={statusFilter === 'completed'}
+                  onToggleComplete={toggleComplete}
+                />
+              ))}
+            </div>
+          )}
 
-                {completedEntries.length > 0 ? (
-                  <details className="home-this-person-completed">
-                    <summary className="home-this-person-completed__summary">
-                      <span>Completed ({completedEntries.length})</span>
-                      <ChevronDown className="home-this-person-completed__chevron size-4" />
-                    </summary>
-                    <div className="home-this-person-completed__list">
-                      {completedEntries.map((plan, index) => (
-                        <ShowedMePlanEntryCard
-                          key={plan.id}
-                          plan={plan}
-                          assets={assets}
-                          editorName={findEditor(editors, plan.editorId)?.name?.trim() ?? ''}
-                          index={index}
-                          isCompleted
-                          onToggleComplete={toggleComplete}
-                        />
-                      ))}
-                    </div>
-                  </details>
-                ) : null}
-              </>
-            )}
-          </div>
+          {visiblePlans.length > PAGE_SIZE ? (
+            <div className="home-gallery-pager">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={safePage <= 1}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                <ChevronLeft className="size-4" />
+                Prev
+              </Button>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {safePage} / {pageCount}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={safePage >= pageCount}
+                onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
+              >
+                Next
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          ) : null}
         </>
       ) : null}
     </div>

@@ -388,3 +388,39 @@
 .home-this-person-completed__list {
   @apply flex flex-col gap-4 border-t border-dashed px-4 pt-4 pb-4;
 }
+
+.home-gallery-toolbar {
+  @apply flex shrink-0 flex-col gap-3;
+}
+
+.home-gallery-toolbar__row {
+  @apply flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center;
+}
+
+.home-gallery {
+  @apply grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4;
+}
+
+.home-gallery-card {
+  @apply overflow-hidden rounded-xl border bg-card;
+}
+
+.home-gallery-video {
+  @apply aspect-[9/16] w-full bg-black object-cover;
+}
+
+.home-gallery-video--empty {
+  @apply flex items-center justify-center text-xs text-muted-foreground;
+}
+
+.home-gallery-actions {
+  @apply grid grid-cols-2 gap-1.5 p-2;
+}
+
+.home-gallery-btn {
+  @apply h-8 w-full min-w-0 px-1.5 text-xs;
+}
+
+.home-gallery-pager {
+  @apply flex shrink-0 items-center justify-center gap-3 pb-2;
+}

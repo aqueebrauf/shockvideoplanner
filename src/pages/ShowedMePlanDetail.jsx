@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Loader2, Sparkles, Trash2, Upload } from 'lucide-react';
 import AssetThumbnail from '@/components/showedMe/AssetThumbnail';
 import ShowedMeSlotAsset from '@/components/showedMe/ShowedMeSlotAsset';
+import EditorToggle from '@/components/showedMe/EditorToggle';
 import UploadProgress from '@/components/showedMe/UploadProgress';
 import DataStatus from '@/components/DataStatus';
 import PageHeader from '@/components/layout/PageHeader';
@@ -53,7 +54,7 @@ import {
   pollGenerationUntilComplete,
   uploadFileToR2,
 } from '@/lib/showedMeApi';
-import { findEditor, findGoal } from '@/lib/planResolvers';
+import { findGoal } from '@/lib/planResolvers';
 
 function Section({ title, description, children }) {
   return (
@@ -101,7 +102,6 @@ export default function ShowedMePlanDetail() {
     [plans, numericPlanId]
   );
   const goal = findGoal(goals, plan?.goalId ?? null);
-  const editor = findEditor(editors, plan?.editorId ?? null);
 
   const backgroundsForGoal = useMemo(
     () =>
@@ -724,30 +724,18 @@ export default function ShowedMePlanDetail() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="plan-editor">Editor</Label>
-            <Select
-              value={plan.editorId ? String(plan.editorId) : ''}
-              onValueChange={(value) => {
+            <Label>Editor</Label>
+            <EditorToggle
+              editors={editors}
+              value={plan.editorId}
+              onChange={(next) => {
                 updatePlan(
                   plan.id,
-                  { editorId: value ? Number(value) : null },
+                  { editorId: next === 'all' || next == null ? null : Number(next) },
                   { immediate: true }
                 );
               }}
-            >
-              <SelectTrigger id="plan-editor">
-                <SelectValue placeholder="Select editor">
-                  {editor?.name?.trim() || 'Select editor'}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {editors.map((person) => (
-                  <SelectItem key={person.id} value={String(person.id)}>
-                    {person.name.trim() || `Editor ${person.id}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
         </div>
       </Section>

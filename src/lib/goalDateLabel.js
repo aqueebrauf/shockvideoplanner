@@ -28,50 +28,84 @@ const MONTH_LABELS = [
   'Dec',
 ];
 
+const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const MONTH_DAY_RE = /^([A-Za-z]+)\s+(\d{1,2})(?:,?\s*(\d{4}))?$/;
+
+function startOfDay(date) {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+function isValidYmd(year, monthIndex, day) {
+  const date = new Date(year, monthIndex, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === monthIndex &&
+    date.getDate() === day
+  );
+}
+
+export function formatDateInputValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function formatShortDate(date) {
+  const label = `${MONTH_LABELS[date.getMonth()]} ${date.getDate()}`;
+  if (date.getFullYear() === new Date().getFullYear()) return label;
+  return `${label}, ${date.getFullYear()}`;
+}
+
 export function formatPlanDate(date = new Date()) {
-  return `${MONTH_LABELS[date.getMonth()]} ${date.getDate()}`;
+  return formatShortDate(date);
 }
 
 export function parseGoalDate(dateStr) {
   if (!dateStr?.trim()) return null;
 
-  const match = dateStr.trim().match(/^([A-Za-z]{3})\s+(\d{1,2})$/);
-  if (!match) return null;
-
-  const month = MONTHS[match[1].toLowerCase().slice(0, 3)];
-  if (month === undefined) return null;
-
-  const day = parseInt(match[2], 10);
-  const now = new Date();
-  let year = now.getFullYear();
-  let candidate = new Date(year, month, day);
-
-  if (candidate > now) {
-    const prevYear = new Date(year - 1, month, day);
-    if (now - prevYear < candidate - now) {
-      candidate = prevYear;
-    }
+  const raw = dateStr.trim();
+  const iso = raw.match(ISO_DATE_RE);
+  if (iso) {
+    const year = Number(iso[1]);
+    const monthIndex = Number(iso[2]) - 1;
+    const day = Number(iso[3]);
+    if (!isValidYmd(year, monthIndex, day)) return null;
+    return new Date(year, monthIndex, day);
   }
 
-  return candidate;
+  const match = raw.match(MONTH_DAY_RE);
+  if (!match) return null;
+
+  const monthIndex = MONTHS[match[1].toLowerCase().slice(0, 3)];
+  if (monthIndex === undefined) return null;
+
+  const day = Number(match[2]);
+  const year = match[3] ? Number(match[3]) : new Date().getFullYear();
+  if (!isValidYmd(year, monthIndex, day)) return null;
+
+  return new Date(year, monthIndex, day);
+}
+
+export function toDateInputValue(dateStr) {
+  const parsed = parseGoalDate(dateStr);
+  return parsed ? formatDateInputValue(parsed) : '';
 }
 
 export function formatGoalDateLabel(dateStr) {
   const parsed = parseGoalDate(dateStr);
   if (!parsed) return dateStr?.trim() || '';
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const target = new Date(parsed);
-  target.setHours(0, 0, 0, 0);
-
+  const today = startOfDay(new Date());
+  const target = startOfDay(parsed);
   const diffDays = Math.round((today - target) / (24 * 60 * 60 * 1000));
 
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
 
-  return dateStr.trim();
+  return formatShortDate(parsed);
 }
 
 export function sortGoalsByRecent(goals) {

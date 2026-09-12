@@ -1,12 +1,14 @@
 import { supabase } from './supabase';
 import { nextIdFromRows } from './db/helpers';
+import { toDateInputValue } from './goalDateLabel';
 
 export function normalizeGoal(row) {
+  const rawDate = row.date ?? row.date_label ?? '';
   return {
     id: row.id,
     title: row.title ?? '',
     link: row.link ?? '',
-    date: row.date ?? row.date_label ?? '',
+    date: toDateInputValue(rawDate),
     hashtag: row.hashtag ?? '',
   };
 }

@@ -3,8 +3,8 @@ import { Eye, Loader2, Upload } from 'lucide-react';
 import DataStatus from '@/components/DataStatus';
 import UploadProgress from '@/components/showedMe/UploadProgress';
 import { DeleteRowButton } from '@/components/table/TableActions';
-import { TableInput } from '@/components/table/TableField';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -180,7 +180,7 @@ export default function GoalDemoLibrary() {
           <div className="space-y-2">
             <Label htmlFor="upload-goal">Goal</Label>
             <Select value={uploadGoalId} onValueChange={setUploadGoalId}>
-              <SelectTrigger id="upload-goal">
+              <SelectTrigger id="upload-goal" className="w-full">
                 <SelectValue placeholder="Select goal" />
               </SelectTrigger>
               <SelectContent>
@@ -194,7 +194,7 @@ export default function GoalDemoLibrary() {
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="background-name">Background name (optional)</Label>
-            <TableInput
+            <Input
               id="background-name"
               value={backgroundName}
               onChange={(e) => setBackgroundName(e.target.value)}
@@ -262,7 +262,7 @@ export default function GoalDemoLibrary() {
                           ) : null}
                         </td>
                         <td>
-                          <TableInput
+                          <Input
                             key={`${entry.id}-${entry.backgroundName}`}
                             defaultValue={entry.backgroundName}
                             placeholder="Untitled background"

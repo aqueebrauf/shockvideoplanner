@@ -18,6 +18,20 @@ export function TableTextarea({ className, ...props }) {
   );
 }
 
+export function TableDateInput({ className, ...props }) {
+  return (
+    <Input
+      type="date"
+      className={cn(
+        tableFieldClassName,
+        'w-full min-w-[10.5rem] cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
 export function TableSelect({ className, ...props }) {
   return (
     <select

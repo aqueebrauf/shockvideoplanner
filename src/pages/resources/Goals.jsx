@@ -1,8 +1,12 @@
 import DataStatus from '../../components/DataStatus';
 import CopyTextButton from '../../components/CopyTextButton';
 import { AddRowButton, DeleteRowButton } from '@/components/table/TableActions';
-import { TableInput } from '@/components/table/TableField';
+import { TableDateInput, TableInput } from '@/components/table/TableField';
 import { useGoals } from '../../hooks/useGoals';
+
+const currentYear = new Date().getFullYear();
+const yearStart = `${currentYear}-01-01`;
+const yearEnd = `${currentYear}-12-31`;
 
 export default function Goals() {
   const { goals, loading, error, updateGoal, flushGoal, addGoal, deleteGoal } =
@@ -20,7 +24,7 @@ export default function Goals() {
             <tr>
               <th className="w-12">#</th>
               <th>Title</th>
-              <th className="w-28">Date</th>
+              <th className="w-44">Date</th>
               <th className="w-40">Hashtag</th>
               <th className="w-24" aria-label="Actions" />
             </tr>
@@ -49,10 +53,10 @@ export default function Goals() {
                     />
                   </td>
                   <td>
-                    <TableInput
-                      type="text"
+                    <TableDateInput
                       value={row.date}
-                      placeholder="Jun 20"
+                      min={yearStart}
+                      max={yearEnd}
                       onChange={(e) =>
                         updateGoal(row.id, { date: e.target.value })
                       }

@@ -1,32 +1,38 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchShowedMePlanAssets,
   fetchAllShowedMePlanAssets,
+  fetchNextShowedMePlanAssetId,
   upsertShowedMePlanAsset,
   deleteShowedMePlanAssetById,
-  nextShowedMePlanAssetId,
   normalizeShowedMePlanAsset,
 } from '@/lib/showedMePlanAssetStorage';
 import { ASSET_STATUS_ACTIVE } from '@/lib/showedMeAssetTypes';
 
 export function useShowedMePlanAssets(planId) {
   const [assets, setAssets] = useState([]);
+  const assetsRef = useRef([]);
   const [loading, setLoading] = useState(Boolean(planId));
   const [error, setError] = useState(null);
 
+  const remember = useCallback((next) => {
+    assetsRef.current = next;
+    setAssets(next);
+    return next;
+  }, []);
+
   const reload = useCallback(async () => {
     if (!planId) {
-      setAssets([]);
+      remember([]);
       return [];
     }
     const data = await fetchShowedMePlanAssets(planId);
-    setAssets(data);
-    return data;
-  }, [planId]);
+    return remember(data);
+  }, [planId, remember]);
 
   useEffect(() => {
     if (!planId) {
-      setAssets([]);
+      remember([]);
       setLoading(false);
       return undefined;
     }
@@ -35,7 +41,7 @@ export function useShowedMePlanAssets(planId) {
     setLoading(true);
     fetchShowedMePlanAssets(planId)
       .then((data) => {
-        if (active) setAssets(data);
+        if (active) remember(data);
       })
       .catch((err) => {
         if (active) setError(err.message ?? 'Failed to load assets');
@@ -47,26 +53,28 @@ export function useShowedMePlanAssets(planId) {
     return () => {
       active = false;
     };
-  }, [planId]);
+  }, [planId, remember]);
 
   const saveAsset = useCallback(
     async (asset) => {
       const saved = await upsertShowedMePlanAsset(asset);
-      setAssets((prev) => {
-        const idx = prev.findIndex((row) => row.id === saved.id);
-        if (idx === -1) return [...prev, saved];
+      const prev = assetsRef.current;
+      const idx = prev.findIndex((row) => row.id === saved.id);
+      if (idx === -1) {
+        remember([...prev, saved]);
+      } else {
         const next = [...prev];
         next[idx] = saved;
-        return next;
-      });
+        remember(next);
+      }
       return saved;
     },
-    []
+    [remember]
   );
 
   const createAsset = useCallback(
     async (partial) => {
-      const id = nextShowedMePlanAssetId(assets);
+      const id = await fetchNextShowedMePlanAssetId(assetsRef.current);
       const row = normalizeShowedMePlanAsset({
         id,
         planId,
@@ -82,22 +90,25 @@ export function useShowedMePlanAssets(planId) {
       });
       return saveAsset(row);
     },
-    [assets, planId, saveAsset]
+    [planId, saveAsset]
   );
 
   const updateAsset = useCallback(
     async (id, patch) => {
-      const existing = assets.find((row) => row.id === id);
+      const existing = assetsRef.current.find((row) => row.id === id);
       if (!existing) return null;
       return saveAsset(normalizeShowedMePlanAsset({ ...existing, ...patch }));
     },
-    [assets, saveAsset]
+    [saveAsset]
   );
 
-  const removeAsset = useCallback(async (id) => {
-    await deleteShowedMePlanAssetById(id);
-    setAssets((prev) => prev.filter((row) => row.id !== id));
-  }, []);
+  const removeAsset = useCallback(
+    async (id) => {
+      await deleteShowedMePlanAssetById(id);
+      remember(assetsRef.current.filter((row) => row.id !== id));
+    },
+    [remember]
+  );
 
   return {
     assets,

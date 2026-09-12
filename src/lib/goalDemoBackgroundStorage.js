@@ -69,6 +69,18 @@ export function nextGoalDemoBackgroundId(rows) {
   return nextIdFromRows(rows);
 }
 
+export async function fetchNextGoalDemoBackgroundId(localRows = []) {
+  const { data, error } = await supabase
+    .from('goal_demo_backgrounds')
+    .select('id')
+    .order('id', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  const localMax = localRows.reduce((max, row) => Math.max(max, row.id ?? 0), 0);
+  return Math.max(data?.id ?? 0, localMax) + 1;
+}
+
 export function groupBackgroundsByGoalId(backgrounds, goals) {
   const goalTitleById = new Map(goals.map((goal) => [goal.id, goal.title?.trim() || `Goal ${goal.id}`]));
   const groups = new Map();
@@ -88,7 +100,7 @@ export function groupBackgroundsByGoalId(backgrounds, goals) {
 }
 
 export function libraryEntryHasFiles(entry) {
-  return Boolean(entry?.demoPublicUrl?.trim() && entry?.framePublicUrl?.trim());
+  return Boolean(entry?.demoPublicUrl?.trim());
 }
 
 export function nextDefaultBackgroundName(backgrounds, goalId) {

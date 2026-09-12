@@ -32,7 +32,7 @@ export default function ShowedMePlans() {
           <Plus className="size-4" />
           New plan
         </Button>
-        <Button type="button" variant="outline" render={<Link to="/generator/demo-library" />}>
+        <Button type="button" variant="outline" render={<Link to="/resources/demo-library" />}>
           Demo library
         </Button>
       </div>

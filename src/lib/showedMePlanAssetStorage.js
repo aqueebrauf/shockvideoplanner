@@ -97,6 +97,18 @@ export function nextShowedMePlanAssetId(assets) {
   return nextIdFromRows(assets);
 }
 
+export async function fetchNextShowedMePlanAssetId(localRows = []) {
+  const { data, error } = await supabase
+    .from('showed_me_plan_assets')
+    .select('id')
+    .order('id', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  const localMax = localRows.reduce((max, row) => Math.max(max, row.id ?? 0), 0);
+  return Math.max(data?.id ?? 0, localMax) + 1;
+}
+
 export function filterActiveAssets(assets) {
   return assets.filter((asset) => asset.status === ASSET_STATUS_ACTIVE);
 }

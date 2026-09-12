@@ -1,28 +1,34 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   deleteGoalDemoBackgroundById,
   fetchGoalDemoBackgrounds,
-  nextGoalDemoBackgroundId,
+  fetchNextGoalDemoBackgroundId,
   normalizeGoalDemoBackground,
   upsertGoalDemoBackground,
 } from '@/lib/goalDemoBackgroundStorage';
 
 export function useGoalDemoBackgrounds() {
   const [backgrounds, setBackgrounds] = useState([]);
+  const backgroundsRef = useRef([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const remember = useCallback((next) => {
+    backgroundsRef.current = next;
+    setBackgrounds(next);
+    return next;
+  }, []);
+
   const reload = useCallback(async () => {
     const data = await fetchGoalDemoBackgrounds();
-    setBackgrounds(data);
-    return data;
-  }, []);
+    return remember(data);
+  }, [remember]);
 
   useEffect(() => {
     let active = true;
     fetchGoalDemoBackgrounds()
       .then((data) => {
-        if (active) setBackgrounds(data);
+        if (active) remember(data);
       })
       .catch((err) => {
         if (active) setError(err.message ?? 'Failed to load demo library');
@@ -33,35 +39,51 @@ export function useGoalDemoBackgrounds() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [remember]);
 
   const createBackground = useCallback(
     async (partial) => {
-      const id = nextGoalDemoBackgroundId(backgrounds);
+      const id = await fetchNextGoalDemoBackgroundId(backgroundsRef.current);
       const row = normalizeGoalDemoBackground({
         id,
         goalId: partial.goalId,
         backgroundName: partial.backgroundName ?? '',
+        demoStorageKey: partial.demoStorageKey,
+        demoPublicUrl: partial.demoPublicUrl,
+        demoMimeType: partial.demoMimeType,
+        frameStorageKey: partial.frameStorageKey,
+        framePublicUrl: partial.framePublicUrl,
+        frameMimeType: partial.frameMimeType,
       });
       const saved = await upsertGoalDemoBackground(row);
-      setBackgrounds((prev) => [...prev, saved]);
+      remember([...backgroundsRef.current, saved]);
       return saved;
     },
-    [backgrounds]
+    [remember]
   );
 
-  const updateBackground = useCallback(async (id, patch) => {
-    const existing = backgrounds.find((row) => row.id === id);
-    if (!existing) return null;
-    const saved = await upsertGoalDemoBackground(normalizeGoalDemoBackground({ ...existing, ...patch }));
-    setBackgrounds((prev) => prev.map((row) => (row.id === id ? saved : row)));
-    return saved;
-  }, [backgrounds]);
+  const updateBackground = useCallback(
+    async (id, patch) => {
+      const existing = backgroundsRef.current.find((row) => row.id === id);
+      if (!existing) {
+        throw new Error('Demo library entry was not found. Try uploading again.');
+      }
+      const saved = await upsertGoalDemoBackground(
+        normalizeGoalDemoBackground({ ...existing, ...patch })
+      );
+      remember(backgroundsRef.current.map((row) => (row.id === id ? saved : row)));
+      return saved;
+    },
+    [remember]
+  );
 
-  const removeBackground = useCallback(async (id) => {
-    await deleteGoalDemoBackgroundById(id);
-    setBackgrounds((prev) => prev.filter((row) => row.id !== id));
-  }, []);
+  const removeBackground = useCallback(
+    async (id) => {
+      await deleteGoalDemoBackgroundById(id);
+      remember(backgroundsRef.current.filter((row) => row.id !== id));
+    },
+    [remember]
+  );
 
   return {
     backgrounds,

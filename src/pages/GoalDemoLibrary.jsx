@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, Loader2, Trash2, Upload } from 'lucide-react';
+import { Eye, Loader2, Upload } from 'lucide-react';
 import DataStatus from '@/components/DataStatus';
-import PageHeader from '@/components/layout/PageHeader';
 import UploadProgress from '@/components/showedMe/UploadProgress';
 import { DeleteRowButton } from '@/components/table/TableActions';
 import { TableInput } from '@/components/table/TableField';
@@ -81,12 +79,8 @@ export default function GoalDemoLibrary() {
     });
 
     let entry = null;
+    const uploadedKeys = [];
     try {
-      entry = await createBackground({
-        goalId,
-        backgroundName: resolvedBackgroundName,
-      });
-
       const demo = await uploadFileToR2({
         file,
         goalId,
@@ -96,6 +90,7 @@ export default function GoalDemoLibrary() {
         onProgress: (pct) =>
           setUploadState({ phase: 'uploading', progress: pct, label: `Uploading ${file.name}…` }),
       });
+      uploadedKeys.push(demo.storageKey);
 
       setUploadState({ phase: 'extracting', progress: 100, label: 'Extracting first frame…' });
 
@@ -108,8 +103,11 @@ export default function GoalDemoLibrary() {
         backgroundName: resolvedBackgroundName,
         assetType: ASSET_TYPE_GOAL_DEMO_LIBRARY_FRAME,
       });
+      uploadedKeys.push(frame.storageKey);
 
-      await updateBackground(entry.id, {
+      entry = await createBackground({
+        goalId,
+        backgroundName: resolvedBackgroundName,
         demoStorageKey: demo.storageKey,
         demoPublicUrl: demo.publicUrl,
         demoMimeType: demo.mimeType,
@@ -129,14 +127,11 @@ export default function GoalDemoLibrary() {
     } catch (err) {
       setActionError(err.message ?? 'Upload failed.');
       setUploadState(null);
-      if (entry?.id) {
-        try {
-          if (entry.demoStorageKey) await deleteShowedMeObject(entry.demoStorageKey);
-          if (entry.frameStorageKey) await deleteShowedMeObject(entry.frameStorageKey);
-          await removeBackground(entry.id);
-        } catch {
-          // ignore cleanup errors
-        }
+      try {
+        await Promise.all(uploadedKeys.map((key) => deleteShowedMeObject(key)));
+        if (entry?.id) await removeBackground(entry.id);
+      } catch {
+        // ignore cleanup errors
       }
     } finally {
       setBusy('');
@@ -168,15 +163,8 @@ export default function GoalDemoLibrary() {
 
   return (
     <div className="space-y-6 pb-10">
-      <PageHeader
-        title="Demo library"
-        description="Upload demo clips once per goal and background. Showed Me plans reuse these files."
-      />
-
-      <p className="text-sm">
-        <Link to="/generator" className="text-primary underline-offset-4 hover:underline">
-          ← All plans
-        </Link>
+      <p className="text-sm text-muted-foreground">
+        Upload demo clips once per goal and background. Showed Me plans reuse these files.
       </p>
 
       <DataStatus loading={loading} error={error || actionError} />

@@ -81,7 +81,11 @@ export function isPlanScopedStorageKey(storageKey) {
 
 export function buildPublicUrl(storageKey) {
   const { publicUrl } = getR2Config();
-  return `${publicUrl}/${storageKey}`;
+  const encodedKey = storageKey
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  return `${publicUrl}/${encodedKey}`;
 }
 
 export async function createPresignedUploadUrl({ storageKey, contentType }) {

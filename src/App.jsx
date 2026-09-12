@@ -23,7 +23,6 @@ import ThisPerson from './pages/resources/ThisPerson';
 const pageTitles = {
   '/': 'Showed Me',
   '/generator': 'Showed Me',
-  '/generator/demo-library': 'Demo library',
   '/resources': 'Resources',
   '/resources/hashtags': 'Hashtags',
   '/resources/goals': 'Goals',
@@ -33,6 +32,7 @@ const pageTitles = {
   '/resources/hooks': 'Hooks',
   '/resources/showed-me-hooks': 'Showed me hooks',
   '/resources/this-person': 'This person',
+  '/resources/demo-library': 'Demo library',
 };
 
 function getPageTitle(pathname) {
@@ -62,7 +62,10 @@ export default function App() {
           <Routes>
             <Route path="/" element={<ShowedMePlanHome />} />
             <Route path="/generator" element={<ShowedMePlans />} />
-            <Route path="/generator/demo-library" element={<GoalDemoLibrary />} />
+            <Route
+              path="/generator/demo-library"
+              element={<Navigate to="/resources/demo-library" replace />}
+            />
             <Route path="/generator/character-walkthrough" element={<Navigate to="/generator" replace />} />
             <Route path="/generator/this-person" element={<Navigate to="/generator" replace />} />
             <Route path="/generator/:planId" element={<ShowedMePlanDetail />} />
@@ -72,7 +75,7 @@ export default function App() {
               path="/person-video-plans/:planId"
               element={<Navigate to={`/generator/${pathname.split('/').pop()}`} replace />}
             />
-            <Route path="/demo-library" element={<Navigate to="/generator/demo-library" replace />} />
+            <Route path="/demo-library" element={<Navigate to="/resources/demo-library" replace />} />
             <Route path="/plan" element={<Navigate to="/generator" replace />} />
             <Route path="/resources" element={<Resources />}>
               <Route index element={<Hashtags />} />
@@ -86,6 +89,7 @@ export default function App() {
               <Route path="hooks" element={<Hooks />} />
               <Route path="showed-me-hooks" element={<ShowedMeHooks />} />
               <Route path="this-person" element={<ThisPerson />} />
+              <Route path="demo-library" element={<GoalDemoLibrary />} />
             </Route>
           </Routes>
         </main>

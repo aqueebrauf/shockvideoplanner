@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Loader2, RefreshCw, RotateCcw, RotateCw, Sparkles, Trash2, Upload } from 'lucide-react';
+import AssetThumbnail from '@/components/showedMe/AssetThumbnail';
 import ShowedMeSlotAsset from '@/components/showedMe/ShowedMeSlotAsset';
 import UploadProgress from '@/components/showedMe/UploadProgress';
 import DataStatus from '@/components/DataStatus';
@@ -91,6 +92,8 @@ export default function ShowedMePlanDetail() {
   } = useShowedMePlanAssets(numericPlanId);
 
   const cleanedPlanRef = useRef(null);
+  const assetsRef = useRef(assets);
+  assetsRef.current = assets;
 
   useEffect(() => {
     cleanedPlanRef.current = null;
@@ -282,8 +285,9 @@ export default function ShowedMePlanDetail() {
       autoSelect = true,
       patchKey = null,
     }) => {
-      const existing = getActiveAssetForType(assets, assetType);
-      const iteration = iterationForUpload(assets, assetType);
+      const currentAssets = assetsRef.current;
+      const existing = getActiveAssetForType(currentAssets, assetType);
+      const iteration = iterationForUpload(currentAssets, assetType);
 
       if (
         existing?.storageKey &&
@@ -327,10 +331,11 @@ export default function ShowedMePlanDetail() {
       }
 
       const latestAssets = await reloadAssets();
+      assetsRef.current = latestAssets;
       syncPlanAssetSelections(latestAssets);
       return asset;
     },
-    [assets, createAsset, reloadAssets, saveAsset, selectAssetForPlan, syncPlanAssetSelections]
+    [createAsset, reloadAssets, saveAsset, selectAssetForPlan, syncPlanAssetSelections]
   );
 
   useEffect(() => {
@@ -852,7 +857,7 @@ export default function ShowedMePlanDetail() {
                 Backgrounds for {goal?.title?.trim() || `goal ${plan.goalId}`}
               </p>
               <Link
-                to="/generator/demo-library"
+                to="/resources/demo-library"
                 className="text-sm text-primary underline-offset-4 hover:underline"
               >
                 Manage demo library
@@ -861,7 +866,7 @@ export default function ShowedMePlanDetail() {
             {backgroundsForGoal.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No backgrounds for this goal yet.{' '}
-                <Link to="/generator/demo-library" className="text-primary underline-offset-4 hover:underline">
+                <Link to="/resources/demo-library" className="text-primary underline-offset-4 hover:underline">
                   Upload demos in the library
                 </Link>
                 .

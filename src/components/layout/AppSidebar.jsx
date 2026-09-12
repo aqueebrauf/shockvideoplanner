@@ -9,6 +9,7 @@ import {
   Target,
   UserCircle,
   Video,
+  Film,
   Zap,
 } from 'lucide-react';
 import {
@@ -39,6 +40,7 @@ const resourceNav = [
   { to: '/resources/hooks', label: 'Hooks', icon: Zap },
   { to: '/resources/showed-me-hooks', label: 'Showed me hooks', icon: Video },
   { to: '/resources/this-person', label: 'This person', icon: UserCircle },
+  { to: '/resources/demo-library', label: 'Demo library', icon: Film },
 ];
 
 function isActivePath(pathname, to, end = false) {

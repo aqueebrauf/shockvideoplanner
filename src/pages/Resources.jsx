@@ -11,6 +11,7 @@ const resourceTabs = [
   { to: '/resources/hooks', label: 'Hooks' },
   { to: '/resources/showed-me-hooks', label: 'Showed me hooks' },
   { to: '/resources/this-person', label: 'This person' },
+  { to: '/resources/demo-library', label: 'Demo library' },
 ];
 
 export default function Resources() {

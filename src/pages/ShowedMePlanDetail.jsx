@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2, Sparkles, Trash2, Upload } from 'lucide-react';
 import AssetThumbnail from '@/components/showedMe/AssetThumbnail';
+import DeletePlanButton from '@/components/showedMe/DeletePlanButton';
 import ShowedMeSlotAsset from '@/components/showedMe/ShowedMeSlotAsset';
 import EditorToggle from '@/components/showedMe/EditorToggle';
 import UploadProgress from '@/components/showedMe/UploadProgress';
@@ -71,6 +72,7 @@ function Section({ title, description, children }) {
 }
 
 export default function ShowedMePlanDetail() {
+  const navigate = useNavigate();
   const { planId } = useParams();
   const numericPlanId = Number(planId);
   const { goals } = useGoals();
@@ -683,11 +685,14 @@ export default function ShowedMePlanDetail() {
         description="Upload demo, generate hook assets, write copy, then mark ready for editors."
       />
 
-      <p className="text-sm">
-        <Link to="/generator" className="text-primary underline-offset-4 hover:underline">
-          ← All plans
-        </Link>
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm">
+          <Link to="/generator" className="text-primary underline-offset-4 hover:underline">
+            ← All plans
+          </Link>
+        </p>
+        <DeletePlanButton plan={plan} onDeleted={() => navigate('/generator')} />
+      </div>
 
       <DataStatus loading={assetsLoading} error={plansError || assetsError || actionError} />
 

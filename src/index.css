@@ -405,6 +405,10 @@
   @apply overflow-hidden rounded-xl border bg-card;
 }
 
+.home-gallery-meta {
+  @apply truncate px-2 pt-2 text-xs font-medium leading-tight;
+}
+
 .home-gallery-video {
   @apply aspect-[9/16] w-full bg-black object-cover;
 }

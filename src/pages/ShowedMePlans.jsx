@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Video } from 'lucide-react';
 import DataStatus from '@/components/DataStatus';
+import DeletePlanButton from '@/components/showedMe/DeletePlanButton';
 import EditorToggle from '@/components/showedMe/EditorToggle';
 import PageHeader from '@/components/layout/PageHeader';
 import { Badge } from '@/components/ui/badge';
@@ -112,6 +113,7 @@ export default function ShowedMePlans() {
                 <Badge variant={plan.workflowStatus === WORKFLOW_STATUS_READY ? 'default' : 'secondary'}>
                   {plan.workflowStatus === WORKFLOW_STATUS_READY ? 'Ready' : 'Draft'}
                 </Badge>
+                <DeletePlanButton plan={plan} />
               </div>
             </div>
           );

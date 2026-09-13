@@ -55,6 +55,17 @@ export async function deleteShowedMeObject(storageKey) {
   });
 }
 
+export async function deletePlanScopedStorage(assets) {
+  const keys = [
+    ...new Set(
+      (assets ?? [])
+        .map((asset) => asset.storageKey)
+        .filter((key) => key && isPlanScopedStorageKey(key))
+    ),
+  ];
+  await Promise.allSettled(keys.map((key) => deleteShowedMeObject(key)));
+}
+
 export async function generateHookImage({
   prompt,
   aspectRatio,

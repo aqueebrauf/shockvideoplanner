@@ -4,19 +4,11 @@ import { Check, ChevronLeft, ChevronRight, Copy, ExternalLink } from 'lucide-rea
 import DataStatus from '@/components/DataStatus';
 import EditorToggle from '@/components/showedMe/EditorToggle';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAllShowedMePlanAssets } from '@/hooks/useShowedMePlanAssets';
 import { useCharacters } from '@/hooks/useCharacters';
 import { useGoals } from '@/hooks/useGoals';
 import { useShowedMePlans } from '@/hooks/useShowedMePlans';
-import { formatGoalDateLabel } from '@/lib/goalDateLabel';
-import { findGoal } from '@/lib/planResolvers';
+import { findEditor, findGoal } from '@/lib/planResolvers';
 import { PLAN_STATUS_COMPLETED, PLAN_STATUS_NOT_STARTED } from '@/lib/planStatus';
 import {
   ASSET_TYPE_DEMO_CLIP,
@@ -25,8 +17,6 @@ import {
 import { getActivePlanAsset } from '@/lib/showedMePlanAssetStorage';
 import {
   filterShowedMePlansByEditorId,
-  filterShowedMePlansByGoalId,
-  getGoalsWithShowedMePlans,
   mergeShowedMeCaption,
   planAppearsOnHome,
   splitShowedMePlansByCompletion,
@@ -64,7 +54,11 @@ function CopyAction({ value, label }) {
   );
 }
 
-function GalleryCard({ plan, assets, isCompleted, onToggleComplete }) {
+function planCardMeta(goalName, editorName) {
+  return [goalName, editorName].filter(Boolean).join(' · ');
+}
+
+function GalleryCard({ plan, assets, goalName, editorName, isCompleted, onToggleComplete }) {
   const hookVideo = getActivePlanAsset(
     assets,
     plan.id,
@@ -80,6 +74,7 @@ function GalleryCard({ plan, assets, isCompleted, onToggleComplete }) {
   const captionCopy = mergeShowedMeCaption(plan.caption, plan.hashtag);
   const hookText = plan.hookText.trim();
   const demoUrl = demoClip?.publicUrl?.trim() || '';
+  const meta = planCardMeta(goalName, editorName);
 
   return (
     <article className="home-gallery-card">
@@ -94,6 +89,7 @@ function GalleryCard({ plan, assets, isCompleted, onToggleComplete }) {
       ) : (
         <div className="home-gallery-video home-gallery-video--empty">No hook</div>
       )}
+      {meta ? <p className="home-gallery-meta">{meta}</p> : null}
       <div className="home-gallery-actions">
         <CopyAction value={hookText} label="Hook" />
         <CopyAction value={captionCopy} label="Caption" />
@@ -137,7 +133,6 @@ export default function ShowedMePlanHome() {
     loading: assetsLoading,
     error: assetsError,
   } = useAllShowedMePlanAssets();
-  const [selectedGoalId, setSelectedGoalId] = useState('');
   const [selectedEditorId, setSelectedEditorId] = useState('all');
   const [statusFilter, setStatusFilter] = useState('pending');
   const [page, setPage] = useState(1);
@@ -147,35 +142,14 @@ export default function ShowedMePlanHome() {
     [plans, assets]
   );
 
-  const goalsWithPlans = useMemo(
-    () => getGoalsWithShowedMePlans(homePlans, goals),
-    [homePlans, goals]
+  const filteredPlans = useMemo(
+    () =>
+      filterShowedMePlansByEditorId(
+        homePlans,
+        selectedEditorId !== 'all' ? Number(selectedEditorId) : null
+      ),
+    [homePlans, selectedEditorId]
   );
-
-  useEffect(() => {
-    if (goalsWithPlans.length === 0) {
-      setSelectedGoalId('');
-      return;
-    }
-    setSelectedGoalId((current) => {
-      if (current && goalsWithPlans.some((goal) => String(goal.id) === String(current))) {
-        return String(current);
-      }
-      return String(goalsWithPlans[0].id);
-    });
-  }, [goalsWithPlans]);
-
-  const selectedGoal = findGoal(goals, selectedGoalId ? Number(selectedGoalId) : null);
-
-  const filteredPlans = useMemo(() => {
-    const byGoal = selectedGoalId
-      ? filterShowedMePlansByGoalId(homePlans, Number(selectedGoalId))
-      : [];
-    return filterShowedMePlansByEditorId(
-      byGoal,
-      selectedEditorId !== 'all' ? Number(selectedEditorId) : null
-    );
-  }, [homePlans, selectedGoalId, selectedEditorId]);
 
   const { active: pendingPlans, completed: completedPlans } = useMemo(
     () => splitShowedMePlansByCompletion(filteredPlans),
@@ -189,13 +163,7 @@ export default function ShowedMePlanHome() {
 
   useEffect(() => {
     setPage(1);
-  }, [selectedGoalId, selectedEditorId, statusFilter]);
-
-  const goalSelectLabel = selectedGoal
-    ? `${selectedGoal.title.trim() || `Goal ${selectedGoal.id}`}${
-        selectedGoal.date ? ` · ${formatGoalDateLabel(selectedGoal.date)}` : ''
-      }`
-    : 'Goal';
+  }, [selectedEditorId, statusFilter]);
 
   const toggleComplete = (plan) => {
     const nextStatus =
@@ -226,19 +194,6 @@ export default function ShowedMePlanHome() {
         <>
           <div className="home-gallery-toolbar">
             <div className="home-gallery-toolbar__row">
-              <Select value={selectedGoalId} onValueChange={setSelectedGoalId}>
-                <SelectTrigger className="w-full sm:max-w-xs" aria-label="Goal">
-                  <SelectValue placeholder="Goal">{goalSelectLabel}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {goalsWithPlans.map((goal) => (
-                    <SelectItem key={goal.id} value={String(goal.id)}>
-                      {goal.title.trim() || `Goal ${goal.id}`}
-                      {goal.date ? ` · ${formatGoalDateLabel(goal.date)}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <EditorToggle
                 editors={editors}
                 value={selectedEditorId}
@@ -275,6 +230,8 @@ export default function ShowedMePlanHome() {
                   key={plan.id}
                   plan={plan}
                   assets={assets}
+                  goalName={findGoal(goals, plan.goalId)?.title?.trim() ?? ''}
+                  editorName={findEditor(editors, plan.editorId)?.name?.trim() ?? ''}
                   isCompleted={statusFilter === 'completed'}
                   onToggleComplete={toggleComplete}
                 />

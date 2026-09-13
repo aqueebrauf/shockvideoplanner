@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { PLAN_STATUS_NOT_STARTED } from '@/lib/planStatus';
+import { deletePlanScopedStorage } from '@/lib/showedMeApi';
 import {
   deleteShowedMePlanById,
   fetchShowedMePlans,
@@ -7,6 +8,7 @@ import {
   normalizeShowedMePlan,
   upsertShowedMePlan,
 } from '@/lib/showedMePlanStorage';
+import { fetchShowedMePlanAssets } from '@/lib/showedMePlanAssetStorage';
 import { WORKFLOW_STATUS_DRAFT } from '@/lib/showedMeAssetTypes';
 
 const SAVE_DELAY_MS = 500;
@@ -18,6 +20,7 @@ function useShowedMePlanState() {
   const [error, setError] = useState(null);
   const pendingRowsRef = useRef(new Map());
   const saveTimersRef = useRef(new Map());
+  const deletedIdsRef = useRef(new Set());
 
   const reload = useCallback(async () => {
     const data = await fetchShowedMePlans();
@@ -51,13 +54,19 @@ function useShowedMePlanState() {
 
   const persistPlan = useCallback(
     async (id) => {
+      if (deletedIdsRef.current.has(id)) return;
       const row = pendingRowsRef.current.get(id);
       if (!row) return;
       try {
         await upsertShowedMePlan(row);
+        if (deletedIdsRef.current.has(id)) {
+          await deleteShowedMePlanById(id);
+          return;
+        }
         pendingRowsRef.current.delete(id);
         setError(null);
       } catch (err) {
+        if (deletedIdsRef.current.has(id)) return;
         setError(err.message ?? 'Failed to save Showed Me plan');
         await reload();
       }
@@ -131,11 +140,26 @@ function useShowedMePlanState() {
 
   const deletePlan = useCallback(
     async (id) => {
-      await deleteShowedMePlanById(id);
+      deletedIdsRef.current.add(id);
+      const existing = saveTimersRef.current.get(id);
+      if (existing) clearTimeout(existing);
+      saveTimersRef.current.delete(id);
       pendingRowsRef.current.delete(id);
-      setPlans((prev) => prev.filter((row) => row.id !== id));
+
+      try {
+        const assets = await fetchShowedMePlanAssets(id).catch(() => []);
+        await deleteShowedMePlanById(id);
+        setPlans((prev) => prev.filter((row) => row.id !== id));
+        setError(null);
+        await deletePlanScopedStorage(assets);
+      } catch (err) {
+        deletedIdsRef.current.delete(id);
+        setError(err.message ?? 'Failed to delete Showed Me plan');
+        await reload();
+        throw err;
+      }
     },
-    []
+    [reload]
   );
 
   const flushPlan = useCallback(

@@ -173,6 +173,17 @@ export function buildKlingVideoPayload({
   };
 }
 
+export async function estimateGeneration(endpoint, body) {
+  const result = await higgsfieldFetch(`/estimate/${endpoint}`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  return {
+    credits: result?.credits ?? null,
+    usd: result?.usd ?? null,
+  };
+}
+
 export async function submitGeneration(endpoint, body) {
   const result = await higgsfieldFetch(`/${endpoint}`, {
     method: 'POST',

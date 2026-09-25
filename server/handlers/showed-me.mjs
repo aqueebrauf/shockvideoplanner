@@ -14,6 +14,7 @@ import {
   buildImagePayload,
   buildKlingVideoPayload,
   downloadToBuffer,
+  estimateGeneration,
   extractOutputUrl,
   getGenerationStatus,
   submitGeneration,
@@ -137,6 +138,19 @@ async function handleGenerateHookVideo(payload) {
   });
 }
 
+async function handleEstimate(payload) {
+  const kind = payload.kind === 'video' ? 'video' : 'image';
+  const built =
+    kind === 'video'
+      ? buildKlingVideoPayload(payload)
+      : buildImagePayload({
+          ...payload,
+          prompt: payload.prompt?.trim() || 'Estimate',
+        });
+  const estimate = await estimateGeneration(built.endpoint, built.body);
+  return jsonResponse(200, estimate);
+}
+
 async function handlePollGeneration(payload) {
   const { requestId, goalId, planId, assetType, iteration } = payload;
   if (!requestId || !goalId || !planId || !assetType) {
@@ -213,6 +227,8 @@ export default async (req) => {
         return await handleGenerateHookImage(body);
       case 'generate-hook-video':
         return await handleGenerateHookVideo(body);
+      case 'estimate-generation':
+        return await handleEstimate(body);
       case 'poll-generation':
         return await handlePollGeneration(body);
       default:

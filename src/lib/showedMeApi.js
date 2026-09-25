@@ -106,6 +106,13 @@ export async function generateHookVideo({
   });
 }
 
+export async function estimateGeneration(payload) {
+  return postShowedMeAction({
+    action: 'estimate-generation',
+    ...payload,
+  });
+}
+
 export async function pollGeneration({
   requestId,
   goalId,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ImagePlus, Loader2, Play, Sparkles, Trash2, Upload, Video } from 'lucide-react';
+import { ImagePlus, Loader2, Play, Plus, Sparkles, Trash2, Upload, Video, X } from 'lucide-react';
 import AssetThumbnail from '@/components/showedMe/AssetThumbnail';
 import DeletePlanButton from '@/components/showedMe/DeletePlanButton';
 import ShowedMeSlotAsset from '@/components/showedMe/ShowedMeSlotAsset';
@@ -54,6 +54,7 @@ import {
 } from '@/lib/showedMeAssetTypes';
 import {
   deleteShowedMeObject,
+  estimateGeneration,
   generateHookImage,
   generateHookVideo,
   isPlanScopedStorageKey,
@@ -72,20 +73,61 @@ import {
   resolutionLabel,
 } from '../../shared/higgsfieldModels.js';
 
-function FrameSlot({ title, frame, onClear, empty }) {
+function formatCredits(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return null;
+  return amount.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function ComposerSelect({ value, onValueChange, options, label }) {
   return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium">{title}</p>
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger className="h-7 w-auto gap-1 rounded-full px-2.5 text-xs" aria-label={label}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function FramePicker({ title, frame, busy, onUpload, onClear }) {
+  return (
+    <div className="relative">
       {frame?.url ? (
-        <div className="max-w-[160px] space-y-2">
-          <img src={frame.url} alt="" className="aspect-[9/16] w-full rounded-lg border object-cover" />
-          <p className="truncate text-xs text-muted-foreground">{frame.label}</p>
-          <Button type="button" size="sm" variant="outline" onClick={onClear}>
-            Clear
-          </Button>
+        <div className="relative h-24 w-16 overflow-hidden rounded-lg border bg-muted">
+          <img src={frame.url} alt="" className="h-full w-full object-cover" />
+          <button
+            type="button"
+            className="absolute top-1 right-1 rounded-full bg-background/90 p-0.5"
+            onClick={onClear}
+            aria-label={`Remove ${title.toLowerCase()}`}
+          >
+            <X className="size-3" />
+          </button>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">{empty}</p>
+        <Label className="flex h-24 w-16 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed bg-muted/40 text-center text-[10px] text-muted-foreground hover:bg-muted">
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+          {title}
+          <span className="text-[9px]">Optional</span>
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            disabled={busy}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) onUpload(file);
+              event.target.value = '';
+            }}
+          />
+        </Label>
       )}
     </div>
   );
@@ -162,6 +204,8 @@ export default function ShowedMePlanDetail() {
   const [endFrame, setEndFrame] = useState(null);
   const [previewEntry, setPreviewEntry] = useState(null);
   const [generationStatus, setGenerationStatus] = useState('');
+  const [imageCost, setImageCost] = useState(null);
+  const [videoCost, setVideoCost] = useState(null);
   const submitLock = useRef('');
 
   const selectedDemo = useMemo(
@@ -169,19 +213,6 @@ export default function ShowedMePlanDetail() {
       getActivePlanAsset(assets, numericPlanId, ASSET_TYPE_DEMO_CLIP, plan?.selectedDemoAssetId),
     [assets, numericPlanId, plan?.selectedDemoAssetId]
   );
-
-  const firstFrameAsset = useMemo(
-    () => getActiveAssetForType(assets, ASSET_TYPE_DEMO_FIRST_FRAME),
-    [assets]
-  );
-
-  const selectedLibraryEntry = useMemo(
-    () => libraryBackgrounds.find((entry) => entry.id === plan?.demoLibraryId) ?? null,
-    [libraryBackgrounds, plan?.demoLibraryId]
-  );
-
-  const demoEndFrameUrl =
-    firstFrameAsset?.publicUrl?.trim() || selectedLibraryEntry?.framePublicUrl?.trim() || '';
 
   const selectedHookImage = useMemo(
     () =>
@@ -220,7 +251,13 @@ export default function ShowedMePlanDetail() {
     : null;
 
   const referenceImages = useMemo(
-    () => assets.filter((a) => a.assetType === ASSET_TYPE_REFERENCE_IMAGE && a.status === 'active'),
+    () =>
+      assets.filter(
+        (asset) =>
+          asset.assetType === ASSET_TYPE_REFERENCE_IMAGE &&
+          asset.status === 'active' &&
+          asset.generationParams?.role !== 'video-frame'
+      ),
     [assets]
   );
 
@@ -233,6 +270,57 @@ export default function ShowedMePlanDetail() {
   );
 
   const imageModel = imageModelById(imageModelId);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const estimate = await estimateGeneration({
+          kind: 'image',
+          modelId: imageModelId,
+          prompt: hookImagePrompt.trim() || 'Estimate',
+          aspectRatio,
+          resolution,
+          imageUrls: referenceImages.map((asset) => asset.publicUrl).filter(Boolean),
+        });
+        if (!cancelled) setImageCost(formatCredits(estimate.credits));
+      } catch {
+        if (!cancelled) setImageCost(null);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [aspectRatio, hookImagePrompt, imageModelId, referenceImages, resolution]);
+
+  useEffect(() => {
+    if (!startFrame?.url) {
+      setVideoCost(null);
+      return undefined;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const estimate = await estimateGeneration({
+          kind: 'video',
+          prompt: hookVideoPrompt.trim() || 'Smooth cinematic transition',
+          imageUrl: startFrame.url,
+          endImageUrl: endFrame?.url || '',
+          duration: Number(videoDuration) || DEFAULT_VIDEO_DURATION,
+          resolution: videoResolution,
+          sound: videoSound ? 'on' : 'off',
+        });
+        if (!cancelled) setVideoCost(formatCredits(estimate.credits));
+      } catch {
+        if (!cancelled) setVideoCost(null);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [endFrame?.url, hookVideoPrompt, startFrame?.url, videoDuration, videoResolution, videoSound]);
 
   const ensureGoalId = useCallback(() => {
     if (!plan?.goalId) {
@@ -465,6 +553,7 @@ export default function ShowedMePlanDetail() {
         skipBusy = false,
         skipDoneMessage = false,
         append = false,
+        generationParams = {},
       } = {}
     ) => {
       if (!file || !plan) return null;
@@ -515,6 +604,7 @@ export default function ShowedMePlanDetail() {
           autoSelect,
           patchKey,
           append,
+          generationParams,
         });
 
         if (uploadLabel && !skipDoneMessage) {
@@ -576,6 +666,21 @@ export default function ShowedMePlanDetail() {
       }
     },
     [persistUploadedAsset, plan, updatePlan]
+  );
+
+  const uploadVideoFrame = useCallback(
+    async (file, slot) => {
+      const asset = await handleUpload(file, ASSET_TYPE_REFERENCE_IMAGE, {
+        autoSelect: false,
+        append: true,
+        generationParams: { role: 'video-frame', slot },
+      });
+      if (!asset?.publicUrl) return;
+      const frame = { url: asset.publicUrl, label: file.name, assetId: asset.id };
+      if (slot === 'start') setStartFrame(frame);
+      else setEndFrame(frame);
+    },
+    [handleUpload]
   );
 
   const useImageAsReference = useCallback(
@@ -859,7 +964,7 @@ export default function ShowedMePlanDetail() {
 
       <Section
         title="1. Demo clip"
-        description="Pick a background from the demo library. The first frame is taken from that clip automatically."
+        description="Preview a background, or add its first frame as the hook video end frame."
       >
         {!plan.goalId ? (
           <p className="text-sm text-muted-foreground">Select a goal above to choose a demo background.</p>
@@ -946,168 +1051,108 @@ export default function ShowedMePlanDetail() {
           </>
         )}
 
-        {selectedDemo ? (
-          <div className="flex flex-wrap items-start gap-4">
-            <ShowedMeSlotAsset
-              asset={selectedDemo}
-              hint="Library clip · first frame is used automatically for hook video"
-              deleting={deletingAssetId === selectedDemo.id}
-              onDelete={handleDeleteAsset}
-            />
-            {demoEndFrameUrl ? (
-              <div className="max-w-[140px] space-y-2">
-                <p className="text-xs text-muted-foreground">End frame from demo</p>
-                <img
-                  src={demoEndFrameUrl}
-                  alt=""
-                  className="aspect-[9/16] w-full rounded-lg border object-cover"
-                />
-              </div>
-            ) : null}
-          </div>
-        ) : plan.goalId ? (
-          <p className="text-sm text-muted-foreground">Pick a background above to attach its demo clip.</p>
-        ) : null}
       </Section>
 
       <Section
         title="2. Hook image"
         description="Write a prompt, add reference images, and keep each result so you can iterate in this card."
       >
-        <div className="flex flex-wrap gap-3">
-          <Label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
-            <Upload className="size-4" />
-            Reference image
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="sr-only"
-              disabled={Boolean(busy)}
-              onChange={async (e) => {
-                const files = [...(e.target.files ?? [])];
-                e.target.value = '';
-                for (const file of files) {
-                  await handleUpload(file, ASSET_TYPE_REFERENCE_IMAGE, {
-                    autoSelect: false,
-                    append: true,
-                    skipBusy: files.length > 1,
-                  });
-                }
-              }}
-            />
-          </Label>
-        </div>
-
-        {referenceImages.length > 0 ? (
-          <div className="grid grid-cols-4 gap-2 max-w-md">
-            {referenceImages.map((asset) => (
-              <div key={asset.id} className="space-y-1">
-                <AssetThumbnail asset={asset} showControls={false} />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 w-full text-xs"
-                  disabled={deletingAssetId === asset.id}
-                  onClick={() => handleDeleteAsset(asset)}
-                >
-                  {deletingAssetId === asset.id ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    <Trash2 className="size-3.5" />
-                  )}
-                  Remove
-                </Button>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="hook-image-prompt">Prompt</Label>
-            <Textarea
-              id="hook-image-prompt"
-              value={hookImagePrompt}
-              onChange={(e) => setHookImagePrompt(e.target.value)}
-              rows={3}
-              placeholder="Describe the hook image…"
-            />
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Model</Label>
-              <Select
-                value={imageModelId}
-                onValueChange={(value) => {
-                  const next = imageModelById(value);
-                  setImageModelId(next.id);
-                  if (!next.aspectRatios.includes(aspectRatio)) {
-                    setAspectRatio(next.defaultAspectRatio);
-                  }
-                  if (!next.resolutions.includes(resolution)) {
-                    setResolution(next.defaultResolution);
+        <div className="rounded-xl border bg-muted/30 p-3">
+          {referenceImages.length > 0 ? (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {referenceImages.map((asset) => (
+                <div key={asset.id} className="relative">
+                  <img
+                    src={asset.publicUrl}
+                    alt=""
+                    className="h-16 w-12 rounded-md border object-cover"
+                  />
+                  <button
+                    type="button"
+                    className="absolute -top-1 -right-1 rounded-full bg-background p-0.5 ring-1 ring-border"
+                    disabled={deletingAssetId === asset.id}
+                    onClick={() => handleDeleteAsset(asset)}
+                    aria-label="Remove reference"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <Textarea
+            id="hook-image-prompt"
+            value={hookImagePrompt}
+            onChange={(e) => setHookImagePrompt(e.target.value)}
+            rows={5}
+            placeholder="Describe the scene you imagine"
+            className="min-h-28 resize-y border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
+          />
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Label className="inline-flex size-7 cursor-pointer items-center justify-center rounded-full border bg-background hover:bg-muted">
+              <Plus className="size-3.5" />
+              <span className="sr-only">Add reference images</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="sr-only"
+                disabled={Boolean(busy)}
+                onChange={async (e) => {
+                  const files = [...(e.target.files ?? [])];
+                  e.target.value = '';
+                  for (const file of files) {
+                    await handleUpload(file, ASSET_TYPE_REFERENCE_IMAGE, {
+                      autoSelect: false,
+                      append: true,
+                      skipBusy: true,
+                    });
                   }
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {IMAGE_MODELS.map((model) => (
-                    <SelectItem key={model.id} value={model.id}>
-                      {model.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Aspect ratio</Label>
-              <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {imageModel.aspectRatios.map((value) => (
-                    <SelectItem key={value} value={value}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Resolution</Label>
-              <Select value={resolution} onValueChange={setResolution}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {imageModel.resolutions.map((value) => (
-                    <SelectItem key={value} value={value}>
-                      {resolutionLabel(value)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              />
+            </Label>
+            <ComposerSelect
+              label="Image model"
+              value={imageModelId}
+              onValueChange={(value) => {
+                const next = imageModelById(value);
+                setImageModelId(next.id);
+                if (!next.aspectRatios.includes(aspectRatio)) setAspectRatio(next.defaultAspectRatio);
+                if (!next.resolutions.includes(resolution)) setResolution(next.defaultResolution);
+              }}
+              options={IMAGE_MODELS.map((model) => ({ value: model.id, label: model.label }))}
+            />
+            <ComposerSelect
+              label="Aspect ratio"
+              value={aspectRatio}
+              onValueChange={setAspectRatio}
+              options={imageModel.aspectRatios.map((value) => ({ value, label: value }))}
+            />
+            <ComposerSelect
+              label="Resolution"
+              value={resolution}
+              onValueChange={setResolution}
+              options={imageModel.resolutions.map((value) => ({
+                value,
+                label: resolutionLabel(value),
+              }))}
+            />
+            <Button
+              type="button"
+              className="ml-auto"
+              disabled={Boolean(busy)}
+              onClick={handleGenerateHookImage}
+            >
+              {busy === 'generate-hook-image' ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+              Generate
+              {imageCost ? <span className="text-xs opacity-80">{imageCost}</span> : null}
+            </Button>
           </div>
         </div>
-
-        <Button
-          type="button"
-          disabled={Boolean(busy)}
-          onClick={handleGenerateHookImage}
-        >
-          {busy === 'generate-hook-image' ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Sparkles className="size-4" />
-          )}
-          Generate hook image
-        </Button>
 
         {hookImages.length === 0 ? (
           <p className="text-sm text-muted-foreground">No hook image yet. Each generation stays in this card.</p>
@@ -1204,71 +1249,77 @@ export default function ShowedMePlanDetail() {
           </Label>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <FrameSlot
-            title="Start frame"
-            frame={startFrame}
-            onClear={() => setStartFrame(null)}
-            empty="Use the video icon on a generated image, or it stays empty."
+        <div className="rounded-xl border bg-muted/30 p-3">
+          <div className="mb-3 flex gap-2">
+            <FramePicker
+              title="Start frame"
+              frame={startFrame}
+              busy={busy === 'upload-reference_image'}
+              onUpload={(file) => uploadVideoFrame(file, 'start')}
+              onClear={() => setStartFrame(null)}
+            />
+            <FramePicker
+              title="End frame"
+              frame={endFrame}
+              busy={busy === 'upload-reference_image'}
+              onUpload={(file) => uploadVideoFrame(file, 'end')}
+              onClear={() => setEndFrame(null)}
+            />
+          </div>
+          <Textarea
+            id="hook-video-prompt"
+            value={hookVideoPrompt}
+            onChange={(e) => setHookVideoPrompt(e.target.value)}
+            rows={5}
+            placeholder="Describe the camera move"
+            className="min-h-28 resize-y border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
           />
-          <FrameSlot
-            title="End frame"
-            frame={endFrame}
-            onClear={() => setEndFrame(null)}
-            empty="Use Add to video on a demo background."
-          />
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border bg-background px-2.5 py-1 text-xs">Kling 3.0</span>
+            <ComposerSelect
+              label="Duration"
+              value={String(videoDuration)}
+              onValueChange={setVideoDuration}
+              options={['3', '4', '5', '6', '7', '8', '9', '10', '12', '15'].map((value) => ({
+                value,
+                label: `${value}s`,
+              }))}
+            />
+            <ComposerSelect
+              label="Resolution"
+              value={videoResolution}
+              onValueChange={setVideoResolution}
+              options={[
+                { value: '720p', label: '720p' },
+                { value: '1080p', label: '1080p' },
+                { value: '4k', label: '4K' },
+              ]}
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant={videoSound ? 'default' : 'outline'}
+              className="rounded-full"
+              onClick={() => setVideoSound((on) => !on)}
+            >
+              Audio {videoSound ? 'on' : 'off'}
+            </Button>
+            <Button
+              type="button"
+              className="ml-auto"
+              disabled={Boolean(busy)}
+              onClick={handleGenerateHookVideo}
+            >
+              {busy === 'generate-hook-video' ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+              Generate
+              {videoCost ? <span className="text-xs opacity-80">{videoCost}</span> : null}
+            </Button>
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="hook-video-prompt">Motion prompt</Label>
-            <Input
-              id="hook-video-prompt"
-              value={hookVideoPrompt}
-              onChange={(e) => setHookVideoPrompt(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="video-duration">Length (seconds)</Label>
-            <Input
-              id="video-duration"
-              type="number"
-              min={3}
-              max={15}
-              value={videoDuration}
-              onChange={(e) => setVideoDuration(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Resolution</Label>
-            <Select value={videoResolution} onValueChange={setVideoResolution}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="720p">720p</SelectItem>
-                <SelectItem value="1080p">1080p</SelectItem>
-                <SelectItem value="4k">4K</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={videoSound}
-              onChange={(e) => setVideoSound(e.target.checked)}
-            />
-            Generate audio
-          </label>
-          <p className="text-sm text-muted-foreground">Model: Kling 3.0</p>
-        </div>
-        <Button type="button" disabled={Boolean(busy)} onClick={handleGenerateHookVideo}>
-          {busy === 'generate-hook-video' ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Sparkles className="size-4" />
-          )}
-          Generate hook video
-        </Button>
         {selectedHookVideo ? (
           <ShowedMeSlotAsset
             asset={selectedHookVideo}

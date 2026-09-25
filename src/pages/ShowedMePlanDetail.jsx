@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ImagePlus, Loader2, Play, Plus, Trash2, Upload, Video, X } from 'lucide-react';
+import { Check, ImagePlus, Loader2, Play, Plus, Trash2, Upload, Video, X } from 'lucide-react';
 import AssetThumbnail from '@/components/showedMe/AssetThumbnail';
 import DeletePlanButton from '@/components/showedMe/DeletePlanButton';
 import ShowedMeSlotAsset from '@/components/showedMe/ShowedMeSlotAsset';
@@ -964,7 +964,7 @@ export default function ShowedMePlanDetail() {
 
       <Section
         title="1. Demo clip"
-        description="Preview a background, or add its first frame as the hook video end frame."
+        description="Select the demo clip for this plan, preview it, or add its first frame as the hook video end frame."
       >
         {!plan.goalId ? (
           <p className="text-sm text-muted-foreground">Select a goal above to choose a demo background.</p>
@@ -999,7 +999,7 @@ export default function ShowedMePlanDetail() {
                     <div
                       key={entry.id}
                       className={`rounded-lg border bg-background p-2 ${
-                        selected || isEndFrame ? 'border-primary ring-2 ring-primary/30' : ''
+                        selected ? 'border-primary ring-2 ring-primary/30' : ''
                       }`}
                     >
                       {entry.framePublicUrl ? (
@@ -1012,36 +1012,54 @@ export default function ShowedMePlanDetail() {
                       <p className="truncate text-xs font-medium">
                         {entry.backgroundName?.trim() || 'Untitled background'}
                       </p>
-                      <div className="mt-2 flex gap-1">
+                      {isEndFrame ? (
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">End frame</p>
+                      ) : null}
+                      <div className="mt-2 flex flex-col gap-1">
                         <Button
                           type="button"
                           size="sm"
-                          variant="outline"
-                          className="h-7 flex-1 px-2 text-xs"
-                          disabled={!entry.demoPublicUrl}
-                          onClick={() => setPreviewEntry(entry)}
+                          variant={selected ? 'default' : 'outline'}
+                          className="h-7 w-full px-2 text-xs"
+                          disabled={Boolean(busy) || selected}
+                          onClick={() => handleSelectLibraryBackground(entry)}
                         >
-                          <Play className="size-3" />
-                          Preview
+                          {isSelecting ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : selected ? (
+                            <Check className="size-3" />
+                          ) : null}
+                          {selected ? 'Selected' : 'Select'}
                         </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="h-7 flex-1 px-2 text-xs"
-                          disabled={Boolean(busy) || !entry.framePublicUrl}
-                          onClick={() => {
-                            setEndFrame({
-                              url: entry.framePublicUrl,
-                              label: entry.backgroundName?.trim() || 'Demo frame',
-                              libraryId: entry.id,
-                            });
-                            if (!selected) handleSelectLibraryBackground(entry);
-                          }}
-                        >
-                          {isSelecting ? <Loader2 className="size-3 animate-spin" /> : null}
-                          Add to video
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 flex-1 px-2 text-xs"
+                            disabled={!entry.demoPublicUrl}
+                            onClick={() => setPreviewEntry(entry)}
+                          >
+                            <Play className="size-3" />
+                            Preview
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 flex-1 px-2 text-xs"
+                            disabled={Boolean(busy) || !entry.framePublicUrl}
+                            onClick={() => {
+                              setEndFrame({
+                                url: entry.framePublicUrl,
+                                label: entry.backgroundName?.trim() || 'Demo frame',
+                                libraryId: entry.id,
+                              });
+                            }}
+                          >
+                            Add to video
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   );

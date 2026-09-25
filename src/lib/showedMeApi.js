@@ -71,6 +71,8 @@ export async function generateHookImage({
   aspectRatio,
   resolution,
   imageUrls,
+  modelId,
+  planId,
 }) {
   return postShowedMeAction({
     action: 'generate-hook-image',
@@ -78,6 +80,8 @@ export async function generateHookImage({
     aspectRatio,
     resolution,
     imageUrls,
+    modelId,
+    planId,
   });
 }
 
@@ -85,14 +89,20 @@ export async function generateHookVideo({
   prompt,
   imageUrl,
   endImageUrl,
-  enhancePrompt,
+  duration,
+  resolution,
+  sound,
+  planId,
 }) {
   return postShowedMeAction({
     action: 'generate-hook-video',
     prompt,
     imageUrl,
     endImageUrl,
-    enhancePrompt,
+    duration,
+    resolution,
+    sound,
+    planId,
   });
 }
 
@@ -213,23 +223,42 @@ export async function uploadFileToR2({
   return { storageKey, publicUrl, mimeType: file.type || 'application/octet-stream' };
 }
 
-const POLL_INTERVAL_MS = 3000;
-const POLL_MAX_ATTEMPTS = 120;
+const POLL_TIMEOUT_MS = 8 * 60 * 1000;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export async function pollGenerationUntilComplete(params, { onProgress } = {}) {
-  for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt += 1) {
-    const result = await pollGeneration(params);
+  const started = Date.now();
+  let delay = 2000;
+  let transientFailures = 0;
+
+  while (Date.now() - started < POLL_TIMEOUT_MS) {
+    let result;
+    try {
+      result = await pollGeneration(params);
+      transientFailures = 0;
+    } catch (err) {
+      const message = err?.message ?? '';
+      const retryable = /failed \(5\d\d\)|network|fetch/i.test(message);
+      transientFailures += 1;
+      if (!retryable || transientFailures > 5) throw err;
+      await sleep(delay + Math.random() * 500);
+      delay = Math.min(delay * 1.5, 10000);
+      continue;
+    }
+
     onProgress?.(result);
 
-    if (result.status === 'completed') {
-      return result;
-    }
-    if (result.status === 'failed' || result.status === 'nsfw') {
+    if (result.status === 'completed') return result;
+    if (result.status === 'failed' || result.status === 'nsfw' || result.status === 'canceled') {
       throw new Error(result.error ?? `Generation ${result.status}.`);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+    await sleep(delay + Math.random() * 500);
+    delay = Math.min(delay * 1.5, 10000);
   }
 
-  throw new Error('Generation timed out. Try again or check Higgsfield dashboard.');
+  throw new Error('Generation timed out. Try again in a moment.');
 }

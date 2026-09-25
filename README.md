@@ -12,7 +12,7 @@ Hosted on [Vercel](https://vercel.com). Connect the GitHub repo in Vercel; pushe
 - `ANTHROPIC_API_KEY`
 - `ANTHROPIC_MODEL` (optional, defaults to `claude-sonnet-4-6`)
 - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` (Showed Me plan media)
-- `HIGGSFIELD_API_KEY_ID`, `HIGGSFIELD_API_KEY_SECRET` (optional, in-app generation)
+- `HIGGSFIELD_API_KEY_ID`, `HIGGSFIELD_API_KEY_SECRET` (optional, in-app generation). Keep these on the server only.
 
 Local dev: copy env vars into `.env.local`, then run `npm run dev` (`vercel dev` serves the app and `/api` routes).
 

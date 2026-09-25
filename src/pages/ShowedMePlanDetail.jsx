@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Loader2, Sparkles, Trash2, Upload } from 'lucide-react';
+import { ImagePlus, Loader2, Play, Sparkles, Trash2, Upload, Video } from 'lucide-react';
 import AssetThumbnail from '@/components/showedMe/AssetThumbnail';
 import DeletePlanButton from '@/components/showedMe/DeletePlanButton';
 import ShowedMeSlotAsset from '@/components/showedMe/ShowedMeSlotAsset';
@@ -9,6 +9,12 @@ import UploadProgress from '@/components/showedMe/UploadProgress';
 import DataStatus from '@/components/DataStatus';
 import PageHeader from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -24,12 +30,13 @@ import { useGoalDemoBackgrounds } from '@/hooks/useGoalDemoBackgrounds';
 import { useGoals } from '@/hooks/useGoals';
 import { useShowedMePlanAssets } from '@/hooks/useShowedMePlanAssets';
 import { useShowedMePlans } from '@/hooks/useShowedMePlans';
-import { libraryEntryHasFiles } from '@/lib/goalDemoBackgroundStorage';
+import { libraryEntryHasFiles, libraryFramePreviewUrl } from '@/lib/goalDemoBackgroundStorage';
 import {
   assetHasFile,
   getActiveAssetForType,
   getActivePlanAsset,
   iterationForUpload,
+  nextIterationForType,
   normalizeShowedMePlanAsset,
   pickSingleSlotKeeper,
 } from '@/lib/showedMePlanAssetStorage';
@@ -40,10 +47,8 @@ import {
   ASSET_TYPE_HOOK_VIDEO,
   ASSET_TYPE_REFERENCE_IMAGE,
   ASSET_STATUS_ACTIVE,
-  HIGGSFIELD_ASPECT_RATIOS,
   SINGLE_SLOT_ASSET_TYPES,
   assetTypeLabel,
-  HIGGSFIELD_RESOLUTIONS,
   WORKFLOW_STATUS_DRAFT,
   WORKFLOW_STATUS_READY,
 } from '@/lib/showedMeAssetTypes';
@@ -56,6 +61,35 @@ import {
   uploadFileToR2,
 } from '@/lib/showedMeApi';
 import { findGoal } from '@/lib/planResolvers';
+import {
+  DEFAULT_IMAGE_ASPECT_RATIO,
+  DEFAULT_IMAGE_MODEL_ID,
+  DEFAULT_IMAGE_RESOLUTION,
+  DEFAULT_VIDEO_DURATION,
+  DEFAULT_VIDEO_RESOLUTION,
+  IMAGE_MODELS,
+  imageModelById,
+  resolutionLabel,
+} from '../../shared/higgsfieldModels.js';
+
+function FrameSlot({ title, frame, onClear, empty }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">{title}</p>
+      {frame?.url ? (
+        <div className="max-w-[160px] space-y-2">
+          <img src={frame.url} alt="" className="aspect-[9/16] w-full rounded-lg border object-cover" />
+          <p className="truncate text-xs text-muted-foreground">{frame.label}</p>
+          <Button type="button" size="sm" variant="outline" onClick={onClear}>
+            Clear
+          </Button>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">{empty}</p>
+      )}
+    </div>
+  );
+}
 
 function Section({ title, description, children }) {
   return (
@@ -118,9 +152,17 @@ export default function ShowedMePlanDetail() {
   const [actionError, setActionError] = useState('');
   const [hookImagePrompt, setHookImagePrompt] = useState('');
   const [hookVideoPrompt, setHookVideoPrompt] = useState('Smooth cinematic transition');
-  const [aspectRatio, setAspectRatio] = useState('9:16');
-  const [resolution, setResolution] = useState('720p');
+  const [imageModelId, setImageModelId] = useState(DEFAULT_IMAGE_MODEL_ID);
+  const [aspectRatio, setAspectRatio] = useState(DEFAULT_IMAGE_ASPECT_RATIO);
+  const [resolution, setResolution] = useState(DEFAULT_IMAGE_RESOLUTION);
+  const [videoDuration, setVideoDuration] = useState(String(DEFAULT_VIDEO_DURATION));
+  const [videoResolution, setVideoResolution] = useState(DEFAULT_VIDEO_RESOLUTION);
+  const [videoSound, setVideoSound] = useState(false);
+  const [startFrame, setStartFrame] = useState(null);
+  const [endFrame, setEndFrame] = useState(null);
+  const [previewEntry, setPreviewEntry] = useState(null);
   const [generationStatus, setGenerationStatus] = useState('');
+  const submitLock = useRef('');
 
   const selectedDemo = useMemo(
     () =>
@@ -182,6 +224,16 @@ export default function ShowedMePlanDetail() {
     [assets]
   );
 
+  const hookImages = useMemo(
+    () =>
+      assets
+        .filter((asset) => asset.assetType === ASSET_TYPE_HOOK_IMAGE && asset.status === 'active' && asset.publicUrl)
+        .sort((a, b) => b.iteration - a.iteration),
+    [assets]
+  );
+
+  const imageModel = imageModelById(imageModelId);
+
   const ensureGoalId = useCallback(() => {
     if (!plan?.goalId) {
       throw new Error('Select a goal for this plan first.');
@@ -228,7 +280,12 @@ export default function ShowedMePlanDetail() {
       setBusy(`delete-${asset.id}`);
       setActionError('');
       try {
-        if (asset.storageKey && isPlanScopedStorageKey(asset.storageKey)) {
+        const sharedKey =
+          asset.storageKey &&
+          assets.some(
+            (row) => row.id !== asset.id && row.storageKey && row.storageKey === asset.storageKey
+          );
+        if (asset.storageKey && isPlanScopedStorageKey(asset.storageKey) && !sharedKey) {
           await deleteShowedMeObject(asset.storageKey);
         }
         clearPlanSelectionForAsset(asset);
@@ -240,7 +297,7 @@ export default function ShowedMePlanDetail() {
         setBusy('');
       }
     },
-    [clearPlanSelectionForAsset, plan, reloadAssets, removeAsset]
+    [assets, clearPlanSelectionForAsset, plan, reloadAssets, removeAsset]
   );
 
   const syncPlanAssetSelections = useCallback(
@@ -292,10 +349,13 @@ export default function ShowedMePlanDetail() {
       generationParams = {},
       autoSelect = true,
       patchKey = null,
+      append = false,
     }) => {
       const currentAssets = assetsRef.current;
-      const existing = getActiveAssetForType(currentAssets, assetType);
-      const iteration = iterationForUpload(currentAssets, assetType);
+      const existing = append ? null : getActiveAssetForType(currentAssets, assetType);
+      const iteration = append
+        ? nextIterationForType(currentAssets, assetType)
+        : iterationForUpload(currentAssets, assetType);
 
       if (
         existing?.storageKey &&
@@ -404,6 +464,7 @@ export default function ShowedMePlanDetail() {
         uploadLabel,
         skipBusy = false,
         skipDoneMessage = false,
+        append = false,
       } = {}
     ) => {
       if (!file || !plan) return null;
@@ -453,6 +514,7 @@ export default function ShowedMePlanDetail() {
           parentAssetId,
           autoSelect,
           patchKey,
+          append,
         });
 
         if (uploadLabel && !skipDoneMessage) {
@@ -516,22 +578,49 @@ export default function ShowedMePlanDetail() {
     [persistUploadedAsset, plan, updatePlan]
   );
 
+  const useImageAsReference = useCallback(
+    async (asset) => {
+      if (!asset?.publicUrl) return;
+      const already = referenceImages.some((row) => row.publicUrl === asset.publicUrl);
+      if (already) return;
+      await createAsset({
+        assetType: ASSET_TYPE_REFERENCE_IMAGE,
+        storageKey: asset.storageKey,
+        publicUrl: asset.publicUrl,
+        mimeType: asset.mimeType || 'image/jpeg',
+        iteration: nextIterationForType(assetsRef.current, ASSET_TYPE_REFERENCE_IMAGE),
+        isSelected: false,
+        generationParams: { copiedFromAssetId: asset.id },
+      });
+    },
+    [createAsset, referenceImages]
+  );
+
   const handleGenerateHookImage = useCallback(async () => {
+    if (submitLock.current) return;
     if (!hookImagePrompt.trim()) {
       setActionError('Enter a prompt for the hook image.');
       return;
     }
+    const model = imageModelById(imageModelId);
+    if (!model.aspectRatios.includes(aspectRatio) || !model.resolutions.includes(resolution)) {
+      setActionError('Choose an aspect ratio and resolution this model supports.');
+      return;
+    }
+    submitLock.current = 'generate-hook-image';
     setBusy('generate-hook-image');
     setActionError('');
     setGenerationStatus('Submitting to Higgsfield…');
     try {
       const goalId = ensureGoalId();
-      const iteration = iterationForUpload(assets, ASSET_TYPE_HOOK_IMAGE);
+      const imageUrls = referenceImages.map((asset) => asset.publicUrl).filter(Boolean);
       const { requestId } = await generateHookImage({
         prompt: hookImagePrompt.trim(),
         aspectRatio,
         resolution,
-        imageUrls: referenceImages.map((a) => a.publicUrl).filter(Boolean),
+        imageUrls,
+        modelId: model.id,
+        planId: plan.id,
       });
       setGenerationStatus('Generating hook image…');
       const result = await pollGenerationUntilComplete(
@@ -540,30 +629,39 @@ export default function ShowedMePlanDetail() {
           goalId,
           planId: plan.id,
           assetType: ASSET_TYPE_HOOK_IMAGE,
-          iteration,
+          iteration: nextIterationForType(assetsRef.current, ASSET_TYPE_HOOK_IMAGE),
         },
-        { onProgress: (p) => setGenerationStatus(`Hook image: ${p.status}`) }
+        { onProgress: (progress) => setGenerationStatus(`Hook image: ${progress.status}`) }
       );
       await persistUploadedAsset({
         assetType: ASSET_TYPE_HOOK_IMAGE,
         storageKey: result.storageKey,
         publicUrl: result.publicUrl,
         mimeType: result.mimeType,
-        generationParams: { requestId, prompt: hookImagePrompt, aspectRatio, resolution },
+        generationParams: {
+          requestId,
+          prompt: hookImagePrompt,
+          aspectRatio,
+          resolution,
+          modelId: model.id,
+          planId: plan.id,
+        },
         patchKey: 'selectedHookImageId',
+        append: true,
       });
       setGenerationStatus('');
     } catch (err) {
       setActionError(err.message ?? 'Hook image generation failed.');
       setGenerationStatus('');
     } finally {
+      submitLock.current = '';
       setBusy('');
     }
   }, [
     aspectRatio,
-    assets,
     ensureGoalId,
     hookImagePrompt,
+    imageModelId,
     persistUploadedAsset,
     plan?.id,
     referenceImages,
@@ -571,22 +669,25 @@ export default function ShowedMePlanDetail() {
   ]);
 
   const handleGenerateHookVideo = useCallback(async () => {
-    const hookImage = selectedHookImage;
-    if (!hookImage?.publicUrl || !demoEndFrameUrl) {
-      setActionError('Select a hook image and a demo background first.');
+    if (submitLock.current) return;
+    if (!startFrame?.url) {
+      setActionError('Add a start frame before generating the hook video.');
       return;
     }
+    submitLock.current = 'generate-hook-video';
     setBusy('generate-hook-video');
     setActionError('');
-    setGenerationStatus('Submitting hook video to Higgsfield…');
+    setGenerationStatus('Submitting hook video to Kling 3.0…');
     try {
       const goalId = ensureGoalId();
-      const iteration = iterationForUpload(assets, ASSET_TYPE_HOOK_VIDEO);
       const { requestId } = await generateHookVideo({
         prompt: hookVideoPrompt.trim() || 'Smooth cinematic transition',
-        imageUrl: hookImage.publicUrl,
-        endImageUrl: demoEndFrameUrl,
-        enhancePrompt: false,
+        imageUrl: startFrame.url,
+        endImageUrl: endFrame?.url || '',
+        duration: Number(videoDuration) || DEFAULT_VIDEO_DURATION,
+        resolution: videoResolution,
+        sound: videoSound ? 'on' : 'off',
+        planId: plan.id,
       });
       setGenerationStatus('Generating hook video…');
       const result = await pollGenerationUntilComplete(
@@ -595,16 +696,24 @@ export default function ShowedMePlanDetail() {
           goalId,
           planId: plan.id,
           assetType: ASSET_TYPE_HOOK_VIDEO,
-          iteration,
+          iteration: 1,
         },
-        { onProgress: (p) => setGenerationStatus(`Hook video: ${p.status}`) }
+        { onProgress: (progress) => setGenerationStatus(`Hook video: ${progress.status}`) }
       );
       await persistUploadedAsset({
         assetType: ASSET_TYPE_HOOK_VIDEO,
         storageKey: result.storageKey,
         publicUrl: result.publicUrl,
         mimeType: result.mimeType,
-        generationParams: { requestId, prompt: hookVideoPrompt },
+        generationParams: {
+          requestId,
+          prompt: hookVideoPrompt,
+          planId: plan.id,
+          modelId: 'kling-3',
+          duration: Number(videoDuration) || DEFAULT_VIDEO_DURATION,
+          resolution: videoResolution,
+          sound: videoSound ? 'on' : 'off',
+        },
         patchKey: 'selectedHookVideoId',
       });
       setGenerationStatus('');
@@ -612,16 +721,19 @@ export default function ShowedMePlanDetail() {
       setActionError(err.message ?? 'Hook video generation failed.');
       setGenerationStatus('');
     } finally {
+      submitLock.current = '';
       setBusy('');
     }
   }, [
+    endFrame?.url,
     ensureGoalId,
-    demoEndFrameUrl,
     hookVideoPrompt,
     persistUploadedAsset,
     plan?.id,
-    selectedHookImage,
-    assets,
+    startFrame?.url,
+    videoDuration,
+    videoResolution,
+    videoSound,
   ]);
 
   const markReady = async () => {
@@ -777,19 +889,17 @@ export default function ShowedMePlanDetail() {
                 {backgroundsForGoal.map((entry) => {
                   const selected = plan.demoLibraryId === entry.id;
                   const isSelecting = busy === `select-library-${entry.id}`;
+                  const isEndFrame = endFrame?.libraryId === entry.id;
                   return (
-                    <button
+                    <div
                       key={entry.id}
-                      type="button"
-                      disabled={Boolean(busy)}
-                      onClick={() => handleSelectLibraryBackground(entry)}
-                      className={`rounded-lg border bg-background p-2 text-left transition hover:bg-muted/50 disabled:opacity-50 ${
-                        selected ? 'border-primary ring-2 ring-primary/30' : ''
+                      className={`rounded-lg border bg-background p-2 ${
+                        selected || isEndFrame ? 'border-primary ring-2 ring-primary/30' : ''
                       }`}
                     >
                       {entry.framePublicUrl ? (
                         <img
-                          src={entry.framePublicUrl}
+                          src={libraryFramePreviewUrl(entry)}
                           alt=""
                           className="mb-2 aspect-[9/16] w-full rounded object-cover"
                         />
@@ -797,15 +907,38 @@ export default function ShowedMePlanDetail() {
                       <p className="truncate text-xs font-medium">
                         {entry.backgroundName?.trim() || 'Untitled background'}
                       </p>
-                      {isSelecting ? (
-                        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                          <Loader2 className="size-3 animate-spin" />
-                          Applying…
-                        </p>
-                      ) : selected ? (
-                        <p className="mt-1 text-xs text-primary">Selected</p>
-                      ) : null}
-                    </button>
+                      <div className="mt-2 flex gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 flex-1 px-2 text-xs"
+                          disabled={!entry.demoPublicUrl}
+                          onClick={() => setPreviewEntry(entry)}
+                        >
+                          <Play className="size-3" />
+                          Preview
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 flex-1 px-2 text-xs"
+                          disabled={Boolean(busy) || !entry.framePublicUrl}
+                          onClick={() => {
+                            setEndFrame({
+                              url: entry.framePublicUrl,
+                              label: entry.backgroundName?.trim() || 'Demo frame',
+                              libraryId: entry.id,
+                            });
+                            if (!selected) handleSelectLibraryBackground(entry);
+                          }}
+                        >
+                          {isSelecting ? <Loader2 className="size-3 animate-spin" /> : null}
+                          Add to video
+                        </Button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -839,7 +972,7 @@ export default function ShowedMePlanDetail() {
 
       <Section
         title="2. Hook image"
-        description="Generate start frame via Higgsfield. Upload reference images optionally."
+        description="Write a prompt, add reference images, and keep each result so you can iterate in this card."
       >
         <div className="flex flex-wrap gap-3">
           <Label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
@@ -848,14 +981,19 @@ export default function ShowedMePlanDetail() {
             <input
               type="file"
               accept="image/*"
+              multiple
               className="sr-only"
               disabled={Boolean(busy)}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  handleUpload(file, ASSET_TYPE_REFERENCE_IMAGE, { autoSelect: false });
-                }
+              onChange={async (e) => {
+                const files = [...(e.target.files ?? [])];
                 e.target.value = '';
+                for (const file of files) {
+                  await handleUpload(file, ASSET_TYPE_REFERENCE_IMAGE, {
+                    autoSelect: false,
+                    append: true,
+                    skipBusy: files.length > 1,
+                  });
+                }
               }}
             />
           </Label>
@@ -899,13 +1037,40 @@ export default function ShowedMePlanDetail() {
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
+              <Label>Model</Label>
+              <Select
+                value={imageModelId}
+                onValueChange={(value) => {
+                  const next = imageModelById(value);
+                  setImageModelId(next.id);
+                  if (!next.aspectRatios.includes(aspectRatio)) {
+                    setAspectRatio(next.defaultAspectRatio);
+                  }
+                  if (!next.resolutions.includes(resolution)) {
+                    setResolution(next.defaultResolution);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {IMAGE_MODELS.map((model) => (
+                    <SelectItem key={model.id} value={model.id}>
+                      {model.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label>Aspect ratio</Label>
               <Select value={aspectRatio} onValueChange={setAspectRatio}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {HIGGSFIELD_ASPECT_RATIOS.map((value) => (
+                  {imageModel.aspectRatios.map((value) => (
                     <SelectItem key={value} value={value}>
                       {value}
                     </SelectItem>
@@ -920,9 +1085,9 @@ export default function ShowedMePlanDetail() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {HIGGSFIELD_RESOLUTIONS.map((value) => (
+                  {imageModel.resolutions.map((value) => (
                     <SelectItem key={value} value={value}>
-                      {value}
+                      {resolutionLabel(value)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -944,21 +1109,64 @@ export default function ShowedMePlanDetail() {
           Generate hook image
         </Button>
 
-        {selectedHookImage ? (
-          <ShowedMeSlotAsset
-            asset={selectedHookImage}
-            hint="Generate or upload again to replace"
-            deleting={deletingAssetId === selectedHookImage.id}
-            onDelete={handleDeleteAsset}
-          />
+        {hookImages.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No hook image yet. Each generation stays in this card.</p>
         ) : (
-          <p className="text-sm text-muted-foreground">No hook image yet.</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            {hookImages.map((asset) => (
+              <div key={asset.id} className="space-y-2">
+                <AssetThumbnail asset={asset} showControls={false} />
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8 flex-1 px-2 text-xs"
+                    title="Use as a reference for the next image"
+                    onClick={() => useImageAsReference(asset)}
+                  >
+                    <ImagePlus className="size-3.5" />
+                    Use as reference
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="outline"
+                    title="Use as the hook video start frame"
+                    onClick={() =>
+                      setStartFrame({
+                        url: asset.publicUrl,
+                        label: 'Generated image',
+                      })
+                    }
+                  >
+                    <Video className="size-3.5" />
+                    <span className="sr-only">Use as start frame</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="outline"
+                    disabled={deletingAssetId === asset.id}
+                    onClick={() => handleDeleteAsset(asset)}
+                  >
+                    {deletingAssetId === asset.id ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-3.5" />
+                    )}
+                    <span className="sr-only">Remove image</span>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </Section>
 
       <Section
         title="3. Hook video"
-        description="Upload manually or generate with Higgsfield (hook image → first frame of the selected demo)."
+        description="Kling 3.0. Defaults are 5 seconds, audio off, and 1080p. Set a start frame and an optional end frame."
       >
         <UploadProgress
           label={uploadState?.assetType === ASSET_TYPE_HOOK_VIDEO ? uploadState.label : null}
@@ -996,13 +1204,62 @@ export default function ShowedMePlanDetail() {
           </Label>
         </div>
 
-        <div className="space-y-2 max-w-xl">
-          <Label htmlFor="hook-video-prompt">Motion prompt (Higgsfield only)</Label>
-          <Input
-            id="hook-video-prompt"
-            value={hookVideoPrompt}
-            onChange={(e) => setHookVideoPrompt(e.target.value)}
+        <div className="grid gap-4 md:grid-cols-2">
+          <FrameSlot
+            title="Start frame"
+            frame={startFrame}
+            onClear={() => setStartFrame(null)}
+            empty="Use the video icon on a generated image, or it stays empty."
           />
+          <FrameSlot
+            title="End frame"
+            frame={endFrame}
+            onClear={() => setEndFrame(null)}
+            empty="Use Add to video on a demo background."
+          />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="hook-video-prompt">Motion prompt</Label>
+            <Input
+              id="hook-video-prompt"
+              value={hookVideoPrompt}
+              onChange={(e) => setHookVideoPrompt(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="video-duration">Length (seconds)</Label>
+            <Input
+              id="video-duration"
+              type="number"
+              min={3}
+              max={15}
+              value={videoDuration}
+              onChange={(e) => setVideoDuration(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Resolution</Label>
+            <Select value={videoResolution} onValueChange={setVideoResolution}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="720p">720p</SelectItem>
+                <SelectItem value="1080p">1080p</SelectItem>
+                <SelectItem value="4k">4K</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={videoSound}
+              onChange={(e) => setVideoSound(e.target.checked)}
+            />
+            Generate audio
+          </label>
+          <p className="text-sm text-muted-foreground">Model: Kling 3.0</p>
         </div>
         <Button type="button" disabled={Boolean(busy)} onClick={handleGenerateHookVideo}>
           {busy === 'generate-hook-video' ? (
@@ -1100,6 +1357,26 @@ export default function ShowedMePlanDetail() {
       {generationStatus ? (
         <p className="text-sm text-muted-foreground">{generationStatus}</p>
       ) : null}
+
+      <Dialog open={Boolean(previewEntry)} onOpenChange={(open) => !open && setPreviewEntry(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="pr-8">
+              {previewEntry?.backgroundName?.trim() || 'Demo preview'}
+            </DialogTitle>
+          </DialogHeader>
+          {previewEntry?.demoPublicUrl ? (
+            <video
+              key={previewEntry.demoPublicUrl}
+              src={previewEntry.demoPublicUrl}
+              className="aspect-[9/16] w-full rounded-lg bg-black object-contain"
+              controls
+              autoPlay
+              playsInline
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

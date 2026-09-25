@@ -11,11 +11,12 @@ import {
 const LIBRARY_CLIP = 'goal_demo_library_clip';
 const LIBRARY_FRAME = 'goal_demo_library_frame';
 import {
+  buildImagePayload,
+  buildKlingVideoPayload,
   downloadToBuffer,
   extractOutputUrl,
   getGenerationStatus,
-  submitHookImageGeneration,
-  submitHookVideoGeneration,
+  submitGeneration,
 } from '../lib/higgsfieldClient.mjs';
 
 function jsonResponse(status, body) {
@@ -100,42 +101,39 @@ async function handleVerifyUpload(payload) {
 }
 
 async function handleGenerateHookImage(payload) {
-  const { prompt, aspectRatio, resolution, imageUrls } = payload;
-  if (!prompt?.trim()) {
-    return jsonResponse(400, { error: 'prompt is required.' });
-  }
-
-  const result = await submitHookImageGeneration({
-    prompt: prompt.trim(),
-    aspectRatio: aspectRatio ?? '9:16',
-    resolution: resolution ?? '720p',
+  const { prompt, aspectRatio, resolution, imageUrls, modelId, planId } = payload;
+  const { endpoint, body } = buildImagePayload({
+    modelId,
+    prompt,
+    aspectRatio,
+    resolution,
     imageUrls: Array.isArray(imageUrls) ? imageUrls : [],
   });
-
+  const result = await submitGeneration(endpoint, body);
   return jsonResponse(200, {
     requestId: result.request_id,
     status: result.status,
     statusUrl: result.status_url,
+    planId: planId ?? null,
   });
 }
 
 async function handleGenerateHookVideo(payload) {
-  const { prompt, imageUrl, endImageUrl, enhancePrompt } = payload;
-  if (!imageUrl || !endImageUrl) {
-    return jsonResponse(400, { error: 'imageUrl and endImageUrl are required.' });
-  }
-
-  const result = await submitHookVideoGeneration({
-    prompt: prompt?.trim() || 'Smooth cinematic transition',
+  const { prompt, imageUrl, endImageUrl, duration, resolution, sound, planId } = payload;
+  const { endpoint, body } = buildKlingVideoPayload({
+    prompt,
     imageUrl,
     endImageUrl,
-    enhancePrompt: Boolean(enhancePrompt),
+    duration,
+    resolution,
+    sound,
   });
-
+  const result = await submitGeneration(endpoint, body);
   return jsonResponse(200, {
     requestId: result.request_id,
     status: result.status,
     statusUrl: result.status_url,
+    planId: planId ?? null,
   });
 }
 
@@ -150,7 +148,7 @@ async function handlePollGeneration(payload) {
   const statusBody = await getGenerationStatus(requestId);
   const { status, url, mimeType, error } = extractOutputUrl(statusBody);
 
-  if (status === 'failed' || status === 'nsfw') {
+  if (status === 'failed' || status === 'nsfw' || status === 'canceled') {
     return jsonResponse(200, { status, error: error ?? `Generation ${status}.` });
   }
 

@@ -2,23 +2,41 @@
  * Browser-only video frame extraction and image transforms (zero API cost).
  */
 
-/**
- * Extract the first frame of a video file as a JPEG blob.
- */
-export function extractFirstVideoFrame(file, { seekTime = 0.1 } = {}) {
+const FIRST_FRAME_TIME = 0;
+const NEAR_ZERO = 1e-4;
+const EXTRACT_TIMEOUT_MS = 20000;
+
+function extractFrameFromSrc(
+  src,
+  { seekTime = FIRST_FRAME_TIME, revokeSrc = false, crossOrigin = false } = {}
+) {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
     video.preload = 'auto';
     video.muted = true;
     video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.controls = false;
+    if (crossOrigin) video.crossOrigin = 'anonymous';
 
-    const objectUrl = URL.createObjectURL(file);
+    video.style.cssText =
+      'position:fixed;left:-99999px;top:0;width:16px;height:16px;opacity:0;pointer-events:none;';
+    document.body.appendChild(video);
+
     let settled = false;
+    let started = false;
+    const timeoutId = window.setTimeout(
+      () => fail('Timed out extracting the first video frame.'),
+      EXTRACT_TIMEOUT_MS
+    );
 
     const cleanup = () => {
-      URL.revokeObjectURL(objectUrl);
+      window.clearTimeout(timeoutId);
+      video.pause();
       video.removeAttribute('src');
       video.load();
+      video.remove();
+      if (revokeSrc) URL.revokeObjectURL(src);
     };
 
     const fail = (message) => {
@@ -35,27 +53,24 @@ export function extractFirstVideoFrame(file, { seekTime = 0.1 } = {}) {
       resolve(blob);
     };
 
-    video.addEventListener('error', () => fail('Could not load video for frame extraction.'));
-
-    video.addEventListener('loadeddata', () => {
+    const capture = () => {
+      if (settled) return;
       try {
-        video.currentTime = Math.min(seekTime, video.duration || seekTime);
-      } catch {
-        fail('Could not seek video for frame extraction.');
-      }
-    });
-
-    video.addEventListener('seeked', () => {
-      try {
+        const width = video.videoWidth;
+        const height = video.videoHeight;
+        if (!width || !height) {
+          fail('Video has no dimensions.');
+          return;
+        }
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
           fail('Canvas is not available.');
           return;
         }
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, width, height);
         canvas.toBlob(
           (blob) => {
             if (!blob) {
@@ -70,23 +85,85 @@ export function extractFirstVideoFrame(file, { seekTime = 0.1 } = {}) {
       } catch (err) {
         fail(err.message ?? 'Frame extraction failed.');
       }
-    });
+    };
 
-    video.src = objectUrl;
+    const capturePresentedFrame = () => {
+      if (settled) return;
+      if (typeof video.requestVideoFrameCallback === 'function') {
+        video.requestVideoFrameCallback(() => capture());
+        window.setTimeout(() => {
+          if (!settled) capture();
+        }, 800);
+        return;
+      }
+      requestAnimationFrame(() => requestAnimationFrame(() => capture()));
+    };
+
+    const onReady = () => {
+      if (started || settled) return;
+      if (!video.videoWidth || !video.videoHeight) return;
+      started = true;
+
+      const duration = Number.isFinite(video.duration) ? video.duration : 0;
+      const target = Math.max(0, Math.min(seekTime, duration || seekTime));
+
+      // Stay on the decoded first frame. Seeking away (e.g. 0.1s) captures a later frame,
+      // and setting currentTime to 0 when already at 0 often never fires `seeked`.
+      if (target <= NEAR_ZERO && video.currentTime <= NEAR_ZERO) {
+        capturePresentedFrame();
+        return;
+      }
+
+      try {
+        video.currentTime = target;
+      } catch {
+        fail('Could not seek video for frame extraction.');
+      }
+    };
+
+    video.addEventListener('error', () => fail('Could not load video for frame extraction.'));
+    video.addEventListener('seeked', capturePresentedFrame);
+    video.addEventListener('loadedmetadata', onReady);
+    video.addEventListener('loadeddata', onReady);
+    video.src = src;
+    video.load();
   });
 }
 
 /**
- * Re-extract the first frame from a demo already stored on R2 (fetches then extracts locally).
+ * Extract the first frame of a video file as a JPEG blob (exactly 0:00:00).
+ */
+export function extractFirstVideoFrame(file, options = {}) {
+  const objectUrl = URL.createObjectURL(file);
+  return extractFrameFromSrc(objectUrl, { ...options, seekTime: options.seekTime ?? FIRST_FRAME_TIME, revokeSrc: true });
+}
+
+/**
+ * Re-extract the first frame from a demo already stored on R2.
+ * Prefers streaming the URL (only the start of the file) and falls back to a full fetch.
  */
 export async function extractFirstVideoFrameFromUrl(url, options = {}) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Could not fetch demo video for frame extraction.');
+  try {
+    return await extractFrameFromSrc(url, {
+      ...options,
+      seekTime: options.seekTime ?? FIRST_FRAME_TIME,
+      crossOrigin: true,
+    });
+  } catch (directError) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Could not fetch demo video for frame extraction.');
+      }
+      const blob = await response.blob();
+      const file = new File([blob], 'demo.mp4', { type: blob.type || 'video/mp4' });
+      return await extractFirstVideoFrame(file, options);
+    } catch {
+      throw directError instanceof Error
+        ? directError
+        : new Error('Could not fetch demo video for frame extraction.');
+    }
   }
-  const blob = await response.blob();
-  const file = new File([blob], 'demo.mp4', { type: blob.type || 'video/mp4' });
-  return extractFirstVideoFrame(file, options);
 }
 
 /**

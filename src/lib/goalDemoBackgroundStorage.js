@@ -27,7 +27,16 @@ function toRow(entry) {
     frame_storage_key: entry.frameStorageKey ?? '',
     frame_public_url: entry.framePublicUrl ?? '',
     frame_mime_type: entry.frameMimeType ?? 'image/jpeg',
+    updated_at: entry.updatedAt ?? new Date().toISOString(),
   };
+}
+
+export function libraryFramePreviewUrl(entry, extraNonce = 0) {
+  const url = entry?.framePublicUrl?.trim();
+  if (!url) return '';
+  const stamp = extraNonce || (entry.updatedAt ? new Date(entry.updatedAt).getTime() : 0);
+  if (!stamp) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}v=${stamp}`;
 }
 
 export async function fetchGoalDemoBackgrounds() {

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Download, Loader2, Trash2, Upload } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Download, Loader2, RefreshCw, Trash2, Upload } from 'lucide-react';
 import DataStatus from '@/components/DataStatus';
 import UploadProgress from '@/components/showedMe/UploadProgress';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import {
   goalDisplayName,
   groupBackgroundsByGoalId,
   libraryEntryHasFiles,
+  libraryFramePreviewUrl,
   nextDefaultBackgroundName,
 } from '@/lib/goalDemoBackgroundStorage';
 import {
@@ -34,6 +35,9 @@ import {
 } from '@/lib/showedMeAssetTypes';
 import { deleteShowedMeObject, uploadFileToR2 } from '@/lib/showedMeApi';
 import { cn } from '@/lib/utils';
+
+const FIRST_FRAME_FIX_ID = 't0';
+let firstFrameAutoRefreshStarted = false;
 
 function firstFrameFileName(entry, goalTitle) {
   const goal = fileSafeName(goalTitle, `goal-${entry.goalId}`);
@@ -81,9 +85,14 @@ export default function GoalDemoLibrary() {
   const [uploadState, setUploadState] = useState(null);
   const [previewEntry, setPreviewEntry] = useState(null);
 
+  const libraryEntries = useMemo(
+    () => backgrounds.filter(libraryEntryHasFiles),
+    [backgrounds]
+  );
+
   const grouped = useMemo(
-    () => groupBackgroundsByGoalId(backgrounds.filter(libraryEntryHasFiles), goals),
-    [backgrounds, goals]
+    () => groupBackgroundsByGoalId(libraryEntries, goals),
+    [libraryEntries, goals]
   );
 
   const handleUpload = async (file) => {
@@ -189,6 +198,87 @@ export default function GoalDemoLibrary() {
     }
   };
 
+  const replaceLibraryFrame = async (entry) => {
+    const frameBlob = await extractFirstVideoFrameFromUrl(entry.demoPublicUrl);
+    const frameFile = new File([frameBlob], 'first-frame.jpg', { type: 'image/jpeg' });
+    const frame = await uploadFileToR2({
+      file: frameFile,
+      goalId: entry.goalId,
+      goalName: goalDisplayName(goals, entry.goalId),
+      backgroundName: entry.backgroundName?.trim() || `Background${entry.id}`,
+      assetType: ASSET_TYPE_GOAL_DEMO_LIBRARY_FRAME,
+    });
+
+    await updateBackground(entry.id, {
+      frameStorageKey: frame.storageKey,
+      framePublicUrl: frame.publicUrl,
+      frameMimeType: frame.mimeType,
+      updatedAt: new Date().toISOString(),
+    });
+
+    if (entry.frameStorageKey && entry.frameStorageKey !== frame.storageKey) {
+      try {
+        await deleteShowedMeObject(entry.frameStorageKey);
+      } catch {
+        // keep the new frame even if the old object cannot be removed
+      }
+    }
+  };
+
+  const handleRefreshAllFrames = async () => {
+    if (libraryEntries.length === 0) {
+      setActionError('No demo clips to re-extract.');
+      return;
+    }
+
+    setBusy('refresh-frames');
+    setActionError('');
+    const failures = [];
+
+    try {
+      for (let index = 0; index < libraryEntries.length; index += 1) {
+        const entry = libraryEntries[index];
+        setUploadState({
+          phase: 'extracting',
+          progress: Math.round((index / libraryEntries.length) * 100),
+          label: `Re-extracting first frame ${index + 1}/${libraryEntries.length}…`,
+        });
+        try {
+          await replaceLibraryFrame(entry);
+        } catch {
+          failures.push(entry.backgroundName?.trim() || `Clip ${entry.id}`);
+        }
+      }
+
+      setUploadState({
+        phase: 'done',
+        progress: 100,
+        label:
+          failures.length === 0
+            ? `Updated ${libraryEntries.length} first frames at 0:00:00.`
+            : `Updated ${libraryEntries.length - failures.length}/${libraryEntries.length} frames.`,
+      });
+      if (failures.length > 0) {
+        setActionError(`Could not re-extract: ${failures.join(', ')}`);
+      } else {
+        window.localStorage.setItem('demo-library-frame-extract', FIRST_FRAME_FIX_ID);
+      }
+      window.setTimeout(() => setUploadState(null), 4000);
+    } finally {
+      setBusy('');
+    }
+  };
+
+  useEffect(() => {
+    if (loading || firstFrameAutoRefreshStarted) return;
+    if (libraryEntries.length === 0) return;
+    if (window.localStorage.getItem('demo-library-frame-extract') === FIRST_FRAME_FIX_ID) {
+      return;
+    }
+    firstFrameAutoRefreshStarted = true;
+    handleRefreshAllFrames();
+  }, [loading, libraryEntries]);
+
   const handleDownloadFrame = async (entry, goalTitle) => {
     if (!entry.framePublicUrl && !entry.demoPublicUrl) {
       setActionError('No first frame available to download.');
@@ -283,9 +373,27 @@ export default function GoalDemoLibrary() {
           progress={uploadState?.progress}
           phase={uploadState?.phase}
         />
-        <p className="text-[11px] text-muted-foreground">
-          First frame is extracted automatically. Empty names become Background1, Background2, …
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] text-muted-foreground">
+            First frame is taken at 0:00:00. Empty names become Background1, Background2, …
+          </p>
+          {libraryEntries.length > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={Boolean(busy)}
+              onClick={handleRefreshAllFrames}
+            >
+              {busy === 'refresh-frames' ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="size-3.5" />
+              )}
+              Re-extract first frames
+            </Button>
+          ) : null}
+        </div>
       </section>
 
       <section className="space-y-5">
@@ -318,7 +426,7 @@ export default function GoalDemoLibrary() {
                       >
                         {entry.framePublicUrl ? (
                           <img
-                            src={entry.framePublicUrl}
+                            src={libraryFramePreviewUrl(entry)}
                             alt=""
                             className="aspect-[9/16] w-full object-cover"
                           />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ImagePlus, Loader2, Play, Plus, Sparkles, Trash2, Upload, Video, X } from 'lucide-react';
+import { ImagePlus, Loader2, Play, Plus, Trash2, Upload, Video, X } from 'lucide-react';
 import AssetThumbnail from '@/components/showedMe/AssetThumbnail';
 import DeletePlanButton from '@/components/showedMe/DeletePlanButton';
 import ShowedMeSlotAsset from '@/components/showedMe/ShowedMeSlotAsset';
@@ -1145,9 +1145,7 @@ export default function ShowedMePlanDetail() {
             >
               {busy === 'generate-hook-image' ? (
                 <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Sparkles className="size-4" />
-              )}
+              ) : null}
               Generate
               {imageCost ? <span className="text-xs opacity-80">{imageCost}</span> : null}
             </Button>
@@ -1312,9 +1310,7 @@ export default function ShowedMePlanDetail() {
             >
               {busy === 'generate-hook-video' ? (
                 <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Sparkles className="size-4" />
-              )}
+              ) : null}
               Generate
               {videoCost ? <span className="text-xs opacity-80">{videoCost}</span> : null}
             </Button>

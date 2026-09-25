@@ -2,10 +2,10 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   Hash,
   Home,
+  Plus,
   Users,
   ListChecks,
   Quote,
-  Sparkles,
   Target,
   UserCircle,
   Video,
@@ -28,7 +28,7 @@ import logo from '@/assets/logo.png';
 
 const mainNav = [
   { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/generator', label: 'Generator', icon: Sparkles },
+  { to: '/generator', label: 'Generator', icon: Plus },
 ];
 
 const resourceNav = [

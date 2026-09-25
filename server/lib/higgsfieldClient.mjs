@@ -11,9 +11,24 @@ import {
 const HIGGSFIELD_BASE = 'https://api.higgsfield.ai';
 const TERMINAL_STATUSES = new Set(['completed', 'failed', 'nsfw', 'canceled']);
 
+function cleanEnv(value) {
+  let text = String(value ?? '').replace(/^\uFEFF/, '').trim();
+  if (
+    (text.startsWith('"') && text.endsWith('"')) ||
+    (text.startsWith("'") && text.endsWith("'"))
+  ) {
+    text = text.slice(1, -1).trim();
+  }
+  return text;
+}
+
 function credentials() {
-  const keyId = (process.env.HIGGSFIELD_API_KEY_ID ?? '').trim();
-  const secret = (process.env.HIGGSFIELD_API_KEY_SECRET ?? '').trim();
+  let keyId = cleanEnv(process.env.HIGGSFIELD_API_KEY_ID);
+  let secret = cleanEnv(process.env.HIGGSFIELD_API_KEY_SECRET);
+  if (/^key\s+/i.test(keyId)) keyId = keyId.replace(/^key\s+/i, '').trim();
+  if (keyId.includes(':') && secret && keyId.endsWith(`:${secret}`)) {
+    keyId = keyId.slice(0, -(secret.length + 1)).trim();
+  }
   if (!keyId || !secret) {
     const err = new Error(
       'Higgsfield API credentials are not configured. Set HIGGSFIELD_API_KEY_ID and HIGGSFIELD_API_KEY_SECRET.'
@@ -66,8 +81,12 @@ async function higgsfieldFetch(path, options = {}) {
   }
 
   if (!response.ok) {
-    const err = new Error(errorMessage(body, response.status));
-    err.status = response.status;
+    const message =
+      response.status === 401
+        ? 'Higgsfield rejected the API key. In Vercel, set HIGGSFIELD_API_KEY_ID and HIGGSFIELD_API_KEY_SECRET to the key ID and secret from Higgsfield Cloud, for Production, then redeploy.'
+        : errorMessage(body, response.status);
+    const err = new Error(message);
+    err.status = response.status === 401 ? 502 : response.status;
     err.body = body;
     err.correlationId = response.headers.get('x-correlation-id');
     throw err;

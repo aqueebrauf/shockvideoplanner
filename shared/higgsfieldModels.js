@@ -1,6 +1,6 @@
 /** Shared Higgsfield model catalog for the Showed Me generator. */
 
-export const DEFAULT_IMAGE_MODEL_ID = 'nano-banana-pro';
+export const DEFAULT_IMAGE_MODEL_ID = 'grok-image-2';
 export const DEFAULT_IMAGE_ASPECT_RATIO = '9:16';
 export const DEFAULT_IMAGE_RESOLUTION = '2k';
 
@@ -10,6 +10,18 @@ export const DEFAULT_VIDEO_SOUND = 'off';
 
 export const IMAGE_MODELS = [
   {
+    id: 'grok-image-2',
+    label: 'Grok Image 2.0',
+    endpoint: 'xai/grok-imagine-image-2.0',
+    aspectRatios: ['9:16', '16:9', '1:1', '4:3', '3:4', '3:2', '2:3', '1:2', '2:1', 'auto'],
+    resolutions: ['1k', '2k'],
+    qualities: ['low', 'medium'],
+    defaultAspectRatio: '9:16',
+    defaultResolution: '1k',
+    defaultQuality: 'low',
+    maxReferences: 10,
+  },
+  {
     id: 'nano-banana-pro',
     label: 'Nano Banana Pro',
     endpoint: 'nano-banana-2',
@@ -18,16 +30,6 @@ export const IMAGE_MODELS = [
     defaultAspectRatio: '9:16',
     defaultResolution: '2k',
     maxReferences: 14,
-  },
-  {
-    id: 'grok-image-2',
-    label: 'Grok Image 2.0',
-    endpoint: 'xai/grok-imagine-image-2.0',
-    aspectRatios: ['9:16', '16:9', '1:1', '4:3', '3:4', '3:2', '2:3', '1:2', '2:1', 'auto'],
-    resolutions: ['1k', '2k'],
-    defaultAspectRatio: '9:16',
-    defaultResolution: '2k',
-    maxReferences: 10,
   },
   {
     id: 'qwen-image-3',

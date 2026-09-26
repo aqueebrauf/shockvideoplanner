@@ -109,6 +109,7 @@ export function buildImagePayload({
   prompt,
   aspectRatio,
   resolution,
+  quality,
   imageUrls = [],
 }) {
   const model = imageModelById(modelId);
@@ -148,7 +149,9 @@ export function buildImagePayload({
     resolution: tier,
   };
   if (urls.length > 0) body.image_urls = urls;
-  if (model.id === 'grok-image-2') body.quality = 'medium';
+  if (model.qualities?.length) {
+    body.quality = model.qualities.includes(quality) ? quality : model.defaultQuality;
+  }
 
   return { endpoint: model.endpoint, body };
 }

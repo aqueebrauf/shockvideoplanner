@@ -79,6 +79,12 @@ function formatCredits(value) {
   return amount.toFixed(2).replace(/\.?0+$/, '');
 }
 
+function formatUsd(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return null;
+  return `$${amount.toFixed(2)}`;
+}
+
 function ComposerSelect({ value, onValueChange, options, label }) {
   return (
     <Select value={value} onValueChange={onValueChange}>
@@ -196,7 +202,12 @@ export default function ShowedMePlanDetail() {
   const [hookVideoPrompt, setHookVideoPrompt] = useState('Smooth cinematic transition');
   const [imageModelId, setImageModelId] = useState(DEFAULT_IMAGE_MODEL_ID);
   const [aspectRatio, setAspectRatio] = useState(DEFAULT_IMAGE_ASPECT_RATIO);
-  const [resolution, setResolution] = useState(DEFAULT_IMAGE_RESOLUTION);
+  const [resolution, setResolution] = useState(
+    () => imageModelById(DEFAULT_IMAGE_MODEL_ID).defaultResolution ?? DEFAULT_IMAGE_RESOLUTION
+  );
+  const [imageQuality, setImageQuality] = useState(
+    () => imageModelById(DEFAULT_IMAGE_MODEL_ID).defaultQuality ?? 'low'
+  );
   const [videoDuration, setVideoDuration] = useState(String(DEFAULT_VIDEO_DURATION));
   const [videoResolution, setVideoResolution] = useState(DEFAULT_VIDEO_RESOLUTION);
   const [videoSound, setVideoSound] = useState(false);
@@ -281,9 +292,10 @@ export default function ShowedMePlanDetail() {
           prompt: hookImagePrompt.trim() || 'Estimate',
           aspectRatio,
           resolution,
+          quality: imageQuality,
           imageUrls: referenceImages.map((asset) => asset.publicUrl).filter(Boolean),
         });
-        if (!cancelled) setImageCost(formatCredits(estimate.credits));
+        if (!cancelled) setImageCost(formatUsd(estimate.usd));
       } catch {
         if (!cancelled) setImageCost(null);
       }
@@ -292,7 +304,7 @@ export default function ShowedMePlanDetail() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [aspectRatio, hookImagePrompt, imageModelId, referenceImages, resolution]);
+  }, [aspectRatio, hookImagePrompt, imageModelId, imageQuality, referenceImages, resolution]);
 
   useEffect(() => {
     if (!startFrame?.url) {
@@ -723,6 +735,7 @@ export default function ShowedMePlanDetail() {
         prompt: hookImagePrompt.trim(),
         aspectRatio,
         resolution,
+        quality: imageQuality,
         imageUrls,
         modelId: model.id,
         planId: plan.id,
@@ -748,6 +761,7 @@ export default function ShowedMePlanDetail() {
           prompt: hookImagePrompt,
           aspectRatio,
           resolution,
+          quality: imageQuality,
           modelId: model.id,
           planId: plan.id,
         },
@@ -769,6 +783,7 @@ export default function ShowedMePlanDetail() {
     imageModelId,
     persistUploadedAsset,
     plan?.id,
+    imageQuality,
     referenceImages,
     resolution,
   ]);
@@ -1137,6 +1152,9 @@ export default function ShowedMePlanDetail() {
                 setImageModelId(next.id);
                 if (!next.aspectRatios.includes(aspectRatio)) setAspectRatio(next.defaultAspectRatio);
                 if (!next.resolutions.includes(resolution)) setResolution(next.defaultResolution);
+                if (next.qualities?.length && !next.qualities.includes(imageQuality)) {
+                  setImageQuality(next.defaultQuality);
+                }
               }}
               options={IMAGE_MODELS.map((model) => ({ value: model.id, label: model.label }))}
             />
@@ -1155,6 +1173,17 @@ export default function ShowedMePlanDetail() {
                 label: resolutionLabel(value),
               }))}
             />
+            {imageModel.qualities?.length ? (
+              <ComposerSelect
+                label="Quality"
+                value={imageQuality}
+                onValueChange={setImageQuality}
+                options={imageModel.qualities.map((value) => ({
+                  value,
+                  label: value.charAt(0).toUpperCase() + value.slice(1),
+                }))}
+              />
+            ) : null}
             <Button
               type="button"
               className="ml-auto"
@@ -1165,8 +1194,10 @@ export default function ShowedMePlanDetail() {
                 <Loader2 className="size-4 animate-spin" />
               ) : null}
               Generate
-              {imageCost ? <span className="text-xs opacity-80">{imageCost}</span> : null}
             </Button>
+            {imageCost ? (
+              <span className="text-sm tabular-nums text-muted-foreground">{imageCost}</span>
+            ) : null}
           </div>
         </div>
 

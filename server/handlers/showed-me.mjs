@@ -102,12 +102,13 @@ async function handleVerifyUpload(payload) {
 }
 
 async function handleGenerateHookImage(payload) {
-  const { prompt, aspectRatio, resolution, imageUrls, modelId, planId } = payload;
+  const { prompt, aspectRatio, resolution, quality, imageUrls, modelId, planId } = payload;
   const { endpoint, body } = buildImagePayload({
     modelId,
     prompt,
     aspectRatio,
     resolution,
+    quality,
     imageUrls: Array.isArray(imageUrls) ? imageUrls : [],
   });
   const result = await submitGeneration(endpoint, body);

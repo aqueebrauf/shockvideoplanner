@@ -138,8 +138,8 @@ export default function ShowedMePlanHome() {
   const [page, setPage] = useState(1);
 
   const homePlans = useMemo(
-    () => plans.filter((plan) => planAppearsOnHome(plan, assets)),
-    [plans, assets]
+    () => plans.filter((plan) => planAppearsOnHome(plan)),
+    [plans]
   );
 
   const filteredPlans = useMemo(
@@ -179,14 +179,29 @@ export default function ShowedMePlanHome() {
 
       {!loading && homePlans.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">
-          No Showed Me plans yet.{' '}
-          <Link
-            to="/generator"
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            Create a plan
-          </Link>
-          .
+          {plans.length === 0 ? (
+            <>
+              No Showed Me plans yet.{' '}
+              <Link
+                to="/generator"
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Create a plan
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              No plans ready for editors yet. Mark a plan ready from the{' '}
+              <Link
+                to="/generator"
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                generator
+              </Link>
+              .
+            </>
+          )}
         </p>
       ) : null}
 

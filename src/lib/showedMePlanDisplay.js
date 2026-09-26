@@ -1,10 +1,5 @@
 import { PLAN_STATUS_COMPLETED } from './planStatus';
-import {
-  ASSET_TYPE_DEMO_CLIP,
-  ASSET_TYPE_HOOK_VIDEO,
-  WORKFLOW_STATUS_READY,
-} from './showedMeAssetTypes';
-import { assetHasFile, getActivePlanAsset } from './showedMePlanAssetStorage';
+import { WORKFLOW_STATUS_READY } from './showedMeAssetTypes';
 
 export function mergeShowedMeCaption(caption, hashtag) {
   const base = caption?.trim() ?? '';
@@ -19,15 +14,8 @@ export function filterReadyShowedMePlans(plans) {
   return plans.filter((plan) => plan.workflowStatus === WORKFLOW_STATUS_READY);
 }
 
-export function planAppearsOnHome(plan, assets = []) {
-  if (plan.workflowStatus === WORKFLOW_STATUS_READY) return true;
-  if (plan.hookText?.trim() || plan.caption?.trim()) return true;
-  return (
-    assetHasFile(
-      getActivePlanAsset(assets, plan.id, ASSET_TYPE_HOOK_VIDEO, plan.selectedHookVideoId)
-    ) ||
-    assetHasFile(getActivePlanAsset(assets, plan.id, ASSET_TYPE_DEMO_CLIP, plan.selectedDemoAssetId))
-  );
+export function planAppearsOnHome(plan) {
+  return plan.workflowStatus === WORKFLOW_STATUS_READY;
 }
 
 export function splitShowedMePlansByCompletion(plans) {

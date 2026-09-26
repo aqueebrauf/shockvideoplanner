@@ -85,6 +85,27 @@ function formatUsd(value) {
   return `$${amount.toFixed(2)}`;
 }
 
+function namedClipboardImage(file) {
+  if (file.name?.includes('.')) return file;
+  const subtype = file.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+  return new File([file], `pasted-image.${subtype}`, { type: file.type || 'image/png' });
+}
+
+function clipboardImageFiles(clipboardData) {
+  const fromFiles = [...(clipboardData?.files ?? [])].filter((file) =>
+    file.type.startsWith('image/')
+  );
+  if (fromFiles.length > 0) return fromFiles.map(namedClipboardImage);
+
+  const fromItems = [];
+  for (const item of clipboardData?.items ?? []) {
+    if (item.kind !== 'file' || !item.type.startsWith('image/')) continue;
+    const file = item.getAsFile();
+    if (file) fromItems.push(namedClipboardImage(file));
+  }
+  return fromItems;
+}
+
 function ComposerSelect({ value, onValueChange, options, label }) {
   return (
     <Select value={value} onValueChange={onValueChange}>
@@ -573,7 +594,9 @@ export default function ShowedMePlanDetail() {
       setActionError('');
       try {
         const goalId = ensureGoalId();
-        const iteration = iterationForUpload(assets, assetType);
+        const iteration = append
+          ? nextIterationForType(assetsRef.current, assetType)
+          : iterationForUpload(assets, assetType);
 
         if (uploadLabel) {
           setUploadState({ phase: 'presigning', progress: 0, label: uploadLabel, assetType });
@@ -1117,8 +1140,32 @@ export default function ShowedMePlanDetail() {
             id="hook-image-prompt"
             value={hookImagePrompt}
             onChange={(e) => setHookImagePrompt(e.target.value)}
+            onPaste={async (event) => {
+              const files = clipboardImageFiles(event.clipboardData);
+              if (files.length === 0 || busy) return;
+              event.preventDefault();
+              for (const file of files) {
+                const count = assetsRef.current.filter(
+                  (asset) =>
+                    asset.assetType === ASSET_TYPE_REFERENCE_IMAGE &&
+                    asset.status === 'active' &&
+                    asset.generationParams?.role !== 'video-frame'
+                ).length;
+                if (count >= imageModel.maxReferences) {
+                  setActionError(
+                    `This model accepts up to ${imageModel.maxReferences} reference images.`
+                  );
+                  break;
+                }
+                await handleUpload(file, ASSET_TYPE_REFERENCE_IMAGE, {
+                  autoSelect: false,
+                  append: true,
+                  skipBusy: true,
+                });
+              }
+            }}
             rows={5}
-            placeholder="Describe the scene you imagine"
+            placeholder="Describe the scene you imagine. Paste an image to add a reference."
             className="min-h-28 resize-y border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
           />
           <div className="mt-2 flex flex-wrap items-center gap-2">

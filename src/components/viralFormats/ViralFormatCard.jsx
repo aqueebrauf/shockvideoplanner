@@ -71,7 +71,15 @@ function EditField({ label, value, placeholder, onChange, tall = false }) {
   );
 }
 
-function OriginalMedia({ videos, instagramLinks, uploads, onFiles, onRemoveVideo, onChangeLinks }) {
+function OriginalMedia({
+  videos,
+  instagramLinks,
+  uploads,
+  editing,
+  onFiles,
+  onRemoveVideo,
+  onChangeLinks,
+}) {
   const inputRef = useRef(null);
   const linkRefs = useRef(new Map());
   const [focusLinkId, setFocusLinkId] = useState(null);
@@ -113,17 +121,19 @@ function OriginalMedia({ videos, instagramLinks, uploads, onFiles, onRemoveVideo
             preload="metadata"
             className="max-h-80 w-full rounded-lg bg-black"
           />
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon-xs"
-            className="absolute top-2 right-2"
-            aria-label="Delete video"
-            title="Delete video"
-            onClick={() => onRemoveVideo(video)}
-          >
-            <Trash2 />
-          </Button>
+          {editing ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon-xs"
+              className="absolute top-2 right-2"
+              aria-label="Delete video"
+              title="Delete video"
+              onClick={() => onRemoveVideo(video)}
+            >
+              <Trash2 />
+            </Button>
+          ) : null}
         </div>
       ))}
       {instagramLinks.map((link) => {
@@ -199,21 +209,23 @@ function OriginalMedia({ videos, instagramLinks, uploads, onFiles, onRemoveVideo
                 <ExternalLink />
                 Link {number}
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={`Delete Link ${number}`}
-                title={`Delete Link ${number}`}
-                onClick={() =>
-                  onChangeLinks(
-                    instagramLinks.filter((item) => item.id !== link.id),
-                    true
-                  )
-                }
-              >
-                <Trash2 />
-              </Button>
+              {editing ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Delete Link ${number}`}
+                  title={`Delete Link ${number}`}
+                  onClick={() =>
+                    onChangeLinks(
+                      instagramLinks.filter((item) => item.id !== link.id),
+                      true
+                    )
+                  }
+                >
+                  <Trash2 />
+                </Button>
+              ) : null}
             </div>
           );
         })}
@@ -356,6 +368,7 @@ export default function ViralFormatCard({
                 videos={format.sampleVideos}
                 instagramLinks={format.instagramLinks ?? []}
                 uploads={uploads}
+                editing={editing}
                 onFiles={onUpload}
                 onRemoveVideo={onRemoveVideo}
                 onChangeLinks={(links, immediate) => onChange({ instagramLinks: links }, immediate)}

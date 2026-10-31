@@ -1,6 +1,6 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import PageHeader from '@/components/layout/PageHeader';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 const resourceTabs = [
   { to: '/resources/hashtags', label: 'Hashtags' },
@@ -12,13 +12,10 @@ const resourceTabs = [
   { to: '/resources/showed-me-hooks', label: 'Showed me hooks' },
   { to: '/resources/this-person', label: 'This person' },
   { to: '/resources/demo-library', label: 'Demo library' },
+  { to: '/resources/viral-formats', label: 'Viral formats' },
 ];
 
 export default function Resources() {
-  const { pathname } = useLocation();
-  const activeTab =
-    resourceTabs.find((tab) => pathname.startsWith(tab.to))?.to ?? '/resources/hashtags';
-
   return (
     <>
       <PageHeader
@@ -26,15 +23,22 @@ export default function Resources() {
         description="Reference data used when planning reels."
       />
 
-      <Tabs value={activeTab} className="mb-6">
-        <TabsList variant="line">
-          {resourceTabs.map((tab) => (
-            <TabsTrigger key={tab.to} value={tab.to} render={<NavLink to={tab.to} />}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <nav className="mb-6 flex flex-wrap gap-x-4 gap-y-2 border-b pb-2">
+        {resourceTabs.map((tab) => (
+          <NavLink
+            key={tab.to}
+            to={tab.to}
+            className={({ isActive }) =>
+              cn(
+                'text-sm font-medium text-foreground/60 hover:text-foreground',
+                isActive && 'text-foreground underline decoration-2 underline-offset-8'
+              )
+            }
+          >
+            {tab.label}
+          </NavLink>
+        ))}
+      </nav>
 
       <Outlet />
     </>

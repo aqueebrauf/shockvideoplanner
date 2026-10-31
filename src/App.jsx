@@ -19,6 +19,7 @@ import Verbatims from './pages/resources/Verbatims';
 import Hooks from './pages/resources/Hooks';
 import ShowedMeHooks from './pages/resources/ShowedMeHooks';
 import ThisPerson from './pages/resources/ThisPerson';
+import ViralFormats from './pages/resources/ViralFormats';
 
 const pageTitles = {
   '/': 'Showed Me',
@@ -34,6 +35,7 @@ const pageTitles = {
   '/resources/showed-me-hooks': 'Showed me hooks',
   '/resources/this-person': 'This person',
   '/resources/demo-library': 'Demo library',
+  '/resources/viral-formats': 'Viral formats',
 };
 
 function getPageTitle(pathname) {
@@ -59,7 +61,11 @@ export default function App() {
           </div>
         </header>
 
-        <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 p-4 md:p-6">
+        <main
+          className={`mx-auto flex min-h-0 w-full flex-1 flex-col gap-4 p-4 md:p-6 ${
+            pathname.startsWith('/resources/viral-formats') ? 'max-w-7xl' : 'max-w-6xl'
+          }`}
+        >
           <Routes>
             <Route path="/" element={<ShowedMePlanHome />} />
             <Route path="/generator" element={<ShowedMePlans />} />
@@ -92,6 +98,7 @@ export default function App() {
               <Route path="showed-me-hooks" element={<ShowedMeHooks />} />
               <Route path="this-person" element={<ThisPerson />} />
               <Route path="demo-library" element={<GoalDemoLibrary />} />
+              <Route path="viral-formats" element={<ViralFormats />} />
             </Route>
           </Routes>
         </main>

@@ -45,8 +45,8 @@ function parseBody(body) {
 async function handlePresignUpload(payload) {
   const { goalId, planId, goalName, backgroundName, assetType, iteration, contentType, fileName } =
     payload;
-  if (!goalId || !assetType || !contentType) {
-    return jsonResponse(400, { error: 'goalId, assetType, and contentType are required.' });
+  if (!assetType || !contentType) {
+    return jsonResponse(400, { error: 'assetType and contentType are required.' });
   }
 
   const ext =
@@ -54,7 +54,17 @@ async function handlePresignUpload(payload) {
     extensionFromMime(contentType);
 
   let storageKey;
-  if (assetType === LIBRARY_CLIP || assetType === LIBRARY_FRAME) {
+  if (assetType === 'viral_format_sample') {
+    const formatId = Number(payload.formatId);
+    if (!Number.isInteger(formatId) || formatId < 1) {
+      return jsonResponse(400, { error: 'formatId is required for viral format uploads.' });
+    }
+    const safeExt = (ext || 'mp4').replace(/[^a-z0-9]/gi, '') || 'mp4';
+    const suffix = Math.random().toString(36).slice(2, 8);
+    storageKey = `viral-formats/${formatId}/${Date.now()}-${suffix}.${safeExt}`;
+  } else if (!goalId) {
+    return jsonResponse(400, { error: 'goalId, assetType, and contentType are required.' });
+  } else if (assetType === LIBRARY_CLIP || assetType === LIBRARY_FRAME) {
     if (!goalName?.trim() || !backgroundName?.trim()) {
       return jsonResponse(400, {
         error: 'goalName and backgroundName are required for demo library uploads.',

@@ -34,6 +34,7 @@ export async function presignShowedMeUpload({
   iteration,
   contentType,
   fileName,
+  formatId = null,
 }) {
   return postShowedMeAction({
     action: 'presign-upload',
@@ -45,6 +46,7 @@ export async function presignShowedMeUpload({
     iteration,
     contentType,
     fileName,
+    formatId,
   });
 }
 
@@ -204,12 +206,13 @@ function putFileWithProgress(url, file, onProgress, storageKey) {
 
 export async function uploadFileToR2({
   file,
-  goalId,
+  goalId = null,
   planId = null,
   goalName = null,
   backgroundName = null,
   assetType,
   iteration = 1,
+  formatId = null,
   onProgress,
 }) {
   onProgress?.(0);
@@ -223,6 +226,7 @@ export async function uploadFileToR2({
     iteration,
     contentType: file.type || 'application/octet-stream',
     fileName: file.name,
+    formatId,
   });
 
   await putFileWithProgress(uploadUrl, file, onProgress, storageKey);

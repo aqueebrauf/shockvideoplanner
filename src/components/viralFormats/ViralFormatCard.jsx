@@ -5,6 +5,7 @@ import UploadProgress from '@/components/showedMe/UploadProgress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { normalizeExternalUrl } from '@/lib/externalUrl';
 import { formatDisplayName } from '@/lib/viralFormatsStorage';
 import { cn } from '@/lib/utils';
 
@@ -78,13 +79,27 @@ function OriginalMedia({ videos, instagramLinks, uploads, onFiles, onRemoveVideo
   useEffect(() => {
     if (!focusLinkId) return;
     linkRefs.current.get(focusLinkId)?.focus();
-    setFocusLinkId(null);
-  }, [focusLinkId, instagramLinks]);
+  }, [focusLinkId]);
 
   const addLink = () => {
+    const draft = instagramLinks.find((link) => !link.url.trim() || link.id === focusLinkId);
+    if (draft && !draft.url.trim()) {
+      setFocusLinkId(draft.id);
+      return;
+    }
     const id = crypto.randomUUID();
     setFocusLinkId(id);
     onChangeLinks([...instagramLinks, { id, url: '' }], true);
+  };
+
+  const commitLink = (link) => {
+    if (!link.url.trim()) {
+      onChangeLinks(
+        instagramLinks.filter((item) => item.id !== link.id),
+        true
+      );
+    }
+    setFocusLinkId((current) => (current === link.id ? null : current));
   };
 
   return (
@@ -111,36 +126,71 @@ function OriginalMedia({ videos, instagramLinks, uploads, onFiles, onRemoveVideo
           </Button>
         </div>
       ))}
-      {instagramLinks.map((link) => (
-        <div key={link.id} className="flex items-center gap-2">
-          <Input
-            ref={(node) => {
-              if (node) linkRefs.current.set(link.id, node);
-              else linkRefs.current.delete(link.id);
-            }}
-            value={link.url}
-            placeholder="https://www.instagram.com/..."
-            aria-label="Instagram link"
-            onChange={(event) =>
-              onChangeLinks(
-                instagramLinks.map((item) =>
-                  item.id === link.id ? { ...item, url: event.target.value } : item
+      {instagramLinks.map((link, index) => {
+        const drafting = focusLinkId === link.id || !link.url.trim();
+        if (drafting) {
+          return (
+            <div key={link.id} className="flex items-center gap-2">
+              <Input
+                ref={(node) => {
+                  if (node) linkRefs.current.set(link.id, node);
+                  else linkRefs.current.delete(link.id);
+                }}
+                value={link.url}
+                placeholder="https://"
+                aria-label="Link URL"
+                onChange={(event) =>
+                  onChangeLinks(
+                    instagramLinks.map((item) =>
+                      item.id === link.id ? { ...item, url: event.target.value } : item
+                    )
+                  )
+                }
+                onBlur={() => commitLink(link)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    event.currentTarget.blur();
+                  }
+                }}
+              />
+            </div>
+          );
+        }
+
+        const number = instagramLinks
+          .slice(0, index + 1)
+          .filter((item) => item.url.trim() && item.id !== focusLinkId).length;
+        const href = normalizeExternalUrl(link.url);
+
+        return (
+          <div key={link.id} className="flex items-center gap-2">
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm underline underline-offset-2"
+            >
+              Link {number}
+            </a>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Delete Link ${number}`}
+              title={`Delete Link ${number}`}
+              onClick={() =>
+                onChangeLinks(
+                  instagramLinks.filter((item) => item.id !== link.id),
+                  true
                 )
-              )
-            }
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            aria-label="Delete Instagram link"
-            title="Delete Instagram link"
-            onClick={() => onChangeLinks(instagramLinks.filter((item) => item.id !== link.id), true)}
-          >
-            <Trash2 />
-          </Button>
-        </div>
-      ))}
+              }
+            >
+              <Trash2 />
+            </Button>
+          </div>
+        );
+      })}
       <input
         ref={inputRef}
         type="file"
@@ -164,7 +214,7 @@ function OriginalMedia({ videos, instagramLinks, uploads, onFiles, onRemoveVideo
           Upload videos
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={addLink}>
-          Instagram
+          Add link
         </Button>
       </div>
       {uploads.map((upload) => (

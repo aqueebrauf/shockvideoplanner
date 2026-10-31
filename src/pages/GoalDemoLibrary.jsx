@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Download, Loader2, RefreshCw, Trash2, Upload } from 'lucide-react';
 import DataStatus from '@/components/DataStatus';
 import UploadProgress from '@/components/showedMe/UploadProgress';
@@ -35,9 +35,6 @@ import {
 } from '@/lib/showedMeAssetTypes';
 import { deleteShowedMeObject, uploadFileToR2 } from '@/lib/showedMeApi';
 import { cn } from '@/lib/utils';
-
-const FIRST_FRAME_FIX_ID = 't0';
-let firstFrameAutoRefreshStarted = false;
 
 function firstFrameFileName(entry, goalTitle) {
   const goal = fileSafeName(goalTitle, `goal-${entry.goalId}`);
@@ -260,24 +257,12 @@ export default function GoalDemoLibrary() {
       });
       if (failures.length > 0) {
         setActionError(`Could not re-extract: ${failures.join(', ')}`);
-      } else {
-        window.localStorage.setItem('demo-library-frame-extract', FIRST_FRAME_FIX_ID);
       }
       window.setTimeout(() => setUploadState(null), 4000);
     } finally {
       setBusy('');
     }
   };
-
-  useEffect(() => {
-    if (loading || firstFrameAutoRefreshStarted) return;
-    if (libraryEntries.length === 0) return;
-    if (window.localStorage.getItem('demo-library-frame-extract') === FIRST_FRAME_FIX_ID) {
-      return;
-    }
-    firstFrameAutoRefreshStarted = true;
-    handleRefreshAllFrames();
-  }, [loading, libraryEntries]);
 
   const handleDownloadFrame = async (entry, goalTitle) => {
     if (!entry.framePublicUrl && !entry.demoPublicUrl) {

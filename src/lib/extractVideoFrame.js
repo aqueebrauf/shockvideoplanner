@@ -4,6 +4,8 @@
 
 const FIRST_FRAME_TIME = 0;
 const NEAR_ZERO = 1e-4;
+// One 24fps frame. Accepts the browser's timestamp at the start, rejects a later seek such as 0.1s.
+const AT_TARGET_TOLERANCE = 1 / 24;
 const EXTRACT_TIMEOUT_MS = 20000;
 
 function extractFrameFromSrc(
@@ -87,42 +89,86 @@ function extractFrameFromSrc(
       }
     };
 
+    const targetTime = () => {
+      const duration = Number.isFinite(video.duration) ? video.duration : 0;
+      return Math.max(0, Math.min(seekTime, duration > 0 ? duration : seekTime));
+    };
+
+    const isAtTarget = () => Math.abs(video.currentTime - targetTime()) <= AT_TARGET_TOLERANCE;
+
     const capturePresentedFrame = () => {
-      if (settled) return;
+      if (settled || !isAtTarget()) return;
       if (typeof video.requestVideoFrameCallback === 'function') {
-        video.requestVideoFrameCallback(() => capture());
+        video.requestVideoFrameCallback(() => {
+          if (settled || !isAtTarget()) return;
+          capture();
+        });
         window.setTimeout(() => {
-          if (!settled) capture();
+          if (!settled && isAtTarget()) capture();
         }, 800);
         return;
       }
-      requestAnimationFrame(() => requestAnimationFrame(() => capture()));
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (!settled && isAtTarget()) capture();
+      }));
+    };
+
+    const seekToTarget = () => {
+      const time = targetTime();
+      let phase = 'target';
+
+      const onSeeked = () => {
+        if (settled) return;
+        if (phase === 'away') {
+          phase = 'target';
+          try {
+            video.currentTime = time;
+          } catch {
+            video.removeEventListener('seeked', onSeeked);
+            fail('Could not seek video for frame extraction.');
+          }
+          return;
+        }
+        video.removeEventListener('seeked', onSeeked);
+        if (!isAtTarget()) {
+          fail('Could not seek to the start of the video.');
+          return;
+        }
+        capturePresentedFrame();
+      };
+
+      video.addEventListener('seeked', onSeeked);
+
+      try {
+        // Assigning the current time does not fire `seeked`, so step away and
+        // seek back. Capture only runs after the seek to `time` completes.
+        if (Math.abs(video.currentTime - time) <= NEAR_ZERO) {
+          const duration = Number.isFinite(video.duration) ? video.duration : 0;
+          const step = duration > 0 ? Math.min(1 / 30, duration / 2) : 1 / 30;
+          if (step <= NEAR_ZERO || Math.abs(step - time) <= NEAR_ZERO) {
+            video.removeEventListener('seeked', onSeeked);
+            capturePresentedFrame();
+            return;
+          }
+          phase = 'away';
+          video.currentTime = step;
+          return;
+        }
+        video.currentTime = time;
+      } catch {
+        video.removeEventListener('seeked', onSeeked);
+        fail('Could not seek video for frame extraction.');
+      }
     };
 
     const onReady = () => {
       if (started || settled) return;
       if (!video.videoWidth || !video.videoHeight) return;
       started = true;
-
-      const duration = Number.isFinite(video.duration) ? video.duration : 0;
-      const target = Math.max(0, Math.min(seekTime, duration || seekTime));
-
-      // Stay on the decoded first frame. Seeking away (e.g. 0.1s) captures a later frame,
-      // and setting currentTime to 0 when already at 0 often never fires `seeked`.
-      if (target <= NEAR_ZERO && video.currentTime <= NEAR_ZERO) {
-        capturePresentedFrame();
-        return;
-      }
-
-      try {
-        video.currentTime = target;
-      } catch {
-        fail('Could not seek video for frame extraction.');
-      }
+      seekToTarget();
     };
 
     video.addEventListener('error', () => fail('Could not load video for frame extraction.'));
-    video.addEventListener('seeked', capturePresentedFrame);
     video.addEventListener('loadedmetadata', onReady);
     video.addEventListener('loadeddata', onReady);
     video.src = src;

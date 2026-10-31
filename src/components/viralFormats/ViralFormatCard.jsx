@@ -39,7 +39,15 @@ function LinkedText({ value, emptyLabel }) {
   }
   if (last < value.length) nodes.push(value.slice(last));
 
-  return <p className="whitespace-pre-wrap text-sm leading-relaxed">{nodes}</p>;
+  return (
+    <p className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-relaxed">
+      {nodes}
+    </p>
+  );
+}
+
+function keepTextKeys(event) {
+  if (event.key === ' ' || event.key === 'Enter') event.stopPropagation();
 }
 
 function ReadField({ label, value, emptyLabel }) {
@@ -64,8 +72,14 @@ function EditField({ label, value, placeholder, onChange, tall = false }) {
       <Textarea
         value={value}
         placeholder={placeholder}
+        rows={tall ? 8 : 4}
         onChange={(event) => onChange(event.target.value)}
-        className={cn('text-sm', tall ? 'min-h-40' : 'min-h-20')}
+        onKeyDown={keepTextKeys}
+        style={{ fieldSizing: 'fixed' }}
+        className={cn(
+          'field-sizing-fixed w-full max-w-full resize-none overflow-y-auto text-sm',
+          tall ? 'h-40 max-h-40' : 'h-24 max-h-24'
+        )}
       />
     </div>
   );
@@ -119,7 +133,7 @@ function OriginalMedia({
             controls
             playsInline
             preload="metadata"
-            className="max-h-80 w-full rounded-lg bg-black"
+            className="max-h-80 w-full max-w-full rounded-lg bg-black"
           />
           {editing ? (
             <Button
@@ -242,6 +256,18 @@ function OriginalMedia({
   );
 }
 
+function formatIdUnderPointer(x, y, ignore) {
+  const stack = document.elementsFromPoint(x, y);
+  for (const node of stack) {
+    if (node === ignore) continue;
+    const card = node.closest?.('[data-format-id]');
+    if (!card) continue;
+    const id = Number(card.getAttribute('data-format-id'));
+    if (Number.isInteger(id)) return id;
+  }
+  return null;
+}
+
 export default function ViralFormatCard({
   format,
   expanded,
@@ -263,6 +289,46 @@ export default function ViralFormatCard({
 }) {
   const title = formatDisplayName(format);
   const hookPreview = format.original.hookCopy?.trim();
+  const gripRef = useRef(null);
+  const draggingRef = useRef(false);
+
+  const beginReorder = (event) => {
+    if (!reorderEnabled) return;
+    if (event.button != null && event.button !== 0) return;
+    if (draggingRef.current && event.type === 'mousedown') return;
+    event.preventDefault();
+    draggingRef.current = true;
+    onDragStart(format.id);
+
+    const move = (ev) => {
+      const id = formatIdUnderPointer(ev.clientX, ev.clientY, gripRef.current);
+      if (id != null) onDragOver(id);
+    };
+    const stop = () => {
+      window.removeEventListener('pointermove', move, true);
+      window.removeEventListener('pointerup', end, true);
+      window.removeEventListener('pointercancel', cancel, true);
+      window.removeEventListener('mousemove', move, true);
+      window.removeEventListener('mouseup', end, true);
+    };
+    const end = (ev) => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      stop();
+      onDrop(formatIdUnderPointer(ev.clientX, ev.clientY, gripRef.current));
+    };
+    const cancel = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      stop();
+      onDragEnd();
+    };
+    window.addEventListener('pointermove', move, true);
+    window.addEventListener('pointerup', end, true);
+    window.addEventListener('pointercancel', cancel, true);
+    window.addEventListener('mousemove', move, true);
+    window.addEventListener('mouseup', end, true);
+  };
 
   const finishEditing = () => {
     onChange({}, true);
@@ -276,34 +342,22 @@ export default function ViralFormatCard({
 
   return (
     <article
-      className={cn('rounded-xl border bg-card shadow-sm', dragOver && 'ring-2 ring-primary')}
-      onDragOver={(event) => {
-        if (!reorderEnabled) return;
-        event.preventDefault();
-        onDragOver(format.id);
-      }}
-      onDrop={(event) => {
-        if (!reorderEnabled) return;
-        event.preventDefault();
-        onDrop(format.id);
-      }}
+      data-format-id={format.id}
+      className={cn('min-w-0 max-w-full rounded-xl border bg-card shadow-sm', dragOver && 'ring-2 ring-primary')}
     >
       <div className="flex items-start gap-2 p-3">
         <div
-          draggable={reorderEnabled}
-          onDragStart={(event) => {
-            if (!reorderEnabled) return;
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', String(format.id));
-            onDragStart(format.id);
-          }}
-          onDragEnd={onDragEnd}
+          ref={gripRef}
+          role="button"
+          tabIndex={reorderEnabled ? 0 : -1}
           title={reorderEnabled ? 'Drag to reorder' : 'Clear the search to reorder'}
           className={cn(
-            'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground',
+            'mt-0.5 flex size-8 shrink-0 touch-none items-center justify-center rounded-md text-muted-foreground select-none',
             reorderEnabled ? 'cursor-grab hover:bg-muted active:cursor-grabbing' : 'cursor-not-allowed opacity-40'
           )}
           aria-label="Drag to reorder"
+          onPointerDown={beginReorder}
+          onMouseDown={beginReorder}
         >
           <GripVertical className="size-4" />
         </div>
@@ -351,18 +405,19 @@ export default function ViralFormatCard({
       </div>
 
       {expanded ? (
-        <div className="flex flex-col gap-4 border-t px-3 py-4">
+        <div className="flex min-w-0 flex-col gap-4 border-t px-3 py-4">
           {editing ? (
             <Input
               value={format.appName}
               placeholder="App name"
               aria-label="App name"
+              onKeyDown={keepTextKeys}
               onChange={(event) => onChange({ appName: event.target.value })}
             />
           ) : null}
 
-          <div className="grid gap-3 lg:grid-cols-2">
-            <section className="flex flex-col gap-3 rounded-xl border bg-background p-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
+            <section className="flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3">
               <h3 className="text-sm font-semibold">Original</h3>
               <OriginalMedia
                 videos={format.sampleVideos}
@@ -405,7 +460,7 @@ export default function ViralFormatCard({
               )}
             </section>
 
-            <section className="flex flex-col gap-3 rounded-xl border bg-background p-3">
+            <section className="flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3">
               <h3 className="text-sm font-semibold">Smash</h3>
               {editing ? (
                 <>

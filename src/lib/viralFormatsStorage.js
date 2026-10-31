@@ -10,14 +10,13 @@ export function emptySide() {
 
 function normalizeSide(value) {
   const side = value && typeof value === 'object' ? value : {};
-  const notes = [side.hookDescription, side.videoCopy, side.videoDescription, side.notes]
-    .map((part) => (part ?? '').trim())
-    .filter(Boolean)
-    .join('\n\n');
-  return {
-    hookCopy: side.hookCopy ?? '',
-    notes,
-  };
+  const hookCopy = typeof side.hookCopy === 'string' ? side.hookCopy : '';
+  let notes = typeof side.notes === 'string' ? side.notes : '';
+  const legacy = [side.hookDescription, side.videoCopy, side.videoDescription]
+    .map((part) => (typeof part === 'string' ? part.trim() : ''))
+    .filter((part) => part && !notes.includes(part));
+  if (legacy.length) notes = [notes, ...legacy].filter((part) => part.length > 0).join('\n\n');
+  return { hookCopy, notes };
 }
 
 function normalizeVideos(value) {

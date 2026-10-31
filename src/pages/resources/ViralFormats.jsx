@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import DataStatus from '@/components/DataStatus';
 import ViralFormatCard from '@/components/viralFormats/ViralFormatCard';
@@ -31,6 +31,7 @@ export default function ViralFormats() {
   const [editingIds, setEditingIds] = useState(() => new Set());
   const [draggingId, setDraggingId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
+  const draggingIdRef = useRef(null);
   const [uploads, setUploads] = useState({});
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [actionError, setActionError] = useState('');
@@ -151,21 +152,39 @@ export default function ViralFormats() {
     }
   };
 
-  const handleDrop = (targetId) => {
-    if (!draggingId || draggingId === targetId) {
-      setDraggingId(null);
-      setDragOverId(null);
-      return;
-    }
-    const ids = formats.map((format) => format.id);
-    const from = ids.indexOf(draggingId);
-    const to = ids.indexOf(targetId);
-    if (from === -1 || to === -1) return;
-    ids.splice(from, 1);
-    ids.splice(to, 0, draggingId);
-    reorderFormats(ids);
+  const clearDrag = () => {
+    draggingIdRef.current = null;
     setDraggingId(null);
     setDragOverId(null);
+  };
+
+  const handleDragStart = (id) => {
+    draggingIdRef.current = id;
+    setDraggingId(id);
+  };
+
+  const handleDragOver = (id) => {
+    if (!draggingIdRef.current) return false;
+    if (draggingIdRef.current === id) {
+      setDragOverId((current) => (current == null ? current : null));
+      return false;
+    }
+    setDragOverId((current) => (current === id ? current : id));
+    return true;
+  };
+
+  const handleDrop = (targetId) => {
+    const sourceId = Number(draggingIdRef.current);
+    const destinationId = Number(targetId);
+    clearDrag();
+    if (!Number.isInteger(sourceId) || !Number.isInteger(destinationId) || sourceId === destinationId) return;
+    const ids = formats.map((format) => Number(format.id));
+    const from = ids.indexOf(sourceId);
+    const to = ids.indexOf(destinationId);
+    if (from === -1 || to === -1) return;
+    ids.splice(from, 1);
+    ids.splice(to, 0, sourceId);
+    reorderFormats(ids);
   };
 
   const uploadsFor = (formatId) =>
@@ -174,7 +193,7 @@ export default function ViralFormats() {
       .map(([, upload]) => upload);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden">
       <DataStatus loading={loading} error={error || actionError} />
       <p className="text-sm text-muted-foreground">
         Original hook, notes, and sample videos, then a Smash version of the same format.
@@ -215,7 +234,7 @@ export default function ViralFormats() {
             : 'Nothing matches this search.'}
         </p>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           {visible.map((format) => (
             <ViralFormatCard
               key={format.id}
@@ -231,12 +250,9 @@ export default function ViralFormats() {
               onChange={(patch, immediate) => updateFormat(format.id, patch, immediate)}
               onUpload={(files) => handleUpload(format, files)}
               onRemoveVideo={(video) => handleRemoveVideo(format, video)}
-              onDragStart={setDraggingId}
-              onDragEnd={() => {
-                setDraggingId(null);
-                setDragOverId(null);
-              }}
-              onDragOver={setDragOverId}
+              onDragStart={handleDragStart}
+              onDragEnd={clearDrag}
+              onDragOver={handleDragOver}
               onDrop={handleDrop}
               onDelete={(confirmed) => {
                 if (!confirmed) {

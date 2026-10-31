@@ -16,7 +16,7 @@ export const viralFormatEntriesB = [
     formatName: 'Count the download, not the view',
     founder: 'An Nayal',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 33:19', url: yt('pb4JIH8FubE', '33:19') },
     ],
@@ -40,7 +40,7 @@ export const viralFormatEntriesB = [
     formatName: 'One charged moment',
     founder: 'Roger Chen',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 12:04', url: '' },
     ],
@@ -64,7 +64,7 @@ export const viralFormatEntriesB = [
     formatName: 'Their comment is the next video',
     founder: 'Michael Que',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       {
         id: 'story',
@@ -92,7 +92,7 @@ export const viralFormatEntriesB = [
     formatName: 'If you are seeing this before the date',
     founder: 'Phoenix Do',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — viral-format section near the start', url: '' },
     ],
@@ -116,7 +116,7 @@ export const viralFormatEntriesB = [
     formatName: 'Two-frame crash-out',
     founder: 'Phoenix Do',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — same Phoenix Do episode, crash-out slideshow', url: '' },
     ],
@@ -188,7 +188,7 @@ export const viralFormatEntriesB = [
     formatName: 'Two notifications',
     founder: 'Mauro Botanes',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — jump to ~4:41', url: '' },
       { id: 'ig', label: 'Instagram @symmetryclub', url: 'https://www.instagram.com/symmetryclub/' },
@@ -213,7 +213,7 @@ export const viralFormatEntriesB = [
     formatName: 'The coach interrupts',
     founder: 'Adam Turaev',
     showName: 'Sub Club / RevenueCat',
-    priority: true,
+    priority: false,
     links: [
       { id: 'pod', label: 'Sub Club — creator-video section', url: '' },
     ],
@@ -237,7 +237,7 @@ export const viralFormatEntriesB = [
     formatName: 'Invisible inside the day',
     founder: 'Jake Castillo / Cal AI team',
     showName: 'Superwall — Alfie Dickens on the creator machine',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — Cal AI marketing', url: yt('l0vswWcGmMs', '0:00') },
     ],
@@ -261,7 +261,7 @@ export const viralFormatEntriesB = [
     formatName: 'Cut the footage they already have',
     founder: 'Greg Stewart',
     showName: 'Sub Club by RevenueCat',
-    priority: true,
+    priority: false,
     links: [
       { id: 'pod', label: 'Sub Club — TikTok section around 37:51', url: '' },
     ],
@@ -285,7 +285,7 @@ export const viralFormatEntriesB = [
     formatName: 'The journey is the show',
     founder: 'Florian Vates',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — 6:58, influencer examples', url: '' },
     ],
@@ -309,7 +309,7 @@ export const viralFormatEntriesB = [
     formatName: 'The notification is the hook',
     founder: 'Hunter Isaacson',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — Hunter Isaacson', url: yt('DTree0unT_0', '0:00') },
     ],
@@ -333,7 +333,7 @@ export const viralFormatEntriesB = [
     formatName: 'Day X, and the comments built it',
     founder: 'Rafael Kramer',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — Rafael Kramer, DaGame', url: '' },
     ],
@@ -357,7 +357,7 @@ export const viralFormatEntriesB = [
     formatName: 'Prove the problem before the feature',
     founder: 'Jack & Nick Sweeney',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — 8:30, content example', url: '' },
     ],
@@ -381,7 +381,7 @@ export const viralFormatEntriesB = [
     formatName: 'Stitch the expert',
     founder: 'George Lampropoulos',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — George Lampropoulos', url: GEORGE },
     ],
@@ -405,7 +405,7 @@ export const viralFormatEntriesB = [
     formatName: 'Upload it, get the mistake',
     founder: 'George Lampropoulos',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — same George episode, match-upload format', url: GEORGE },
     ],
@@ -429,7 +429,7 @@ export const viralFormatEntriesB = [
     formatName: 'That routine is ridiculous',
     founder: 'George Lampropoulos',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — same episode, AbMax section', url: GEORGE },
     ],
@@ -477,7 +477,7 @@ export const viralFormatEntriesB = [
     formatName: 'Splash, upload, result',
     founder: 'Lotanna Ezeike',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 3:43', url: yt('NmIHgCRd04E', '3:43') },
     ],
@@ -501,7 +501,7 @@ export const viralFormatEntriesB = [
     formatName: 'One screenshot that hurts',
     founder: 'Kelechi Onyeama',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — 3:45 distribution, 7:45 playbook', url: '' },
     ],
@@ -525,7 +525,7 @@ export const viralFormatEntriesB = [
     formatName: 'The name is the joke',
     founder: 'CiteSure founder',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — CiteSure founder interview', url: '' },
     ],
@@ -549,7 +549,7 @@ export const viralFormatEntriesB = [
     formatName: 'Remake the grammar',
     founder: 'Vadim Strizheus',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — 6:45, growth section', url: '' },
     ],
@@ -573,7 +573,7 @@ export const viralFormatEntriesB = [
     formatName: 'Sell the mockup',
     founder: 'Breezy founder',
     showName: 'Sub Club',
-    priority: true,
+    priority: false,
     links: [
       { id: 'pod', label: 'Sub Club — 40:06', url: '' },
     ],
@@ -597,7 +597,7 @@ export const viralFormatEntriesB = [
     formatName: 'Duet the tutorial that is already winning',
     founder: 'Maddie Kirby',
     showName: 'Sub Club',
-    priority: true,
+    priority: false,
     links: [
       { id: 'pod', label: 'Sub Club — viral duet around 27–34 min', url: '' },
     ],
@@ -621,7 +621,7 @@ export const viralFormatEntriesB = [
     formatName: 'Seed the culture, then drop the app',
     founder: 'Christian Rac & Braylin Byrd',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — 4:51', url: '' },
       { id: 'ig', label: 'Instagram @3akings_', url: 'https://www.instagram.com/3akings_/' },
@@ -646,7 +646,7 @@ export const viralFormatEntriesB = [
     formatName: 'One slide in someone else\'s list',
     founder: 'Ryan Yao',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — app growth section', url: '' },
     ],
@@ -670,7 +670,7 @@ export const viralFormatEntriesB = [
     formatName: 'Useful advice, product last',
     founder: 'Cedric Roberge',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — Cedric Roberge', url: yt('mOpYezjqU9c', '0:00') },
     ],
@@ -694,7 +694,7 @@ export const viralFormatEntriesB = [
     formatName: 'The transformation the niche already understands',
     founder: 'Ethan',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — CutCoach', url: '' },
     ],
@@ -742,7 +742,7 @@ export const viralFormatEntriesB = [
     formatName: 'The score makes them react',
     founder: 'Anada Lakra',
     showName: 'Founder interviews',
-    priority: true,
+    priority: false,
     links: [
       { id: 'pod', label: 'Founder podcast — growth section', url: '' },
     ],
@@ -766,7 +766,7 @@ export const viralFormatEntriesB = [
     formatName: 'One face they recognise',
     founder: 'Cliff Weitzman',
     showName: 'Founder / growth interview',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'YouTube — around 18:35, character section', url: '' },
     ],
@@ -790,7 +790,7 @@ export const viralFormatEntriesB = [
     formatName: 'The magic moment',
     founder: 'Jure Sotosek',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'story', label: 'Starter Story — organic short-form strategy', url: '' },
     ],
@@ -838,7 +838,7 @@ export const viralFormatEntriesB = [
     formatName: 'One job, one result',
     founder: 'Steve Hoyek',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — 7:38, ad example', url: '' },
     ],
@@ -910,7 +910,7 @@ export const viralFormatEntriesB = [
     formatName: 'Rank what they sent',
     founder: 'George Lampropoulos',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — ranking and stitch creatives', url: GEORGE },
     ],
@@ -934,7 +934,7 @@ export const viralFormatEntriesB = [
     formatName: 'I want that for myself',
     founder: 'Maddie Kirby',
     showName: 'Sub Club',
-    priority: true,
+    priority: false,
     links: [
       { id: 'pod', label: 'Maddie Kirby — bookshelf widget, separate from 1SE', url: '' },
     ],

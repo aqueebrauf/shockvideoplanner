@@ -11,11 +11,11 @@ function matchesQuery(format, query) {
   if (!query) return true;
   const haystack = [
     format.appName,
-    format.formatName,
     format.original.hookCopy,
     format.original.notes,
     format.smash.hookCopy,
     format.smash.notes,
+    ...(format.instagramLinks ?? []).map((link) => link.url),
   ]
     .join(' ')
     .toLowerCase();

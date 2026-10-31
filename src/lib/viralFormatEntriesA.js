@@ -14,7 +14,7 @@ export const viralFormatEntriesA = [
     formatName: 'Over-the-shoulder curiosity',
     founder: 'Mario Ortiz Manero & Alejandro Sanchez',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 30:40', url: yt('PdudtXwEsOQ', '30:40') },
     ],
@@ -38,7 +38,7 @@ export const viralFormatEntriesA = [
     formatName: 'Borrowed viral scene',
     founder: 'Nikita & Evgeniy',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — jump to 7:35', url: yt('1nfPvJKrYYQ', '7:35') },
       {
@@ -67,7 +67,7 @@ export const viralFormatEntriesA = [
     formatName: 'Hook, then demo',
     founder: 'Jay Raavi',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 21:50', url: yt('RVnnqTrSKZY', '21:50') },
       { id: 'hooks', label: 'Superwall — testing hooks at 12:35', url: yt('RVnnqTrSKZY', '12:35') },
@@ -93,7 +93,7 @@ export const viralFormatEntriesA = [
     formatName: 'Accidental discovery',
     founder: 'Dan Vykhopen',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 14:11', url: yt('r_JUxa3RZgM', '14:11') },
     ],
@@ -166,7 +166,7 @@ export const viralFormatEntriesA = [
     formatName: 'Frankenstein native story',
     founder: 'Daniel Kwon',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 3:22', url: yt('2cDIFx4WWD0', '3:22') },
     ],
@@ -190,7 +190,7 @@ export const viralFormatEntriesA = [
     formatName: 'Six-second fade-in',
     founder: 'Peter Gillan',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 35:09', url: yt('si3HzkBTPl4', '35:09') },
     ],
@@ -214,7 +214,7 @@ export const viralFormatEntriesA = [
     formatName: 'Setup, demo, payoff',
     founder: 'Dillion Verma',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 22:14', url: yt('PFfo4JySptw', '22:14') },
     ],
@@ -238,7 +238,7 @@ export const viralFormatEntriesA = [
     formatName: 'Camera reveals the magic',
     founder: 'Kiran Desai',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 32:53', url: yt('CdBuMyrqWCs', '32:53') },
     ],
@@ -262,7 +262,7 @@ export const viralFormatEntriesA = [
     formatName: 'The product roasts you',
     founder: 'Morrie Schonfeld',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 12:42', url: yt('s9qQPM92JNs', '12:42') },
     ],
@@ -286,7 +286,7 @@ export const viralFormatEntriesA = [
     formatName: 'Before, after, plan',
     founder: 'Nicole Cheung',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 12:00', url: yt('Bf12MNPO-Js', '12:00') },
     ],
@@ -310,7 +310,7 @@ export const viralFormatEntriesA = [
     formatName: 'Seven-second UI story',
     founder: 'Nicole Cheung',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 34:40', url: yt('Bf12MNPO-Js', '34:40') },
     ],
@@ -358,7 +358,7 @@ export const viralFormatEntriesA = [
     formatName: 'Mundane picture, text does the work',
     founder: 'Nic Weber',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — Nic Weber, jump to ~15:27', url: '' },
     ],
@@ -382,7 +382,7 @@ export const viralFormatEntriesA = [
     formatName: 'Three screens only',
     founder: 'Lotanna Ezeike',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 7:54', url: yt('NmIHgCRd04E', '7:54') },
     ],
@@ -406,7 +406,7 @@ export const viralFormatEntriesA = [
     formatName: 'Port a proven format',
     founder: 'Caleb Dean',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 1:04', url: yt('yw5iIgO4PbY', '1:04') },
     ],
@@ -430,7 +430,7 @@ export const viralFormatEntriesA = [
     formatName: 'Hard way, easy way',
     founder: 'Casper Opala',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 13:24', url: yt('I10xtUiXfeY', '13:24') },
     ],
@@ -454,7 +454,7 @@ export const viralFormatEntriesA = [
     formatName: 'Day in the life, quietly checked off',
     founder: 'Evan Yadegari',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 8:06', url: yt('qYYeu0E-1SI', '8:06') },
     ],
@@ -550,7 +550,7 @@ export const viralFormatEntriesA = [
     formatName: 'Interrupt the ritual',
     founder: 'Sarah Pearl',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — jump to 10:16', url: yt('Eg93po_DAYo', '10:16') },
     ],
@@ -622,7 +622,7 @@ export const viralFormatEntriesA = [
     formatName: 'Mom changed my college life',
     founder: 'Brett Bauman & Zack Hargett',
     showName: 'Superwall',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Superwall — jump to 7:35', url: yt('E_4gRy4O03w', '7:35') },
       { id: 'ig', label: 'Instagram @coconoteapp', url: 'https://www.instagram.com/coconoteapp/' },
@@ -647,7 +647,7 @@ export const viralFormatEntriesA = [
     formatName: 'The mechanic is the video',
     founder: 'Jake Glacer',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       { id: 'yt', label: 'Starter Story — jump to 9:59', url: '' },
     ],
@@ -699,7 +699,7 @@ export const viralFormatEntriesA = [
     formatName: 'Reaction, then the demo',
     founder: 'Mau Baron',
     showName: 'Starter Story',
-    priority: true,
+    priority: false,
     links: [
       {
         id: 'story',

@@ -18,6 +18,7 @@ function mergeFormat(current, patch) {
     original: patch.original ? { ...current.original, ...patch.original } : current.original,
     smash: patch.smash ? { ...current.smash, ...patch.smash } : current.smash,
     sampleVideos: patch.sampleVideos ?? current.sampleVideos,
+    instagramLinks: patch.instagramLinks ?? current.instagramLinks,
   });
 }
 

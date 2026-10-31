@@ -32,14 +32,22 @@ function normalizeVideos(value) {
     .filter((video) => video.url || video.key);
 }
 
+function normalizeInstagramLinks(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((link, index) => ({
+    id: link?.id || `ig-${index + 1}`,
+    url: link?.url ?? '',
+  }));
+}
+
 export function normalizeViralFormat(row) {
   return {
     id: row.id,
     sortOrder: row.sort_order ?? row.sortOrder ?? 0,
     appName: row.app_name ?? row.appName ?? '',
-    formatName: row.format_name ?? row.formatName ?? '',
     priority: Boolean(row.priority),
     sampleVideos: normalizeVideos(row.sample_videos ?? row.sampleVideos),
+    instagramLinks: normalizeInstagramLinks(row.instagram_links ?? row.instagramLinks),
     original: normalizeSide(row.original),
     smash: normalizeSide(row.smash),
   };
@@ -51,9 +59,9 @@ function toRow(format) {
     id: normalized.id,
     sort_order: normalized.sortOrder,
     app_name: normalized.appName,
-    format_name: normalized.formatName,
     priority: normalized.priority,
     sample_videos: normalized.sampleVideos,
+    instagram_links: normalized.instagramLinks,
     original: normalized.original,
     smash: normalized.smash,
     updated_at: new Date().toISOString(),
@@ -61,10 +69,7 @@ function toRow(format) {
 }
 
 export function formatDisplayName(format) {
-  const app = format.appName?.trim();
-  const name = format.formatName?.trim();
-  if (app && name) return `${app} — ${name}`;
-  return app || name || 'Untitled format';
+  return format.appName?.trim() || 'Untitled format';
 }
 
 export function createEmptyViralFormat(id, sortOrder) {
@@ -72,9 +77,9 @@ export function createEmptyViralFormat(id, sortOrder) {
     id,
     sortOrder,
     appName: '',
-    formatName: '',
     priority: false,
     sampleVideos: [],
+    instagramLinks: [],
     original: emptySide(),
     smash: emptySide(),
   });

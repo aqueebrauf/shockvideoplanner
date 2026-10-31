@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, GripVertical, Pencil, Star, Trash2, Upload } from 'lucide-react';
 import CopyTextButton from '@/components/CopyTextButton';
 import UploadProgress from '@/components/showedMe/UploadProgress';
@@ -70,38 +70,77 @@ function EditField({ label, value, placeholder, onChange, tall = false }) {
   );
 }
 
-function SampleVideos({ videos, editing, uploads, onFiles, onRemove }) {
+function OriginalMedia({ videos, instagramLinks, uploads, onFiles, onRemoveVideo, onChangeLinks }) {
   const inputRef = useRef(null);
+  const linkRefs = useRef(new Map());
+  const [focusLinkId, setFocusLinkId] = useState(null);
+
+  useEffect(() => {
+    if (!focusLinkId) return;
+    linkRefs.current.get(focusLinkId)?.focus();
+    setFocusLinkId(null);
+  }, [focusLinkId, instagramLinks]);
+
+  const addLink = () => {
+    const id = crypto.randomUUID();
+    setFocusLinkId(id);
+    onChangeLinks([...instagramLinks, { id, url: '' }], true);
+  };
 
   return (
     <div className="flex flex-col gap-2">
-      {videos.length > 0 ? (
-        <div className="grid gap-3">
-          {videos.map((video) => (
-            <div key={video.id} className="flex flex-col gap-1.5">
-              <video
-                src={video.url}
-                controls
-                playsInline
-                preload="metadata"
-                className="max-h-80 w-full rounded-lg bg-black"
-              />
-              {editing ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  className="w-fit"
-                  onClick={() => onRemove(video)}
-                >
-                  <Trash2 />
-                  Remove
-                </Button>
-              ) : null}
-            </div>
-          ))}
+      {videos.map((video) => (
+        <div key={video.id} className="relative">
+          <video
+            src={video.url}
+            controls
+            playsInline
+            preload="metadata"
+            className="max-h-80 w-full rounded-lg bg-black"
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon-xs"
+            className="absolute top-2 right-2"
+            aria-label="Delete video"
+            title="Delete video"
+            onClick={() => onRemoveVideo(video)}
+          >
+            <Trash2 />
+          </Button>
         </div>
-      ) : null}
+      ))}
+      {instagramLinks.map((link) => (
+        <div key={link.id} className="flex items-center gap-2">
+          <Input
+            ref={(node) => {
+              if (node) linkRefs.current.set(link.id, node);
+              else linkRefs.current.delete(link.id);
+            }}
+            value={link.url}
+            placeholder="https://www.instagram.com/..."
+            aria-label="Instagram link"
+            onChange={(event) =>
+              onChangeLinks(
+                instagramLinks.map((item) =>
+                  item.id === link.id ? { ...item, url: event.target.value } : item
+                )
+              )
+            }
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Delete Instagram link"
+            title="Delete Instagram link"
+            onClick={() => onChangeLinks(instagramLinks.filter((item) => item.id !== link.id), true)}
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      ))}
       <input
         ref={inputRef}
         type="file"
@@ -114,16 +153,20 @@ function SampleVideos({ videos, editing, uploads, onFiles, onRemove }) {
           if (files.length > 0) onFiles(files);
         }}
       />
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="w-fit"
-        onClick={() => inputRef.current?.click()}
-      >
-        <Upload />
-        Upload videos
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload />
+          Upload videos
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={addLink}>
+          Instagram
+        </Button>
+      </div>
       {uploads.map((upload) => (
         <UploadProgress
           key={upload.id}
@@ -247,32 +290,24 @@ export default function ViralFormatCard({
       {expanded ? (
         <div className="flex flex-col gap-4 border-t px-3 py-4">
           {editing ? (
-            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.4fr)] sm:items-center">
-              <Input
-                value={format.appName}
-                placeholder="App name"
-                aria-label="App name"
-                onChange={(event) => onChange({ appName: event.target.value })}
-              />
-              <span className="hidden text-muted-foreground sm:block">—</span>
-              <Input
-                value={format.formatName}
-                placeholder="Format name"
-                aria-label="Format name"
-                onChange={(event) => onChange({ formatName: event.target.value })}
-              />
-            </div>
+            <Input
+              value={format.appName}
+              placeholder="App name"
+              aria-label="App name"
+              onChange={(event) => onChange({ appName: event.target.value })}
+            />
           ) : null}
 
           <div className="grid gap-3 lg:grid-cols-2">
             <section className="flex flex-col gap-3 rounded-xl border bg-background p-3">
               <h3 className="text-sm font-semibold">Original</h3>
-              <SampleVideos
+              <OriginalMedia
                 videos={format.sampleVideos}
-                editing={editing}
+                instagramLinks={format.instagramLinks ?? []}
                 uploads={uploads}
                 onFiles={onUpload}
-                onRemove={onRemoveVideo}
+                onRemoveVideo={onRemoveVideo}
+                onChangeLinks={(links, immediate) => onChange({ instagramLinks: links }, immediate)}
               />
               {editing ? (
                 <>

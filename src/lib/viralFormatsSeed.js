@@ -41,9 +41,9 @@ export const VIRAL_FORMAT_SEED = [...viralFormatEntriesA, ...viralFormatEntriesB
     id: index + 1,
     sortOrder: index + 1,
     appName: entry.appName ?? '',
-    formatName: entry.formatName ?? '',
     priority: Boolean(entry.priority),
     sampleVideos: [],
+    instagramLinks: [],
     original: originalSide(entry),
     smash: smashSide(entry),
   })
